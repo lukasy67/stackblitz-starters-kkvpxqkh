@@ -1,0 +1,25 @@
+<nav class="tab-bar">
+
+  <button class="tab-link active" onclick="openTab(event, 'panel-medallero')">🏆 Medallero</button>
+
+  <button class="tab-link" onclick="openTab(event, 'panel-estadisticas')">📊 Estadísticas</button>
+
+
+  <button class="tab-link" onclick="openTab(event, 'panel-cuadro-honor')">🎖️ Cuadro de Honor</button>
+  <button class="tab-link" onclick="openTab(event, 'panel-comparativa')">⚖️ Comparativa Carreras</button>
+  <button class="tab-link" onclick="openTab(event, 'panel-voley')">🏐 Vóley</button>
+</nav>
+
+<div id="panel-medallero" class="tab-content" style="display:block"> ... Tabla de Campeones ... </div>
+
+<div id="panel-estadisticas" class="tab-content" style="display:none"> ... Rendimiento de Cursos ... </div>
+<div id="panel-futsal" class="tab-content" style="display:none">
+  <div class="sub-tabs">
+    <button onclick="filtrarSexo('M')">Masculino</button>
+    <button onclick="filtrarSexo('F')">Femenino</button>
+  </div>
+  <div id="futsal-data"></div>
+</div>
+
+<div id="panel-cuadro-honor" class="tab-content" style="display:none"> ... Récords y Menciones ... </div>
+<div id="panel-comparativa" class="tab-content" style="display:none"> ... Psicología vs Educación ... </div>
