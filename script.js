@@ -23,15 +23,25 @@ async function cargarDatos() {
     const res = await fetch(API_URL);
     datosTorneo = await res.json();
 
-    // Llama al árbol gráfico para Futsal y Vóley
+    // 1. Ordenar partidos por número correlativo
+    datosTorneo.partidos.sort((a, b) => (parseInt(a.orden) || 0) - (parseInt(b.orden) || 0));
+
+    // 2. Dibujar Árbol Gráfico para Futsal y Vóley
     renderizarArbolVisual("Futsal Masculino", "futsal-content");
     renderizarArbolVisual("Volley Mixto", "voley-content");
 
-    // Llama al formato por tarjetas/listas para las demás modalidades
+    // 3. Dibujar Tarjetas para Fútbol de Campo y Pikivoley
     renderizarPartidosDisciplina("Fútbol de Campo", "futbol-content");
     renderizarPartidosDisciplina("Pikivoley Masculino", "pikivoley-content");
+
+    // 4. Renderizar Tablas Generales
+    renderizarMedalleroSimulado();
+    renderizarEstadisticasEquipos();
+    renderizarCuadroHonor();
+    renderizarComparativaCarreras();
+
   } catch (err) {
-    console.error("Error al cargar datos:", err);
+    console.error("Error al cargar datos desde Google Sheets:", err);
   }
 }
 
