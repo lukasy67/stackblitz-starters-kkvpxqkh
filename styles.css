@@ -7,9 +7,6 @@ body {
 }
 
 .header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
   background-color: #1f1f1f;
   padding: 15px 20px;
   border-radius: 10px;
@@ -29,11 +26,18 @@ body {
   color: #aaa;
 }
 
-.btn-admin {
-  background-color: #3b82f6;
-  color: #ffffff;
+.header-seccion {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+}
+
+.btn-nuevo-partido {
+  background-color: #10b981;
+  color: #fff;
   border: none;
-  padding: 10px 14px;
+  padding: 8px 12px;
   border-radius: 6px;
   cursor: pointer;
   font-weight: bold;
@@ -54,10 +58,9 @@ body {
   border-radius: 8px;
   cursor: pointer;
   font-size: 14px;
-  transition: all 0.2s ease;
 }
 
-.tab-link:hover, .tab-link.active, .sub-link.active {
+.tab-link.active, .sub-link.active {
   background-color: #3b82f6;
   color: #ffffff;
   border-color: #60a5fa;
@@ -74,10 +77,8 @@ body {
   background-color: #181818;
   padding: 20px;
   border-radius: 10px;
-  min-height: 400px;
 }
 
-/* Tablas Deportivas */
 .tabla-deportiva {
   width: 100%;
   border-collapse: collapse;
@@ -92,33 +93,17 @@ body {
   color: #60a5fa;
   padding: 12px;
   text-align: left;
-  font-size: 13px;
 }
 
 .tabla-deportiva td {
   padding: 12px;
   border-bottom: 1px solid #2d2d2d;
-  font-size: 14px;
 }
 
-.tabla-deportiva tr:hover {
-  background-color: #262626;
-}
-
-.badge-total {
-  background-color: #3b82f6;
-  color: #ffffff;
-  padding: 4px 8px;
-  border-radius: 4px;
-  font-weight: bold;
-}
-
-/* Tarjetas de Partidos */
 .grid-partidos {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
   gap: 15px;
-  margin-top: 15px;
 }
 
 .card-partido {
@@ -126,22 +111,16 @@ body {
   border: 1px solid #333;
   border-radius: 8px;
   padding: 15px;
-}
-
-.card-partido .badge-fase {
-  font-size: 11px;
-  background-color: #333;
-  color: #f59e0b;
-  padding: 3px 6px;
-  border-radius: 4px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
 }
 
 .marcador-box {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin: 15px 0;
-  font-size: 16px;
+  margin: 12px 0;
 }
 
 .marcador-box strong {
@@ -149,7 +128,18 @@ body {
   color: #60a5fa;
 }
 
-/* Modal Emergente */
+.btn-cargar-card {
+  background-color: #3b82f6;
+  color: #fff;
+  border: none;
+  padding: 8px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 12px;
+  margin-top: 10px;
+  font-weight: bold;
+}
+
 .modal {
   display: none;
   position: fixed;
@@ -158,12 +148,12 @@ body {
   top: 0;
   width: 100%;
   height: 100%;
-  background-color: rgba(0,0,0,0.8);
+  background-color: rgba(0,0,0,0.85);
 }
 
 .modal-content {
   background-color: #1f1f1f;
-  margin: 8% auto;
+  margin: 5% auto;
   padding: 20px;
   border-radius: 10px;
   width: 90%;
@@ -180,8 +170,8 @@ body {
 
 .modal input, .modal select {
   width: 100%;
-  padding: 10px;
-  margin: 10px 0;
+  padding: 8px;
+  margin: 6px 0;
   background-color: #121212;
   border: 1px solid #444;
   color: #fff;
@@ -194,6 +184,25 @@ body {
   gap: 10px;
 }
 
+.btn-add-incidencia {
+  background-color: #374151;
+  color: #fff;
+  border: none;
+  padding: 8px;
+  width: 100%;
+  border-radius: 6px;
+  cursor: pointer;
+  margin-top: 5px;
+}
+
+.incidencias-list {
+  list-style: none;
+  padding: 0;
+  margin: 10px 0;
+  font-size: 12px;
+  color: #fbbf24;
+}
+
 .btn-guardar {
   width: 100%;
   background-color: #10b981;
@@ -203,6 +212,5 @@ body {
   border-radius: 6px;
   cursor: pointer;
   font-weight: bold;
-  font-size: 15px;
   margin-top: 10px;
 }

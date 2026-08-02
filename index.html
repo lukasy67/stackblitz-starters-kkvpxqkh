@@ -14,7 +14,6 @@
       <h1>Juegos InterFilo 2026</h1>
       <p>Facultad de Filosofía - Filial San Estanislao</p>
     </div>
-    <button class="btn-admin" onclick="abrirModalAdmin()">🔑 Acceso Mesa de Control</button>
   </header>
 
   <!-- Barra de Navegación por Pestañas -->
@@ -32,31 +31,26 @@
   <!-- Paneles de Contenido -->
   <main class="main-content">
     
-    <!-- Panel 1: Medallero General -->
     <div id="panel-medallero" class="tab-content" style="display:block">
       <h2>🏆 Medallero General y Tabla de Campeones</h2>
       <div id="medallero-content">Cargando medallero...</div>
     </div>
 
-    <!-- Panel 2: Estadísticas de Equipos -->
     <div id="panel-estadisticas" class="tab-content" style="display:none">
       <h2>📊 Rendimiento Colectivo de Cursos</h2>
       <div id="estadisticas-content">Cargando estadísticas...</div>
     </div>
 
-    <!-- Panel 3: Cuadro de Honor -->
     <div id="panel-cuadro-honor" class="tab-content" style="display:none">
       <h2>🎖️ Cuadro de Honor y Récords del Torneo</h2>
       <div id="cuadro-honor-content">Cargando récords...</div>
     </div>
 
-    <!-- Panel 4: Comparativa de Carreras -->
     <div id="panel-comparativa" class="tab-content" style="display:none">
       <h2>⚖️ Comparativa: Carrera de Psicología vs Ciencias de la Educación</h2>
       <div id="comparativa-content">Cargando comparativa...</div>
     </div>
 
-    <!-- Panel 5: Futsal -->
     <div id="panel-futsal" class="tab-content" style="display:none">
       <h2>⚽ Futsal</h2>
       <div class="sub-tabs">
@@ -66,57 +60,91 @@
       <div id="futsal-content">Cargando partidos de futsal...</div>
     </div>
 
-    <!-- Panel 6: Fútbol de Campo -->
     <div id="panel-futbol" class="tab-content" style="display:none">
-      <h2>⚽ Fútbol de Campo</h2>
-      <div class="sub-tabs">
-        <button class="sub-link active" onclick="filtrarFutbolFase('Principal')">🏆 Cuadro Principal</button>
-        <button class="sub-link" onclick="filtrarFutbolFase('Repechaje')">🔄 Ronda de Reingreso</button>
+      <div class="header-seccion">
+        <h2>⚽ Fútbol de Campo</h2>
+        <button class="btn-nuevo-partido" onclick="abrirModalNuevoPartido('Fútbol de Campo')">➕ Agregar Partido de Reingreso</button>
       </div>
       <div id="futbol-content">Cargando partidos de fútbol...</div>
     </div>
 
-    <!-- Panel 7: Vóley Mixto -->
     <div id="panel-voley" class="tab-content" style="display:none">
       <h2>🏐 Vóley Mixto</h2>
       <div id="voley-content">Cargando partidos de vóley...</div>
     </div>
 
-    <!-- Panel 8: Pikivoley -->
     <div id="panel-pikivoley" class="tab-content" style="display:none">
-      <h2>🦶🏐 Pikivoley Masculino</h2>
-      <div class="sub-tabs">
-        <button class="sub-link active" onclick="filtrarPikivoleyFase('Principal')">🏆 Cuadro Principal</button>
-        <button class="sub-link" onclick="filtrarPikivoleyFase('Repechaje')">🔄 Ronda de Reingreso</button>
+      <div class="header-seccion">
+        <h2>🦶🏐 Pikivoley Masculino</h2>
+        <button class="btn-nuevo-partido" onclick="abrirModalNuevoPartido('Pikivoley Masculino')">➕ Agregar Partido de Reingreso</button>
       </div>
       <div id="pikivoley-content">Cargando partidos de pikivoley...</div>
     </div>
 
   </main>
 
-  <!-- Modal emergente para la Mesa de Control -->
+  <!-- Modal 1: Cargar Marcador e Incidencias (Tarjetas / Goles) -->
   <div id="modal-admin" class="modal">
     <div class="modal-content">
       <span class="close" onclick="cerrarModalAdmin()">&times;</span>
       <h3>Mesa de Control - Cargar Partido</h3>
       <input type="password" id="admin-clave" placeholder="Ingresar Clave de Mesa (ej. 1234)">
       
-      <label for="admin-partido-select">Seleccionar Partido:</label>
-      <select id="admin-partido-select"></select>
+      <h4 id="modal-partido-titulo" style="color:#60a5fa; margin:10px 0;"></h4>
+      <input type="hidden" id="admin-id-partido">
 
       <div class="goles-input">
         <div>
           <label id="lbl-equipo-a">Equipo A</label>
-          <input type="number" id="goles-a" placeholder="Goles/Puntos A" min="0">
+          <input type="number" id="goles-a" placeholder="Goles A" min="0">
         </div>
         <div>
           <label id="lbl-equipo-b">Equipo B</label>
-          <input type="number" id="goles-b" placeholder="Goles/Puntos B" min="0">
+          <input type="number" id="goles-b" placeholder="Goles B" min="0">
         </div>
       </div>
 
+      <!-- Sección de Tarjetas e Incidencias -->
+      <hr style="border-color:#333; margin:15px 0;">
+      <h4 style="margin:5px 0; color:#aaa;">Cargar Tarjetas e Incidencias:</h4>
+      <input type="text" id="inc-jugador" placeholder="Nombre y Apellido del Jugador">
+      <select id="inc-equipo-select"></select>
+      <select id="inc-tipo">
+        <option value="Gol">⚽ Gol</option>
+        <option value="Tarjeta Amarilla">🟨 Tarjeta Amarilla</option>
+        <option value="Tarjeta Roja">🟥 Tarjeta Roja</option>
+        <option value="Tarjeta Azul">🟦 Tarjeta Azul</option>
+      </select>
+      <button type="button" class="btn-add-incidencia" onclick="agregarIncidenciaLista()">➕ Agregar Incidencia</button>
+
+      <ul id="lista-incidencias-temp" class="incidencias-list"></ul>
+
       <button class="btn-guardar" onclick="enviarResultado()">Guardar y Publicar</button>
       <p id="admin-msj"></p>
+    </div>
+  </div>
+
+  <!-- Modal 2: Agregar Nuevo Partido de Reingreso -->
+  <div id="modal-nuevo-partido" class="modal">
+    <div class="modal-content">
+      <span class="close" onclick="cerrarModalNuevoPartido()">&times;</span>
+      <h3>➕ Crear Partido de Reingreso</h3>
+      <p style="font-size:12px; color:#aaa;">Solo habilitado para Fútbol de Campo y Pikivoley.</p>
+      
+      <label>Disciplina:</label>
+      <input type="text" id="nuevo-disciplina" readonly style="background:#222; color:#888;">
+
+      <label>Equipo A (Reingreso):</label>
+      <select id="nuevo-equipo-a"></select>
+
+      <label>Equipo B (Reingreso):</label>
+      <select id="nuevo-equipo-b"></select>
+
+      <label>Fecha y Hora:</label>
+      <input type="text" id="nuevo-fecha-hora" placeholder="Ej. 20/07 18:00 HS">
+
+      <button class="btn-guardar" onclick="crearPartidoReingreso()">Crear Partido</button>
+      <p id="nuevo-msj"></p>
     </div>
   </div>
 
