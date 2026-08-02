@@ -23,16 +23,12 @@ async function cargarDatos() {
     const res = await fetch(API_URL);
     datosTorneo = await res.json();
 
-    // Ordenar partidos por número correlativo
-    datosTorneo.partidos.sort((a, b) => (parseInt(a.orden) || 0) - (parseInt(b.orden) || 0));
+    // Llama al árbol gráfico para Futsal y Vóley
+    renderizarArbolVisual("Futsal Masculino", "futsal-content");
+    renderizarArbolVisual("Volley Mixto", "voley-content");
 
-    renderizarMedalleroSimulado();
-    renderizarEstadisticasEquipos();
-    renderizarCuadroHonor();
-    renderizarComparativaCarreras();
-    renderizarPartidosDisciplina("Futsal Masculino", "futsal-content");
+    // Llama al formato por tarjetas/listas para las demás modalidades
     renderizarPartidosDisciplina("Fútbol de Campo", "futbol-content");
-    renderizarPartidosDisciplina("Volley Mixto", "voley-content");
     renderizarPartidosDisciplina("Pikivoley Masculino", "pikivoley-content");
   } catch (err) {
     console.error("Error al cargar datos:", err);
