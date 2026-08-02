@@ -21,3 +21,38 @@ button:hover, button.active {
   background-color: #3b82f6;
   border-color: #60a5fa;
 }
+.tabla-deportiva {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 15px;
+  background-color: #1f1f1f;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+}
+
+.tabla-deportiva th {
+  background-color: #2a2a2a;
+  color: #3b82f6;
+  padding: 12px;
+  text-align: left;
+  font-size: 14px;
+}
+
+.tabla-deportiva td {
+  padding: 12px;
+  border-bottom: 1px solid #2d2d2d;
+  font-size: 14px;
+}
+
+.tabla-deportiva tr:hover {
+  background-color: #282828;
+}
+
+.badge-total {
+  background-color: #3b82f6;
+  color: #ffffff;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-weight: bold;
+}
