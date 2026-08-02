@@ -8,12 +8,13 @@
 </head>
 <body>
 
-  <!-- Cabecera Principal -->
+  <!-- Cabecera Principal con Botón General -->
   <header class="header">
     <div class="header-info">
       <h1>Juegos InterFilo 2026</h1>
       <p>Facultad de Filosofía - Filial San Estanislao</p>
     </div>
+    <button class="btn-crear-partido" onclick="abrirModalCrearPartido()">➕ Agregar Partido</button>
   </header>
 
   <!-- Barra de Navegación por Pestañas -->
@@ -52,10 +53,9 @@
     </div>
 
     <div id="panel-futsal" class="tab-content" style="display:none">
-      <h2>⚽ Futsal</h2>
-      <div class="sub-tabs">
-        <button class="sub-link active" onclick="filtrarFutsalSexo('M')">Masculino</button>
-        <button class="sub-link" onclick="filtrarFutsalSexo('F')">Femenino</button>
+      <div class="header-seccion">
+        <h2>⚽ Futsal</h2>
+        <button class="btn-crear-partido" onclick="abrirModalCrearPartido('Futsal Masculino')">➕ Agregar Partido de Futsal</button>
       </div>
       <div id="futsal-content">Cargando partidos de futsal...</div>
     </div>
@@ -63,31 +63,34 @@
     <div id="panel-futbol" class="tab-content" style="display:none">
       <div class="header-seccion">
         <h2>⚽ Fútbol de Campo</h2>
-        <button class="btn-nuevo-partido" onclick="abrirModalNuevoPartido('Fútbol de Campo')">➕ Agregar Partido de Reingreso</button>
+        <button class="btn-crear-partido" onclick="abrirModalCrearPartido('Fútbol de Campo')">➕ Agregar Partido de Fútbol</button>
       </div>
       <div id="futbol-content">Cargando partidos de fútbol...</div>
     </div>
 
     <div id="panel-voley" class="tab-content" style="display:none">
-      <h2>🏐 Vóley Mixto</h2>
+      <div class="header-seccion">
+        <h2>🏐 Vóley Mixto</h2>
+        <button class="btn-crear-partido" onclick="abrirModalCrearPartido('Volley Mixto')">➕ Agregar Partido de Vóley</button>
+      </div>
       <div id="voley-content">Cargando partidos de vóley...</div>
     </div>
 
     <div id="panel-pikivoley" class="tab-content" style="display:none">
       <div class="header-seccion">
         <h2>🦶🏐 Pikivoley Masculino</h2>
-        <button class="btn-nuevo-partido" onclick="abrirModalNuevoPartido('Pikivoley Masculino')">➕ Agregar Partido de Reingreso</button>
+        <button class="btn-crear-partido" onclick="abrirModalCrearPartido('Pikivoley Masculino')">➕ Agregar Partido de Pikivoley</button>
       </div>
       <div id="pikivoley-content">Cargando partidos de pikivoley...</div>
     </div>
 
   </main>
 
-  <!-- Modal 1: Cargar Marcador e Incidencias (Tarjetas / Goles) -->
+  <!-- Modal 1: Cargar Marcador e Incidencias por Partido -->
   <div id="modal-admin" class="modal">
     <div class="modal-content">
       <span class="close" onclick="cerrarModalAdmin()">&times;</span>
-      <h3>Mesa de Control - Cargar Partido</h3>
+      <h3>Mesa de Control - Cargar Resultado</h3>
       <input type="password" id="admin-clave" placeholder="Ingresar Clave de Mesa (ej. 1234)">
       
       <h4 id="modal-partido-titulo" style="color:#60a5fa; margin:10px 0;"></h4>
@@ -104,10 +107,9 @@
         </div>
       </div>
 
-      <!-- Sección de Tarjetas e Incidencias -->
       <hr style="border-color:#333; margin:15px 0;">
       <h4 style="margin:5px 0; color:#aaa;">Cargar Tarjetas e Incidencias:</h4>
-      <input type="text" id="inc-jugador" placeholder="Nombre y Apellido del Jugador">
+      <input type="text" id="inc-jugador" placeholder="Nombre del Jugador">
       <select id="inc-equipo-select"></select>
       <select id="inc-tipo">
         <option value="Gol">⚽ Gol</option>
@@ -124,27 +126,46 @@
     </div>
   </div>
 
-  <!-- Modal 2: Agregar Nuevo Partido de Reingreso -->
-  <div id="modal-nuevo-partido" class="modal">
+  <!-- Modal 2: Agregar Nuevo Partido -->
+  <div id="modal-crear-partido" class="modal">
     <div class="modal-content">
-      <span class="close" onclick="cerrarModalNuevoPartido()">&times;</span>
-      <h3>➕ Crear Partido de Reingreso</h3>
-      <p style="font-size:12px; color:#aaa;">Solo habilitado para Fútbol de Campo y Pikivoley.</p>
+      <span class="close" onclick="cerrarModalCrearPartido()">&times;</span>
+      <h3>➕ Crear Nuevo Partido</h3>
+      <input type="password" id="crear-clave" placeholder="Ingresar Clave de Mesa (ej. 1234)">
       
       <label>Disciplina:</label>
-      <input type="text" id="nuevo-disciplina" readonly style="background:#222; color:#888;">
+      <select id="crear-disciplina">
+        <option value="Futsal Masculino">Futsal Masculino</option>
+        <option value="Futsal Femenino">Futsal Femenino</option>
+        <option value="Fútbol de Campo">Fútbol de Campo</option>
+        <option value="Volley Mixto">Volley Mixto</option>
+        <option value="Pikivoley Masculino">Pikivoley Masculino</option>
+      </select>
 
-      <label>Equipo A (Reingreso):</label>
-      <select id="nuevo-equipo-a"></select>
+      <label>Número / Orden de Partido:</label>
+      <input type="number" id="crear-orden" placeholder="Ej. 1, 2, 3..." min="1">
 
-      <label>Equipo B (Reingreso):</label>
-      <select id="nuevo-equipo-b"></select>
+      <label>Fase del Encuentro:</label>
+      <select id="crear-fase">
+        <option value="1ª Ronda Eliminatoria">1ª Ronda Eliminatoria</option>
+        <option value="Preliminar Interna">Preliminar Interna (Equipos A vs B)</option>
+        <option value="Ronda de Reingreso">Ronda de Reingreso / Repechaje</option>
+        <option value="Cuartos de Final">Cuartos de Final</option>
+        <option value="Semifinal">Semifinal</option>
+        <option value="Final">Final</option>
+      </select>
+
+      <label>Equipo A:</label>
+      <select id="crear-equipo-a"></select>
+
+      <label>Equipo B:</label>
+      <select id="crear-equipo-b"></select>
 
       <label>Fecha y Hora:</label>
-      <input type="text" id="nuevo-fecha-hora" placeholder="Ej. 20/07 18:00 HS">
+      <input type="text" id="crear-fecha-hora" placeholder="Ej. 20/07 15:30 HS">
 
-      <button class="btn-guardar" onclick="crearPartidoReingreso()">Crear Partido</button>
-      <p id="nuevo-msj"></p>
+      <button class="btn-guardar" onclick="enviarNuevoPartido()">Crear y Publicar Partido</button>
+      <p id="crear-msj"></p>
     </div>
   </div>
 
