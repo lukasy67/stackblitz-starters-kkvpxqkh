@@ -1,26 +1,125 @@
-<link rel="stylesheet" href="styles.css">
-<nav class="tab-bar">
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>InterFilo 2026 - Universidad Nacional de Asunción</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
 
-  <button class="tab-link active" onclick="openTab(event, 'panel-medallero')">🏆 Medallero</button>
+  <!-- Cabecera Principal -->
+  <header class="header">
+    <div class="header-info">
+      <h1>Juegos InterFilo 2026</h1>
+      <p>Facultad de Filosofía - Filial San Estanislao</p>
+    </div>
+    <button class="btn-admin" onclick="abrirModalAdmin()">🔑 Acceso Mesa de Control</button>
+  </header>
 
-  <button class="tab-link" onclick="openTab(event, 'panel-estadisticas')">📊 Estadísticas</button>
+  <!-- Barra de Navegación por Pestañas -->
+  <nav class="tab-bar">
+    <button class="tab-link active" onclick="openTab(event, 'panel-medallero')">🏆 Medallero</button>
+    <button class="tab-link" onclick="openTab(event, 'panel-estadisticas')">📊 Estadísticas Equipos</button>
+    <button class="tab-link" onclick="openTab(event, 'panel-cuadro-honor')">🎖️ Cuadro de Honor</button>
+    <button class="tab-link" onclick="openTab(event, 'panel-comparativa')">⚖️ Psicología vs Educación</button>
+    <button class="tab-link" onclick="openTab(event, 'panel-futsal')">⚽ Futsal</button>
+    <button class="tab-link" onclick="openTab(event, 'panel-futbol')">⚽ Fútbol de Campo</button>
+    <button class="tab-link" onclick="openTab(event, 'panel-voley')">🏐 Vóley Mixto</button>
+    <button class="tab-link" onclick="openTab(event, 'panel-pikivoley')">🦶🏐 Pikivoley</button>
+  </nav>
 
+  <!-- Paneles de Contenido -->
+  <main class="main-content">
+    
+    <!-- Panel 1: Medallero General -->
+    <div id="panel-medallero" class="tab-content" style="display:block">
+      <h2>🏆 Medallero General y Tabla de Campeones</h2>
+      <div id="medallero-content">Cargando medallero...</div>
+    </div>
 
-  <button class="tab-link" onclick="openTab(event, 'panel-cuadro-honor')">🎖️ Cuadro de Honor</button>
-  <button class="tab-link" onclick="openTab(event, 'panel-comparativa')">⚖️ Comparativa Carreras</button>
-  <button class="tab-link" onclick="openTab(event, 'panel-voley')">🏐 Vóley</button>
-</nav>
+    <!-- Panel 2: Estadísticas de Equipos -->
+    <div id="panel-estadisticas" class="tab-content" style="display:none">
+      <h2>📊 Rendimiento Colectivo de Cursos</h2>
+      <div id="estadisticas-content">Cargando estadísticas...</div>
+    </div>
 
-<div id="panel-medallero" class="tab-content" style="display:block"> ... Tabla de Campeones ... </div>
+    <!-- Panel 3: Cuadro de Honor -->
+    <div id="panel-cuadro-honor" class="tab-content" style="display:none">
+      <h2>🎖️ Cuadro de Honor y Récords del Torneo</h2>
+      <div id="cuadro-honor-content">Cargando récords...</div>
+    </div>
 
-<div id="panel-estadisticas" class="tab-content" style="display:none"> ... Rendimiento de Cursos ... </div>
-<div id="panel-futsal" class="tab-content" style="display:none">
-  <div class="sub-tabs">
-    <button onclick="filtrarSexo('M')">Masculino</button>
-    <button onclick="filtrarSexo('F')">Femenino</button>
+    <!-- Panel 4: Comparativa de Carreras -->
+    <div id="panel-comparativa" class="tab-content" style="display:none">
+      <h2>⚖️ Comparativa: Carrera de Psicología vs Ciencias de la Educación</h2>
+      <div id="comparativa-content">Cargando comparativa...</div>
+    </div>
+
+    <!-- Panel 5: Futsal -->
+    <div id="panel-futsal" class="tab-content" style="display:none">
+      <h2>⚽ Futsal</h2>
+      <div class="sub-tabs">
+        <button class="sub-link active" onclick="filtrarFutsalSexo('M')">Masculino</button>
+        <button class="sub-link" onclick="filtrarFutsalSexo('F')">Femenino</button>
+      </div>
+      <div id="futsal-content">Cargando partidos de futsal...</div>
+    </div>
+
+    <!-- Panel 6: Fútbol de Campo -->
+    <div id="panel-futbol" class="tab-content" style="display:none">
+      <h2>⚽ Fútbol de Campo</h2>
+      <div class="sub-tabs">
+        <button class="sub-link active" onclick="filtrarFutbolFase('Principal')">🏆 Cuadro Principal</button>
+        <button class="sub-link" onclick="filtrarFutbolFase('Repechaje')">🔄 Ronda de Reingreso</button>
+      </div>
+      <div id="futbol-content">Cargando partidos de fútbol...</div>
+    </div>
+
+    <!-- Panel 7: Vóley Mixto -->
+    <div id="panel-voley" class="tab-content" style="display:none">
+      <h2>🏐 Vóley Mixto</h2>
+      <div id="voley-content">Cargando partidos de vóley...</div>
+    </div>
+
+    <!-- Panel 8: Pikivoley -->
+    <div id="panel-pikivoley" class="tab-content" style="display:none">
+      <h2>🦶🏐 Pikivoley Masculino</h2>
+      <div class="sub-tabs">
+        <button class="sub-link active" onclick="filtrarPikivoleyFase('Principal')">🏆 Cuadro Principal</button>
+        <button class="sub-link" onclick="filtrarPikivoleyFase('Repechaje')">🔄 Ronda de Reingreso</button>
+      </div>
+      <div id="pikivoley-content">Cargando partidos de pikivoley...</div>
+    </div>
+
+  </main>
+
+  <!-- Modal emergente para la Mesa de Control -->
+  <div id="modal-admin" class="modal">
+    <div class="modal-content">
+      <span class="close" onclick="cerrarModalAdmin()">&times;</span>
+      <h3>Mesa de Control - Cargar Partido</h3>
+      <input type="password" id="admin-clave" placeholder="Ingresar Clave de Mesa (ej. 1234)">
+      
+      <label for="admin-partido-select">Seleccionar Partido:</label>
+      <select id="admin-partido-select"></select>
+
+      <div class="goles-input">
+        <div>
+          <label id="lbl-equipo-a">Equipo A</label>
+          <input type="number" id="goles-a" placeholder="Goles/Puntos A" min="0">
+        </div>
+        <div>
+          <label id="lbl-equipo-b">Equipo B</label>
+          <input type="number" id="goles-b" placeholder="Goles/Puntos B" min="0">
+        </div>
+      </div>
+
+      <button class="btn-guardar" onclick="enviarResultado()">Guardar y Publicar</button>
+      <p id="admin-msj"></p>
+    </div>
   </div>
-  <div id="futsal-data"></div>
-</div>
 
-<div id="panel-cuadro-honor" class="tab-content" style="display:none"> ... Récords y Menciones ... </div>
-<div id="panel-comparativa" class="tab-content" style="display:none"> ... Psicología vs Educación ... </div>
+  <script src="script.js"></script>
+</body>
+</html>
