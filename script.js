@@ -1,4 +1,4 @@
-const API_URL = "https://script.google.com/macros/s/AKfycbzqkLS7-VmjpksfIfSLouknRIt7IYR0Xhh37CmLXSs8ps4j1y9_yyGSF81pKXtmLJRx/exec";
+const API_URL = "https://script.google.com/macros/s/AKfycbz3ALGr9E_82eKVNAzipYV36ll6SNQdrPppwIUrQl035UY0wZrN9Y0QQ3tQitgxPho5/exec";
 
 let datosTorneo = { partidos: [], incidencias: [] };
 let incidenciasTemp = [];
@@ -23,26 +23,37 @@ async function cargarDatos() {
     const res = await fetch(API_URL);
     datosTorneo = await res.json();
 
-    // 1. Ordenar partidos por número correlativo
+    // Ordenar por número correlativo de partido
     datosTorneo.partidos.sort((a, b) => (parseInt(a.orden) || 0) - (parseInt(b.orden) || 0));
 
-    // 2. Dibujar Árbol Gráfico para Futsal y Vóley
+    // Renderizar Árboles Gráficos
     renderizarArbolVisual("Futsal Masculino", "futsal-content");
     renderizarArbolVisual("Volley Mixto", "voley-content");
 
-    // 3. Dibujar Tarjetas para Fútbol de Campo y Pikivoley
-    renderizarPartidosDisciplina("Fútbol de Campo", "futbol-content");
+    // Renderizar Listas por Tarjetas
+    renderizarPartidosDisciplina("Fútbol de Campo Masculino", "futbol-content");
     renderizarPartidosDisciplina("Pikivoley Masculino", "pikivoley-content");
 
-    // 4. Renderizar Tablas Generales
+    // Tablas de Posiciones
     renderizarMedalleroSimulado();
     renderizarEstadisticasEquipos();
     renderizarCuadroHonor();
     renderizarComparativaCarreras();
-
   } catch (err) {
-    console.error("Error al cargar datos desde Google Sheets:", err);
+    console.error("Error al conectar con la base de datos:", err);
   }
+}
+
+// Filtro explícito para Fútbol de Campo
+function filtrarFutbolSexo(sexo) {
+  const disc = sexo === 'M' ? "Fútbol de Campo Masculino" : "Fútbol de Campo Femenino";
+  renderizarPartidosDisciplina(disc, "futbol-content");
+}
+
+// Filtro explícito para Futsal
+function filtrarFutsalSexo(sexo) {
+  const disc = sexo === 'M' ? "Futsal Masculino" : "Futsal Femenino";
+  renderizarArbolVisual(disc, "futsal-content");
 }
 
 function renderizarNombreVisible(nombreCompleto) {
