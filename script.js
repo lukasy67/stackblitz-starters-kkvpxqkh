@@ -236,3 +236,99 @@ function renderizarComparativaCarreras() {
 }
 
 window.onload = cargarDatos;
+
+// Renderizado del Árbol Gráfico para Futsal y Vóley
+function renderizarArbolVisual(disciplina, contenedorId) {
+  const contenedor = document.getElementById(contenedorId);
+  const partidos = datosTorneo.partidos.filter(p => p.disciplina === disciplina);
+
+  if (partidos.length === 0) {
+    contenedor.innerHTML = `<p style="color:#aaa;">No hay partidos cargados para ${disciplina}.</p>`;
+    return;
+  }
+
+  // Mapa de partidos por ID para rápido acceso
+  const mapaPartidos = {};
+  partidos.forEach(p => mapaPartidos[p.id] = p);
+
+  // Obtener ganadores automáticos
+  function obtenerGanador(partidoId) {
+    const p = mapaPartidos[partidoId];
+    if (!p || p.estado !== "Finalizado") return "Por Definir";
+    return parseInt(p.golesA) > parseInt(p.golesB) ? p.equipoA : p.equipoB;
+  }
+
+  // Estructura de ejemplo para 8 equipos (Cuartos -> Semis -> Final)
+  const c1_ganador = obtenerGanador("FUT-C1");
+  const c2_ganador = obtenerGanador("FUT-C2");
+  const c3_ganador = obtenerGanador("FUT-C3");
+  const c4_ganador = obtenerGanador("FUT-C4");
+
+  const semi1_A = c1_ganador !== "Por Definir" ? c1_ganador : (mapaPartidos["FUT-S1"]?.equipoA || "Ganador C1");
+  const semi1_B = c2_ganador !== "Por Definir" ? c2_ganador : (mapaPartidos["FUT-S1"]?.equipoB || "Ganador C2");
+
+  const semi2_A = c3_ganador !== "Por Definir" ? c3_ganador : (mapaPartidos["FUT-S2"]?.equipoA || "Ganador C3");
+  const semi2_B = c4_ganador !== "Por Definir" ? c4_ganador : (mapaPartidos["FUT-S2"]?.equipoB || "Ganador C4");
+
+  const s1_ganador = obtenerGanador("FUT-S1");
+  const s2_ganador = obtenerGanador("FUT-S2");
+
+  const final_A = s1_ganador !== "Por Definir" ? s1_ganador : (mapaPartidos["FUT-FIN"]?.equipoA || "Finalista 1");
+  const final_B = s2_ganador !== "Por Definir" ? s2_ganador : (mapaPartidos["FUT-FIN"]?.equipoB || "Finalista 2");
+
+  const campeonFinal = obtenerGanador("FUT-FIN");
+
+  let html = `
+    <div class="bracket-container">
+      
+      <!-- Ronda 1: Cuartos de Final (Izquierda) -->
+      <div class="bracket-round">
+        <div class="bracket-match">
+          <div class="bracket-team"><span>${renderizarNombreVisible(mapaPartidos["FUT-C1"]?.equipoA || "Equipo 1")}</span><strong>${mapaPartidos["FUT-C1"]?.golesA ?? "-"}</strong></div>
+          <div class="bracket-team"><span>${renderizarNombreVisible(mapaPartidos["FUT-C1"]?.equipoB || "Equipo 2")}</span><strong>${mapaPartidos["FUT-C1"]?.golesB ?? "-"}</strong></div>
+        </div>
+        <div class="bracket-match">
+          <div class="bracket-team"><span>${renderizarNombreVisible(mapaPartidos["FUT-C2"]?.equipoA || "Equipo 3")}</span><strong>${mapaPartidos["FUT-C2"]?.golesA ?? "-"}</strong></div>
+          <div class="bracket-team"><span>${renderizarNombreVisible(mapaPartidos["FUT-C2"]?.equipoB || "Equipo 4")}</span><strong>${mapaPartidos["FUT-C2"]?.golesB ?? "-"}</strong></div>
+        </div>
+      </div>
+
+      <!-- Ronda 2: Semifinal (Izquierda) -->
+      <div class="bracket-round">
+        <div class="bracket-match">
+          <div class="bracket-team"><span>${renderizarNombreVisible(semi1_A)}</span><strong>${mapaPartidos["FUT-S1"]?.golesA ?? "-"}</strong></div>
+          <div class="bracket-team"><span>${renderizarNombreVisible(semi1_B)}</span><strong>${mapaPartidos["FUT-S1"]?.golesB ?? "-"}</strong></div>
+        </div>
+      </div>
+
+      <!-- Centro: CAMPEÓN DE LA MODALIDAD -->
+      <div class="bracket-champion">
+        <h4>🏆 CAMPEÓN</h4>
+        <span>${renderizarNombreVisible(campeonFinal)}</span>
+      </div>
+
+      <!-- Ronda 2: Semifinal (Derecha) -->
+      <div class="bracket-round">
+        <div class="bracket-match">
+          <div class="bracket-team"><span>${renderizarNombreVisible(semi2_A)}</span><strong>${mapaPartidos["FUT-S2"]?.golesA ?? "-"}</strong></div>
+          <div class="bracket-team"><span>${renderizarNombreVisible(semi2_B)}</span><strong>${mapaPartidos["FUT-S2"]?.golesB ?? "-"}</strong></div>
+        </div>
+      </div>
+
+      <!-- Ronda 1: Cuartos de Final (Derecha) -->
+      <div class="bracket-round">
+        <div class="bracket-match">
+          <div class="bracket-team"><span>${renderizarNombreVisible(mapaPartidos["FUT-C3"]?.equipoA || "Equipo 5")}</span><strong>${mapaPartidos["FUT-C3"]?.golesA ?? "-"}</strong></div>
+          <div class="bracket-team"><span>${renderizarNombreVisible(mapaPartidos["FUT-C3"]?.equipoB || "Equipo 6")}</span><strong>${mapaPartidos["FUT-C3"]?.golesB ?? "-"}</strong></div>
+        </div>
+        <div class="bracket-match">
+          <div class="bracket-team"><span>${renderizarNombreVisible(mapaPartidos["FUT-C4"]?.equipoA || "Equipo 7")}</span><strong>${mapaPartidos["FUT-C4"]?.golesA ?? "-"}</strong></div>
+          <div class="bracket-team"><span>${renderizarNombreVisible(mapaPartidos["FUT-C4"]?.equipoB || "Equipo 8")}</span><strong>${mapaPartidos["FUT-C4"]?.golesB ?? "-"}</strong></div>
+        </div>
+      </div>
+
+    </div>
+  `;
+
+  contenedor.innerHTML = html;
+}
