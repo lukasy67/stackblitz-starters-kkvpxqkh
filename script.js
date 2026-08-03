@@ -25,6 +25,47 @@ try {
   console.log("Error al suscribir a Realtime:", e);
 }
 
+function renderizarArbolVisual(disciplina, containerId) {
+  const container = document.getElementById(containerId);
+  if (!container) return;
+
+  const partidos = datosTorneo.partidos.filter(p => p.disciplina === disciplina);
+  const fases = ["Cuartos de Final", "Semifinales", "Final"];
+
+  let html = `<div class="bracket-tree-container">`;
+
+  fases.forEach(fase => {
+    const partidosFase = partidos.filter(p => p.fase === fase);
+    if (partidosFase.length > 0) {
+      html += `<div class="bracket-round">`;
+      html += `<div class="bracket-round-title">${fase}</div>`;
+
+      partidosFase.forEach(p => {
+        const winA = p.estado === 'Finalizado' && p.goles_a > p.goles_b ? 'winner' : '';
+        const winB = p.estado === 'Finalizado' && p.goles_b > p.goles_a ? 'winner' : '';
+
+        html += `
+          <div class="bracket-card" onclick="abrirModalAdmin('${p.id}')">
+            <div class="bracket-team-row ${winA}">
+              <span>${p.equipo_a || 'Por definir'}</span>
+              <span class="bracket-team-score">${p.goles_a ?? 0}</span>
+            </div>
+            <div class="bracket-team-row ${winB}">
+              <span>${p.equipo_b || 'Por definir'}</span>
+              <span class="bracket-team-score">${p.goles_b ?? 0}</span>
+            </div>
+          </div>
+        `;
+      });
+
+      html += `</div>`;
+    }
+  });
+
+  html += `</div>`;
+  container.innerHTML = html;
+}
+
 // Conmutación de Pestañas
 function openTab(evt, tabName) {
   if (evt) evt.preventDefault();
@@ -229,7 +270,18 @@ async function enviarNuevoPartido() {
   const fase = document.getElementById("crear-fase").value;
   const equipoA = document.getElementById("crear-equipo-a").value;
   const equipoB = document.getElementById("crear-equipo-b").value;
-  const fechaHora = document.getElementById("crear-fecha-hora").value;
+  const fechaHoraRaw = document.getElementById("crear-fecha-hora").value;
+
+// Formatea la fecha elegida a un formato amigable (ej: "10/08 15:30 HS")
+let fechaHoraFormateada = fechaHoraRaw;
+if (fechaHoraRaw) {
+  const fecha = new Date(fechaHoraRaw);
+  const dia = String(fecha.getDate()).padStart(2, '0');
+  const mes = String(fecha.getMonth() + 1).padStart(2, '0');
+  const hora = String(fecha.getHours()).padStart(2, '0');
+  const mins = String(fecha.getMinutes()).padStart(2, '0');
+  fechaHoraFormateada = `${dia}/${mes} ${hora}:${mins} HS`;
+}
 
   const idNuevo = "PAR-" + new Date().getTime();
 
