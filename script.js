@@ -1,19 +1,37 @@
-// Claves obtenidas de Supabase (Project Settings > API)
+// URL Corregida de Supabase
 const SUPABASE_URL = "https://zkklifirmzvlwapivbrc.supabase.co";
 const SUPABASE_KEY = "sb_publishable_Od54CMAGf_6wyGbeU-vvCw_FWzvrvbd";
 
 const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-// Escuchar cambios en Tiempo Real
+let datosTorneo = { partidos: [], incidencias: [] };
+let incidenciasTemp = [];
+
+const CURSOS_EQUIPOS = [
+  "Dements (4 Ciencias)", "PsychoKings (2 Psico)", "Titanium (1 Psico)", "Insanos (3 Psico)",
+  "Alpha (1 Ciencias)", "Vanguardia (2 Ciencias)", "Legión (3 Ciencias)", "Mastery (5 Psico)", "Avanzada (4 Psico)"
+];
+
+// Escuchar cambios en tiempo real
 supabase
   .channel('cambios-partidos')
-  .on('postgres_changes', { event: '*', schema: 'public', table: 'partidos' }, payload => {
-    console.log('¡Cambio registrado en tiempo real!', payload);
+  .on('postgres_changes', { event: '*', schema: 'public', table: 'partidos' }, () => {
     cargarDatos();
   })
   .subscribe();
 
-// Función para Cargar Partidos desde Supabase
+// Conmutación de Pestañas
+function openTab(evt, tabName) {
+  var i, tabcontent, tablinks;
+  tabcontent = document.getElementsByClassName("tab-content");
+  for (i = 0; i < tabcontent.length; i++) { tabcontent[i].style.display = "none"; }
+  tablinks = document.getElementsByClassName("tab-link");
+  for (i = 0; i < tablinks.length; i++) { tablinks[i].className = tablinks[i].className.replace(" active", ""); }
+  document.getElementById(tabName).style.display = "block";
+  evt.currentTarget.className += " active";
+}
+
+// Cargar Datos desde Supabase
 async function cargarDatos() {
   try {
     const { data: partidos, error } = await supabase
@@ -23,80 +41,159 @@ async function cargarDatos() {
 
     if (error) throw error;
 
-    datosTorneo.partidos = partidos;
+    // Mapear campos de Supabase a objetos JavaScript
+    datosTorneo.partidos = (partidos || []).map(p => ({
+      id: p.id,
+      disciplina: p.disciplina,
+      fase: p.fase,
+      equipoA: p.equipo_a,
+      equipoB: p.equipo_b,
+      golesA: p.goles_a !== null ? p.goles_a : "",
+      golesB: p.goles_b !== null ? p.goles_b : "",
+      estado: p.estado || 'Pendiente',
+      fechaHora: p.fecha_hora,
+      orden: p.orden || 1
+    }));
 
     // Renderizar Vistas
     renderizarArbolVisual("Futsal Masculino", "futsal-content");
-    renderizarArbolVisual("Volley Mixto", "voley-content");
     renderizarPartidosDisciplina("Fútbol de Campo Masculino", "futbol-content");
+    renderizarArbolVisual("Volley Mixto", "voley-content");
     renderizarPartidosDisciplina("Pikivoley Masculino", "pikivoley-content");
     renderizarMedalleroSimulado();
     renderizarEstadisticasEquipos();
+    renderizarCuadroHonor();
+    renderizarComparativaCarreras();
   } catch (err) {
     console.error("Error al cargar datos desde Supabase:", err);
   }
 }
 
-// Función para Crear Nuevo Partido en Supabase
-async function enviarNuevoPartido() {
-  const disciplina = document.getElementById("crear-disciplina").value;
-  const orden = document.getElementById("crear-orden").value;
-  const fase = document.getElementById("crear-fase").value;
-  const equipoA = document.getElementById("crear-equipo-a").value;
-  const equipoB = document.getElementById("crear-equipo-b").value;
-  const fechaHora = document.getElementById("crear-fecha-hora").value;
-
-  const idNuevo = "PAR-" + new Date().getTime();
-
-  document.getElementById("crear-msj").innerText = "Creando partido en Supabase...";
-
-  const { data, error } = await supabase
-    .from('partidos')
-    .insert([
-      {
-        id: idNuevo,
-        disciplina: disciplina,
-        fase: fase,
-        equipo_a: equipoA,
-        equipo_b: equipoB,
-        fecha_hora: fechaHora,
-        orden: parseInt(orden),
-        estado: 'Pendiente'
-      }
-    ]);
-
-  if (error) {
-    document.getElementById("crear-msj").innerText = "Error: " + error.message;
-  } else {
-    document.getElementById("crear-msj").innerText = "¡Partido creado con éxito!";
-    cerrarModalCrearPartido();
-    cargarDatos();
-  }
+function renderizarNombreVisible(nombreCompleto) {
+  if (!nombreCompleto) return "";
+  return nombreCompleto.split(" (")[0];
 }
 
-// Función para Actualizar Resultado en Supabase
+// Renderizado por Tarjetas
+function renderizarPartidosDisciplina(disciplina, contenedorId) {
+  const contenedor = document.getElementById(contenedorId);
+  const partidos = datosTorneo.partidos.filter(p => p.disciplina === disciplina);
+
+  if (partidos.length === 0) {
+    contenedor.innerHTML = `<p style="color:#aaa;">No hay partidos programados para ${disciplina}.</p>`;
+    return;
+  }
+
+  let html = `<div class="grid-partidos">`;
+  partidos.forEach(p => {
+    html += `
+      <div class="card-partido">
+        <div>
+          <div class="card-header-info">
+            <span class="badge-orden">Partido #${p.orden || 1}</span>
+            <span class="badge-fase">${p.fase}</span>
+          </div>
+          <div class="marcador-box">
+            <span>${renderizarNombreVisible(p.equipoA)}</span>
+            <strong>${p.golesA !== "" ? p.golesA : "-"} : ${p.golesB !== "" ? p.golesB : "-"}</strong>
+            <span>${renderizarNombreVisible(p.equipoB)}</span>
+          </div>
+          <small style="color:#aaa;">${p.fechaHora} | Estado: ${p.estado}</small>
+        </div>
+        <button class="btn-cargar-card" onclick="abrirModalParaPartido('${p.id}', '${p.equipoA}', '${p.equipoB}', '${p.disciplina}')">✏️ Cargar Resultado / Tarjetas</button>
+      </div>
+    `;
+  });
+  html += `</div>`;
+  contenedor.innerHTML = html;
+}
+
+// Renderizado de Árbol Gráfico
+function renderizarArbolVisual(disciplina, contenedorId) {
+  const contenedor = document.getElementById(contenedorId);
+  const partidos = datosTorneo.partidos.filter(p => p.disciplina === disciplina);
+
+  if (partidos.length === 0) {
+    contenedor.innerHTML = `<p style="color:#aaa;">No hay partidos cargados para ${disciplina}.</p>`;
+    return;
+  }
+
+  renderizarPartidosDisciplina(disciplina, contenedorId);
+}
+
+// Filtros por Cuerpos de Competencia
+function filtrarFutsalSexo(sexo) {
+  const disc = sexo === 'M' ? "Futsal Masculino" : "Futsal Femenino";
+  renderizarPartidosDisciplina(disc, "futsal-content");
+}
+
+function filtrarFutbolSexo(sexo) {
+  const disc = sexo === 'M' ? "Fútbol de Campo Masculino" : "Fútbol de Campo Femenino";
+  renderizarPartidosDisciplina(disc, "futbol-content");
+}
+
+// Modal Cargar Marcador
+function abrirModalParaPartido(idPartido, equipoA, equipoB, disciplina) {
+  document.getElementById("admin-id-partido").value = idPartido;
+  document.getElementById("modal-partido-titulo").innerText = `${disciplina}: ${renderizarNombreVisible(equipoA)} vs ${renderizarNombreVisible(equipoB)}`;
+  document.getElementById("lbl-equipo-a").innerText = renderizarNombreVisible(equipoA);
+  document.getElementById("lbl-equipo-b").innerText = renderizarNombreVisible(equipoB);
+
+  const selectEq = document.getElementById("inc-equipo-select");
+  selectEq.innerHTML = `
+    <option value="${equipoA}">${renderizarNombreVisible(equipoA)}</option>
+    <option value="${equipoB}">${renderizarNombreVisible(equipoB)}</option>
+  `;
+
+  incidenciasTemp = [];
+  document.getElementById("lista-incidencias-temp").innerHTML = "";
+  document.getElementById("admin-msj").innerText = "";
+  document.getElementById("modal-admin").style.display = "block";
+}
+
+function cerrarModalAdmin() {
+  document.getElementById("modal-admin").style.display = "none";
+}
+
+function agregarIncidenciaLista() {
+  const jugador = document.getElementById("inc-jugador").value;
+  const equipo = document.getElementById("inc-equipo-select").value;
+  const tipo = document.getElementById("inc-tipo").value;
+
+  if (!jugador) return;
+
+  incidenciasTemp.push({ jugador, equipo, tipo });
+  const ul = document.getElementById("lista-incidencias-temp");
+  ul.innerHTML += `<li>• ${jugador} (${renderizarNombreVisible(equipo)}): ${tipo}</li>`;
+  document.getElementById("inc-jugador").value = "";
+}
+
 async function enviarResultado() {
   const idPartido = document.getElementById("admin-id-partido").value;
   const golesA = document.getElementById("goles-a").value;
   const golesB = document.getElementById("goles-b").value;
 
-  document.getElementById("admin-msj").innerText = "Guardando resultado...";
+  document.getElementById("admin-msj").innerText = "Guardando en Supabase...";
 
   const { error } = await supabase
     .from('partidos')
-    .update({ goles_a: parseInt(golesA), goles_b: parseInt(golesB), estado: 'Finalizado' })
+    .update({ 
+      goles_a: parseInt(golesA), 
+      goles_b: parseInt(golesB), 
+      estado: 'Finalizado' 
+    })
     .eq('id', idPartido);
 
   if (error) {
     document.getElementById("admin-msj").innerText = "Error: " + error.message;
   } else {
     document.getElementById("admin-msj").innerText = "¡Resultado actualizado!";
-    cerrarModalAdmin();
+    setTimeout(cerrarModalAdmin, 1000);
     cargarDatos();
   }
 }
 
-// Modal Crear Nuevo Partido
+// Modal Crear Partido
 function abrirModalCrearPartido(disciplinaPrevia = "") {
   if (disciplinaPrevia) {
     document.getElementById("crear-disciplina").value = disciplinaPrevia;
@@ -121,7 +218,6 @@ function cerrarModalCrearPartido() {
 }
 
 async function enviarNuevoPartido() {
-  const clave = document.getElementById("crear-clave").value;
   const disciplina = document.getElementById("crear-disciplina").value;
   const orden = document.getElementById("crear-orden").value;
   const fase = document.getElementById("crear-fase").value;
@@ -129,46 +225,46 @@ async function enviarNuevoPartido() {
   const equipoB = document.getElementById("crear-equipo-b").value;
   const fechaHora = document.getElementById("crear-fecha-hora").value;
 
-  const payload = {
-    clave: clave,
-    accion: "crear_partido",
-    disciplina: disciplina,
-    orden: parseInt(orden),
-    fase: fase,
-    equipoA: equipoA,
-    equipoB: equipoB,
-    fechaHora: fechaHora
-  };
+  const idNuevo = "PAR-" + new Date().getTime();
 
-  document.getElementById("crear-msj").innerText = "Creando partido...";
+  document.getElementById("crear-msj").innerText = "Guardando en Supabase...";
 
-  try {
-    const res = await fetch(API_URL, { method: "POST", body: JSON.stringify(payload) });
-    const data = await res.json();
-    if (data.status === "success") {
-      document.getElementById("crear-msj").innerText = "¡Partido creado con éxito!";
-      cargarDatos();
-      setTimeout(cerrarModalCrearPartido, 1500);
-    } else {
-      document.getElementById("crear-msj").innerText = "Error: " + data.message;
-    }
-  } catch (err) {
-    document.getElementById("crear-msj").innerText = "Error de conexión";
+  const { error } = await supabase
+    .from('partidos')
+    .insert([
+      {
+        id: idNuevo,
+        disciplina: disciplina,
+        fase: fase,
+        equipo_a: equipoA,
+        equipo_b: equipoB,
+        fecha_hora: fechaHora,
+        orden: parseInt(orden),
+        estado: 'Pendiente'
+      }
+    ]);
+
+  if (error) {
+    document.getElementById("crear-msj").innerText = "Error: " + error.message;
+  } else {
+    document.getElementById("crear-msj").innerText = "¡Partido creado con éxito!";
+    setTimeout(cerrarModalCrearPartido, 1000);
+    cargarDatos();
   }
 }
 
+// Vistas Estáticas Auxiliares
 function renderizarMedalleroSimulado() {
   const contenedor = document.getElementById("medallero-content");
-  const cursos = [
-    { curso: "Psicología 1°", futM: 100, futF: 0, futb: 50, vol: 50, piki: 0, ajedrez: 0, clash: 100, total: 300 },
-    { curso: "Psicología 2°", futM: 50, futF: 100, futb: 0, vol: 100, piki: 100, ajedrez: 50, clash: 0, total: 400 }
-  ];
-  let html = `<table class="tabla-deportiva"><thead><tr><th>Curso / Equipo</th><th>Futsal M</th><th>Futsal F</th><th>Fútbol</th><th>Vóley</th><th>Pikivoley</th><th>E-Sports</th><th>Ajedrez</th><th>TOTAL PTS</th></tr></thead><tbody>`;
-  cursos.forEach(f => {
-    html += `<tr><td><strong>${f.curso}</strong></td><td>${f.futM}</td><td>${f.futF}</td><td>${f.futb}</td><td>${f.vol}</td><td>${f.piki}</td><td>${f.clash}</td><td>${f.ajedrez}</td><td><span class="badge-total">${f.total} Pts</span></td></tr>`;
-  });
-  html += `</tbody></table>`;
-  contenedor.innerHTML = html;
+  contenedor.innerHTML = `
+    <table class="tabla-deportiva">
+      <thead><tr><th>Curso / Equipo</th><th>Futsal M</th><th>Futsal F</th><th>Fútbol</th><th>Vóley</th><th>Pikivoley</th><th>E-Sports</th><th>Ajedrez</th><th>TOTAL PTS</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Psicología 1°</strong></td><td>100</td><td>0</td><td>50</td><td>50</td><td>0</td><td>100</td><td>0</td><td><span class="badge-total">300 Pts</span></td></tr>
+        <tr><td><strong>Psicología 2°</strong></td><td>50</td><td>100</td><td>0</td><td>100</td><td>100</td><td>0</td><td>50</td><td><span class="badge-total">400 Pts</span></td></tr>
+      </tbody>
+    </table>
+  `;
 }
 
 function renderizarEstadisticasEquipos() {
@@ -187,99 +283,3 @@ function renderizarComparativaCarreras() {
 }
 
 window.onload = cargarDatos;
-
-// Renderizado del Árbol Gráfico para Futsal y Vóley
-function renderizarArbolVisual(disciplina, contenedorId) {
-  const contenedor = document.getElementById(contenedorId);
-  const partidos = datosTorneo.partidos.filter(p => p.disciplina === disciplina);
-
-  if (partidos.length === 0) {
-    contenedor.innerHTML = `<p style="color:#aaa;">No hay partidos cargados para ${disciplina}.</p>`;
-    return;
-  }
-
-  // Mapa de partidos por ID para rápido acceso
-  const mapaPartidos = {};
-  partidos.forEach(p => mapaPartidos[p.id] = p);
-
-  // Obtener ganadores automáticos
-  function obtenerGanador(partidoId) {
-    const p = mapaPartidos[partidoId];
-    if (!p || p.estado !== "Finalizado") return "Por Definir";
-    return parseInt(p.golesA) > parseInt(p.golesB) ? p.equipoA : p.equipoB;
-  }
-
-  // Estructura de ejemplo para 8 equipos (Cuartos -> Semis -> Final)
-  const c1_ganador = obtenerGanador("FUT-C1");
-  const c2_ganador = obtenerGanador("FUT-C2");
-  const c3_ganador = obtenerGanador("FUT-C3");
-  const c4_ganador = obtenerGanador("FUT-C4");
-
-  const semi1_A = c1_ganador !== "Por Definir" ? c1_ganador : (mapaPartidos["FUT-S1"]?.equipoA || "Ganador C1");
-  const semi1_B = c2_ganador !== "Por Definir" ? c2_ganador : (mapaPartidos["FUT-S1"]?.equipoB || "Ganador C2");
-
-  const semi2_A = c3_ganador !== "Por Definir" ? c3_ganador : (mapaPartidos["FUT-S2"]?.equipoA || "Ganador C3");
-  const semi2_B = c4_ganador !== "Por Definir" ? c4_ganador : (mapaPartidos["FUT-S2"]?.equipoB || "Ganador C4");
-
-  const s1_ganador = obtenerGanador("FUT-S1");
-  const s2_ganador = obtenerGanador("FUT-S2");
-
-  const final_A = s1_ganador !== "Por Definir" ? s1_ganador : (mapaPartidos["FUT-FIN"]?.equipoA || "Finalista 1");
-  const final_B = s2_ganador !== "Por Definir" ? s2_ganador : (mapaPartidos["FUT-FIN"]?.equipoB || "Finalista 2");
-
-  const campeonFinal = obtenerGanador("FUT-FIN");
-
-  let html = `
-    <div class="bracket-container">
-      
-      <!-- Ronda 1: Cuartos de Final (Izquierda) -->
-      <div class="bracket-round">
-        <div class="bracket-match">
-          <div class="bracket-team"><span>${renderizarNombreVisible(mapaPartidos["FUT-C1"]?.equipoA || "Equipo 1")}</span><strong>${mapaPartidos["FUT-C1"]?.golesA ?? "-"}</strong></div>
-          <div class="bracket-team"><span>${renderizarNombreVisible(mapaPartidos["FUT-C1"]?.equipoB || "Equipo 2")}</span><strong>${mapaPartidos["FUT-C1"]?.golesB ?? "-"}</strong></div>
-        </div>
-        <div class="bracket-match">
-          <div class="bracket-team"><span>${renderizarNombreVisible(mapaPartidos["FUT-C2"]?.equipoA || "Equipo 3")}</span><strong>${mapaPartidos["FUT-C2"]?.golesA ?? "-"}</strong></div>
-          <div class="bracket-team"><span>${renderizarNombreVisible(mapaPartidos["FUT-C2"]?.equipoB || "Equipo 4")}</span><strong>${mapaPartidos["FUT-C2"]?.golesB ?? "-"}</strong></div>
-        </div>
-      </div>
-
-      <!-- Ronda 2: Semifinal (Izquierda) -->
-      <div class="bracket-round">
-        <div class="bracket-match">
-          <div class="bracket-team"><span>${renderizarNombreVisible(semi1_A)}</span><strong>${mapaPartidos["FUT-S1"]?.golesA ?? "-"}</strong></div>
-          <div class="bracket-team"><span>${renderizarNombreVisible(semi1_B)}</span><strong>${mapaPartidos["FUT-S1"]?.golesB ?? "-"}</strong></div>
-        </div>
-      </div>
-
-      <!-- Centro: CAMPEÓN DE LA MODALIDAD -->
-      <div class="bracket-champion">
-        <h4>🏆 CAMPEÓN</h4>
-        <span>${renderizarNombreVisible(campeonFinal)}</span>
-      </div>
-
-      <!-- Ronda 2: Semifinal (Derecha) -->
-      <div class="bracket-round">
-        <div class="bracket-match">
-          <div class="bracket-team"><span>${renderizarNombreVisible(semi2_A)}</span><strong>${mapaPartidos["FUT-S2"]?.golesA ?? "-"}</strong></div>
-          <div class="bracket-team"><span>${renderizarNombreVisible(semi2_B)}</span><strong>${mapaPartidos["FUT-S2"]?.golesB ?? "-"}</strong></div>
-        </div>
-      </div>
-
-      <!-- Ronda 1: Cuartos de Final (Derecha) -->
-      <div class="bracket-round">
-        <div class="bracket-match">
-          <div class="bracket-team"><span>${renderizarNombreVisible(mapaPartidos["FUT-C3"]?.equipoA || "Equipo 5")}</span><strong>${mapaPartidos["FUT-C3"]?.golesA ?? "-"}</strong></div>
-          <div class="bracket-team"><span>${renderizarNombreVisible(mapaPartidos["FUT-C3"]?.equipoB || "Equipo 6")}</span><strong>${mapaPartidos["FUT-C3"]?.golesB ?? "-"}</strong></div>
-        </div>
-        <div class="bracket-match">
-          <div class="bracket-team"><span>${renderizarNombreVisible(mapaPartidos["FUT-C4"]?.equipoA || "Equipo 7")}</span><strong>${mapaPartidos["FUT-C4"]?.golesA ?? "-"}</strong></div>
-          <div class="bracket-team"><span>${renderizarNombreVisible(mapaPartidos["FUT-C4"]?.equipoB || "Equipo 8")}</span><strong>${mapaPartidos["FUT-C4"]?.golesB ?? "-"}</strong></div>
-        </div>
-      </div>
-
-    </div>
-  `;
-
-  contenedor.innerHTML = html;
-}

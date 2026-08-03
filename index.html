@@ -5,11 +5,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>InterFilo 2026 - Universidad Nacional de Asunción</title>
   <link rel="stylesheet" href="styles.css">
+  <!-- SDK de Supabase -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
 
-  <!-- Cabecera Principal con Botón General -->
+  <!-- Cabecera Principal -->
   <header class="header">
     <div class="header-info">
       <h1>Juegos InterFilo 2026</h1>
@@ -58,13 +59,21 @@
         <h2>⚽ Futsal</h2>
         <button class="btn-crear-partido" onclick="abrirModalCrearPartido('Futsal Masculino')">➕ Agregar Partido de Futsal</button>
       </div>
+      <div class="sub-tabs">
+        <button class="sub-link active" onclick="filtrarFutsalSexo('M')">Masculino</button>
+        <button class="sub-link" onclick="filtrarFutsalSexo('F')">Femenino</button>
+      </div>
       <div id="futsal-content">Cargando partidos de futsal...</div>
     </div>
 
     <div id="panel-futbol" class="tab-content" style="display:none">
       <div class="header-seccion">
         <h2>⚽ Fútbol de Campo</h2>
-        <button class="btn-crear-partido" onclick="abrirModalCrearPartido('Fútbol de Campo')">➕ Agregar Partido de Fútbol</button>
+        <button class="btn-crear-partido" onclick="abrirModalCrearPartido('Fútbol de Campo Masculino')">➕ Agregar Partido de Fútbol</button>
+      </div>
+      <div class="sub-tabs">
+        <button class="sub-link active" onclick="filtrarFutbolSexo('M')">Masculino</button>
+        <button class="sub-link" onclick="filtrarFutbolSexo('F')">Femenino</button>
       </div>
       <div id="futbol-content">Cargando partidos de fútbol...</div>
     </div>
@@ -87,12 +96,11 @@
 
   </main>
 
-  <!-- Modal 1: Cargar Marcador e Incidencias por Partido -->
+  <!-- Modal 1: Cargar Marcador e Incidencias -->
   <div id="modal-admin" class="modal">
     <div class="modal-content">
       <span class="close" onclick="cerrarModalAdmin()">&times;</span>
       <h3>Mesa de Control - Cargar Resultado</h3>
-      <input type="password" id="admin-clave" placeholder="Ingresar Clave de Mesa (ej. 1234)">
       
       <h4 id="modal-partido-titulo" style="color:#60a5fa; margin:10px 0;"></h4>
       <input type="hidden" id="admin-id-partido">
@@ -132,7 +140,6 @@
     <div class="modal-content">
       <span class="close" onclick="cerrarModalCrearPartido()">&times;</span>
       <h3>➕ Crear Nuevo Partido</h3>
-      <input type="password" id="crear-clave" placeholder="Ingresar Clave de Mesa (ej. 1234)">
       
       <label>Disciplina:</label>
       <select id="crear-disciplina">

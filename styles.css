@@ -53,7 +53,7 @@ body {
   margin-bottom: 20px;
 }
 
-.tab-link {
+.tab-link, .sub-link {
   background-color: #1f1f1f;
   color: #cccccc;
   border: 1px solid #333333;
@@ -61,13 +61,20 @@ body {
   border-radius: 8px;
   cursor: pointer;
   font-size: 14px;
+  transition: all 0.2s ease;
 }
 
-.tab-link.active {
+.tab-link.active, .sub-link.active {
   background-color: #3b82f6;
   color: #ffffff;
   border-color: #60a5fa;
   font-weight: bold;
+}
+
+.sub-tabs {
+  margin-bottom: 15px;
+  display: flex;
+  gap: 10px;
 }
 
 .main-content {
@@ -234,7 +241,8 @@ body {
   font-weight: bold;
   margin-top: 10px;
 }
-/* Estructura del Árbol de Brackets */
+
+/* Árbol de Brackets Visuales */
 .bracket-container {
   display: flex;
   justify-content: space-around;
@@ -257,7 +265,6 @@ body {
   border: 1px solid #333;
   border-radius: 8px;
   padding: 10px;
-  position: relative;
 }
 
 .bracket-team {
@@ -272,16 +279,6 @@ body {
   border-bottom: none;
 }
 
-.bracket-team.winner {
-  color: #10b981;
-  font-weight: bold;
-}
-
-.bracket-team strong {
-  color: #60a5fa;
-}
-
-/* Caja Destacada del Campeón (Centro) */
 .bracket-champion {
   background-color: #1e3a8a;
   border: 2px solid #3b82f6;
@@ -294,11 +291,4 @@ body {
 .bracket-champion h4 {
   margin: 0 0 8px 0;
   color: #f59e0b;
-  font-size: 14px;
-}
-
-.bracket-champion span {
-  font-size: 16px;
-  font-weight: bold;
-  color: #ffffff;
 }
