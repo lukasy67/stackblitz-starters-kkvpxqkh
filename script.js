@@ -46,8 +46,8 @@ function normalizarTexto(txt) {
   return txt.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
 }
 
-// Alternar Modo Logística (1234) / Super Admin (alucas) / Espectador
-function activarModoLogistica() {
+// Alternar Modo Logística (contraseña configurable) / Super Admin (alucas) / Espectador
+async function activarModoLogistica() {
   if (esModoLogistica || esModoSuperAdmin) {
     esModoLogistica = false;
     esModoSuperAdmin = false;
@@ -58,20 +58,45 @@ function activarModoLogistica() {
   }
 
   const pass = prompt("Ingrese contraseña de acceso de la Organización:");
-  if (pass === "1234") {
-    esModoLogistica = true;
-    esModoSuperAdmin = false;
-    document.body.classList.add("modo-logistica");
-    alert("¡Modo Logística activado!");
-    cargarDatos();
-  } else if (pass === "alucas") {
+  if (pass === null) return;
+
+  // "alucas" es la contraseña de Super Admin: queda fija en el código,
+  // no se guarda en la base de datos ni se puede cambiar desde la interfaz.
+  if (pass === "alucas") {
     esModoLogistica = true;
     esModoSuperAdmin = true;
     document.body.classList.add("modo-logistica", "modo-superadmin");
     alert("¡Modo Super Admin (Lucas) activado!");
     cargarDatos();
-  } else if (pass !== null) {
+    return;
+  }
+
+  const claveLogisticaActual = await obtenerClaveLogistica();
+  if (pass === claveLogisticaActual) {
+    esModoLogistica = true;
+    esModoSuperAdmin = false;
+    document.body.classList.add("modo-logistica");
+    alert("¡Modo Logística activado!");
+    cargarDatos();
+  } else {
     alert("Contraseña incorrecta.");
+  }
+}
+
+// Trae la contraseña de Logística vigente desde Supabase (con "1234" como respaldo
+// por si la tabla config_accesos todavía no fue creada)
+async function obtenerClaveLogistica() {
+  try {
+    const { data, error } = await dbClient
+      .from('config_accesos')
+      .select('valor')
+      .eq('clave_id', 'logistica')
+      .single();
+
+    if (error || !data) return "1234";
+    return data.valor;
+  } catch (e) {
+    return "1234";
   }
 }
 
@@ -1379,14 +1404,19 @@ function renderizarQuinielaRanking() {
     if (campFutbol && p.pred_futbol === campFutbol) aciertos++;
     if (campVoley && p.pred_voley === campVoley) aciertos++;
     if (campPiki && p.pred_pikivoley === campPiki) aciertos++;
-    return { nombre: p.nombre, curso: p.curso, aciertos };
+
+    const fecha = p.created_at ? new Date(p.created_at).toLocaleString('es-PY', {
+      day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit'
+    }) : '-';
+
+    return { nombre: p.nombre, curso: p.curso, aciertos, fecha };
   }).sort((a, b) => b.aciertos - a.aciertos);
 
-  let html = `<div style="overflow-x:auto;"><table class="tabla-deportiva"><thead><tr><th>Pos.</th><th>Alumno</th><th>Curso</th><th>Aciertos</th></tr></thead><tbody>`;
+  let html = `<div style="overflow-x:auto;"><table class="tabla-deportiva"><thead><tr><th>Pos.</th><th>Alumno</th><th>Curso</th><th>Aciertos</th><th>Fecha de Predicción</th></tr></thead><tbody>`;
 
   ranking.forEach((r, index) => {
     const claseBadge = index === 0 ? 'badge-posicion-1' : index === 1 ? 'badge-posicion-2' : index === 2 ? 'badge-posicion-3' : '';
-    html += `<tr><td><b class="${claseBadge}">#${index + 1}</b></td><td>${escaparHTML(r.nombre)}</td><td>${renderizarNombreVisible(r.curso)}</td><td><b style="color:#d4af37;">${r.aciertos} / 4</b></td></tr>`;
+    html += `<tr><td><b class="${claseBadge}">#${index + 1}</b></td><td>${escaparHTML(r.nombre)}</td><td>${renderizarNombreVisible(r.curso)}</td><td><b style="color:#d4af37;">${r.aciertos} / 4</b></td><td style="color:#aaa; font-size:12px;">${r.fecha}</td></tr>`;
   });
 
   html += `</tbody></table></div>
@@ -1397,3 +1427,52 @@ function renderizarQuinielaRanking() {
 window.onload = function() {
   cargarDatos();
 };
+
+// ============================================================
+// CAMBIO DE CONTRASEÑA DE LOGÍSTICA (SOLO SUPER ADMIN)
+// ============================================================
+function abrirModalCambiarClave() {
+  if (!esModoSuperAdmin) {
+    alert("Esta función es exclusiva del Super Administrador.");
+    return;
+  }
+  document.getElementById("nueva-clave-logistica").value = "";
+  document.getElementById("clave-msj").innerText = "";
+  document.getElementById("modal-cambiar-clave").style.display = "block";
+}
+
+function cerrarModalCambiarClave() {
+  document.getElementById("modal-cambiar-clave").style.display = "none";
+}
+
+async function guardarNuevaClaveLogistica() {
+  if (!esModoSuperAdmin) {
+    alert("Esta función es exclusiva del Super Administrador.");
+    return;
+  }
+
+  const nueva = document.getElementById("nueva-clave-logistica").value.trim();
+  const msj = document.getElementById("clave-msj");
+
+  if (!nueva) {
+    msj.innerText = "Ingresá una nueva contraseña.";
+    return;
+  }
+  if (nueva === "alucas") {
+    msj.innerText = "Esa contraseña está reservada para el Super Admin.";
+    return;
+  }
+
+  msj.innerText = "Guardando...";
+
+  const { error } = await dbClient
+    .from('config_accesos')
+    .upsert({ clave_id: 'logistica', valor: nueva, updated_at: new Date().toISOString() }, { onConflict: 'clave_id' });
+
+  if (error) {
+    msj.innerText = "Error: " + error.message;
+  } else {
+    msj.innerText = "¡Contraseña de Logística actualizada!";
+    setTimeout(cerrarModalCambiarClave, 1200);
+  }
+}

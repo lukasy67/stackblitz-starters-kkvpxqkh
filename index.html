@@ -26,7 +26,7 @@
     <button class="tab-link" onclick="openTab(event, 'panel-voley')">🏐 Vóley Mixto</button>
     <button class="tab-link" onclick="openTab(event, 'panel-pikivoley')">🦶🏐 Pikivoley</button>
     <button class="tab-link" onclick="openTab(event, 'panel-medallero')">🏆 Tabla General</button>
-    <button class="tab-link" onclick="openTab(event, 'panel-quiniela')">🎯 Quiniela</button>
+    <button class="tab-link" onclick="openTab(event, 'panel-quiniela')">🎯 Predicciones</button>
     <button class="tab-link" onclick="openTab(event, 'panel-estadisticas')">📊 Rendimiento Cursos</button>
     <button class="tab-link" onclick="openTab(event, 'panel-cuadro-honor')">🎖️ Cuadro de Honor</button>
     <button class="tab-link" onclick="openTab(event, 'panel-comparativa')">⚖️ Psicología vs Educación</button>
@@ -102,7 +102,10 @@
     <div id="panel-medallero" class="tab-content" style="display:none">
       <div class="header-seccion">
         <h2>🏆 Tabla General de Deportes</h2>
-        <button class="btn-crear-partido solo-superadmin" onclick="abrirModalAjustarPuntos()">✏️ Ajustar Puntos Manuales</button>
+        <div style="display:flex; gap:8px;">
+          <button class="btn-crear-partido solo-superadmin" onclick="abrirModalCambiarClave()">🔑 Cambiar Clave de Logística</button>
+          <button class="btn-crear-partido solo-superadmin" onclick="abrirModalAjustarPuntos()">✏️ Ajustar Puntos Manuales</button>
+        </div>
       </div>
       <div id="medallero-content">Cargando puntuaciones oficiales...</div>
     </div>
@@ -154,7 +157,7 @@
     </div>
 
     <div id="panel-quiniela" class="tab-content" style="display:none">
-      <h2>🎯 Quiniela / Predicciones</h2>
+      <h2>🎯 Predicciones del Torneo</h2>
       <p style="color:#aaa; font-size:13px;">Pronosticá quién se corona campeón en Futsal Masculino, Fútbol de Campo Masculino, Vóley Mixto y Pikivoley. Los aciertos se calculan automáticamente cuando se juega la Final de cada disciplina.</p>
 
       <div class="quiniela-form-box">
@@ -341,6 +344,21 @@
 
       <h4 style="margin:15px 0 8px 0; color:#d4af37;">⚽ Incidencias y Tarjetas Registradas:</h4>
       <ul id="detalles-lista-incidencias" class="incidencias-list"></ul>
+    </div>
+  </div>
+
+  <!-- Modal 5: Cambiar Contraseña de Logística (Solo Super Admin) -->
+  <div id="modal-cambiar-clave" class="modal">
+    <div class="modal-content">
+      <span class="close" onclick="cerrarModalCambiarClave()">&times;</span>
+      <h3>🔑 Cambiar Contraseña de Logística</h3>
+      <p style="font-size:12px; color:#aaa;">Esta es la contraseña que usa el equipo de Logística para cargar resultados. Solo vos (Super Admin) podés cambiarla.</p>
+
+      <label>Nueva Contraseña de Logística:</label>
+      <input type="text" id="nueva-clave-logistica" placeholder="Ingresá la nueva contraseña">
+
+      <button type="button" class="btn-guardar" onclick="guardarNuevaClaveLogistica()">Guardar Nueva Contraseña</button>
+      <p id="clave-msj"></p>
     </div>
   </div>
 
