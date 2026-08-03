@@ -1,6 +1,7 @@
+/* PALETA DE COLORES: NEGRO / BLANCO / DORADO */
 body {
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  background-color: #121212;
+  background-color: #0d0d0d;
   color: #ffffff;
   margin: 0;
   padding: 15px;
@@ -10,23 +11,25 @@ body {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background-color: #1f1f1f;
-  padding: 15px 20px;
-  border-radius: 10px;
-  margin-bottom: 15px;
-  border-bottom: 2px solid #3b82f6;
+  background-color: #161616;
+  padding: 18px 24px;
+  border-radius: 12px;
+  margin-bottom: 20px;
+  border: 1px solid #d4af37;
+  box-shadow: 0 4px 15px rgba(212, 175, 55, 0.15);
 }
 
 .header h1 {
   margin: 0;
   font-size: 22px;
-  color: #60a5fa;
+  color: #d4af37;
+  letter-spacing: 1px;
 }
 
 .header p {
   margin: 5px 0 0 0;
   font-size: 13px;
-  color: #aaa;
+  color: #cccccc;
 }
 
 .header-seccion {
@@ -37,27 +40,33 @@ body {
 }
 
 .btn-crear-partido {
-  background-color: #10b981;
-  color: #ffffff;
+  background-color: #d4af37;
+  color: #000000;
   border: none;
-  padding: 10px 14px;
+  padding: 10px 16px;
   border-radius: 6px;
   cursor: pointer;
   font-weight: bold;
+  transition: all 0.2s ease;
+}
+
+.btn-crear-partido:hover {
+  background-color: #f59e0b;
+  box-shadow: 0 0 10px rgba(212, 175, 55, 0.4);
 }
 
 .tab-bar {
   display: flex;
   flex-wrap: wrap;
-  gap: 6px;
+  gap: 8px;
   margin-bottom: 20px;
 }
 
 .tab-link, .sub-link {
-  background-color: #1f1f1f;
-  color: #cccccc;
+  background-color: #161616;
+  color: #dddddd;
   border: 1px solid #333333;
-  padding: 10px 14px;
+  padding: 10px 16px;
   border-radius: 8px;
   cursor: pointer;
   font-size: 14px;
@@ -65,9 +74,9 @@ body {
 }
 
 .tab-link.active, .sub-link.active {
-  background-color: #3b82f6;
-  color: #ffffff;
-  border-color: #60a5fa;
+  background-color: #d4af37;
+  color: #000000;
+  border-color: #f59e0b;
   font-weight: bold;
 }
 
@@ -78,9 +87,41 @@ body {
 }
 
 .main-content {
-  background-color: #181818;
+  background-color: #141414;
   padding: 20px;
-  border-radius: 10px;
+  border-radius: 12px;
+  border: 1px solid #222222;
+}
+
+/* Tablas Deportivas y Estadísticas */
+.tabla-deportiva {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 15px;
+  background-color: #161616;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid #333;
+}
+
+.tabla-deportiva th {
+  background-color: #222222;
+  color: #d4af37;
+  padding: 12px;
+  text-align: left;
+  font-size: 13px;
+  border-bottom: 2px solid #d4af37;
+}
+
+.tabla-deportiva td {
+  padding: 12px;
+  border-bottom: 1px solid #262626;
+  font-size: 13px;
+  color: #eeeeee;
+}
+
+.tabla-deportiva tr:hover {
+  background-color: #1f1f1f;
 }
 
 /* Modales */
@@ -96,13 +137,13 @@ body {
 }
 
 .modal-content {
-  background-color: #1f1f1f;
-  margin: 4% auto;
+  background-color: #161616;
+  margin: 3% auto;
   padding: 20px;
   border-radius: 10px;
   width: 90%;
   max-width: 450px;
-  border: 1px solid #3b82f6;
+  border: 1px solid #d4af37;
 }
 
 .close {
@@ -116,7 +157,7 @@ body {
   width: 100%;
   padding: 8px;
   margin: 6px 0;
-  background-color: #121212;
+  background-color: #0d0d0d;
   border: 1px solid #444;
   color: #fff;
   border-radius: 6px;
@@ -128,16 +169,53 @@ body {
   gap: 10px;
 }
 
+.btn-add-incidencia {
+  background-color: #2a2a2a;
+  color: #d4af37;
+  border: 1px solid #d4af37;
+  padding: 8px;
+  width: 100%;
+  border-radius: 6px;
+  cursor: pointer;
+  margin-top: 5px;
+  font-weight: bold;
+}
+
+.btn-add-incidencia:hover {
+  background-color: #333333;
+}
+
+.incidencias-list {
+  list-style: none;
+  padding: 0;
+  margin: 12px 0;
+  font-size: 12px;
+  max-height: 120px;
+  overflow-y: auto;
+}
+
+.incidencias-list li {
+  background-color: #0d0d0d;
+  padding: 6px 8px;
+  border-radius: 4px;
+  margin-bottom: 4px;
+  border: 1px solid #282828;
+}
+
 .btn-guardar {
   width: 100%;
-  background-color: #10b981;
-  color: #fff;
+  background-color: #d4af37;
+  color: #000;
   border: none;
   padding: 12px;
   border-radius: 6px;
   cursor: pointer;
   font-weight: bold;
   margin-top: 10px;
+}
+
+.btn-guardar:hover {
+  background-color: #f59e0b;
 }
 
 /* Árbol de Brackets Grafico */
@@ -148,9 +226,9 @@ body {
   gap: 40px;
   overflow-x: auto;
   padding: 30px 20px;
-  background-color: #121212;
+  background-color: #0d0d0d;
   border-radius: 12px;
-  border: 1px solid #222;
+  border: 1px solid #262626;
 }
 
 .bracket-col {
@@ -163,7 +241,7 @@ body {
 
 .bracket-title {
   text-align: center;
-  color: #3b82f6;
+  color: #d4af37;
   font-weight: bold;
   font-size: 13px;
   text-transform: uppercase;
@@ -184,14 +262,14 @@ body {
   top: 25%;
   bottom: 25%;
   width: 20px;
-  border: 2px solid #3b82f6;
+  border: 2px solid #d4af37;
   border-left: none;
   border-radius: 0 6px 6px 0;
 }
 
 .bracket-node {
-  background-color: #1a1a1a;
-  border: 1px solid #3b82f6;
+  background-color: #161616;
+  border: 1px solid #d4af37;
   border-radius: 8px;
   padding: 10px;
   position: relative;
@@ -201,7 +279,7 @@ body {
 
 .bracket-node:hover {
   transform: translateY(-2px);
-  box-shadow: 0 0 10px rgba(59, 130, 246, 0.4);
+  box-shadow: 0 0 10px rgba(212, 175, 55, 0.3);
 }
 
 .bracket-node .team {
@@ -210,7 +288,7 @@ body {
   align-items: center;
   padding: 4px 0;
   font-size: 13px;
-  color: #e5e7eb;
+  color: #ffffff;
 }
 
 .bracket-node .team:first-child {
@@ -218,13 +296,13 @@ body {
 }
 
 .bracket-node .team.winner {
-  color: #10b981;
+  color: #f59e0b;
   font-weight: bold;
 }
 
 .bracket-node .team b {
   background-color: #262626;
-  color: #60a5fa;
+  color: #d4af37;
   padding: 2px 8px;
   border-radius: 4px;
   font-size: 12px;
@@ -237,21 +315,50 @@ body {
   top: 50%;
   width: 20px;
   height: 2px;
-  background-color: #3b82f6;
+  background-color: #d4af37;
 }
 
 .champion-box {
-  background: linear-gradient(135deg, #1f2937, #111827);
-  border: 2px solid #f59e0b;
+  background: linear-gradient(135deg, #161616, #222222);
+  border: 2px solid #d4af37;
   border-radius: 10px;
   padding: 18px;
   text-align: center;
-  color: #fbbf24;
+  color: #d4af37;
   font-weight: bold;
+  font-size: 15px;
+  box-shadow: 0 0 15px rgba(212, 175, 55, 0.2);
+}
+
+/* Tarjetas Informativas Cuadro de Honor */
+.grid-honor {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 15px;
+  margin-top: 15px;
+}
+
+.card-honor {
+  background-color: #161616;
+  border: 1px solid #d4af37;
+  border-radius: 8px;
+  padding: 15px;
+  text-align: center;
+}
+
+.card-honor h3 {
+  color: #d4af37;
+  margin-top: 0;
   font-size: 15px;
 }
 
-/* Ocultar elementos de Logística por defecto */
+.card-honor p {
+  font-size: 18px;
+  font-weight: bold;
+  margin: 5px 0 0 0;
+}
+
+/* Modo Logística */
 .solo-logistica {
   display: none !important;
 }
@@ -260,16 +367,15 @@ body.modo-logistica .solo-logistica {
   display: inline-block !important;
 }
 
-/* Pie de Página y Botón Búho */
 .footer {
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-top: 30px;
   padding: 15px 20px;
-  background-color: #1f1f1f;
+  background-color: #161616;
   border-radius: 10px;
-  border-top: 1px solid #333;
+  border: 1px solid #333333;
 }
 
 .footer-creditos {
@@ -278,7 +384,7 @@ body.modo-logistica .solo-logistica {
 }
 
 .footer-creditos a {
-  color: #60a5fa;
+  color: #d4af37;
   text-decoration: none;
   font-weight: bold;
 }
@@ -303,5 +409,5 @@ body.modo-logistica .solo-logistica {
 
 body.modo-logistica .btn-buho {
   opacity: 1;
-  filter: drop-shadow(0 0 8px #10b981);
+  filter: drop-shadow(0 0 8px #d4af37);
 }

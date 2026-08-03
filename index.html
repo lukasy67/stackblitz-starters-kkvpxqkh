@@ -13,7 +13,7 @@
   <!-- Cabecera Principal -->
   <header class="header">
     <div class="header-info">
-      <h1>Juegos InterFilo 2026</h1>
+      <h1>JUEGOS INTERFILO 2026</h1>
       <p>Facultad de Filosofía - Filial San Estanislao</p>
     </div>
     <button class="btn-crear-partido solo-logistica" onclick="abrirModalCrearPartido()">➕ Agregar Partido</button>
@@ -35,7 +35,7 @@
   <main class="main-content">
     
     <div id="panel-medallero" class="tab-content" style="display:block">
-      <h2>🏆 Medallero General y Tabla de Campeones</h2>
+      <h2>🏆 Medallero General y Tabla de Puntuación</h2>
       <div id="medallero-content">Cargando medallero...</div>
     </div>
 
@@ -45,12 +45,12 @@
     </div>
 
     <div id="panel-cuadro-honor" class="tab-content" style="display:none">
-      <h2>🏅 Cuadro de Honor y Récords del Torneo</h2>
+      <h2>🏅 Cuadro de Honor y Destacados</h2>
       <div id="cuadro-honor-content">Cargando récords...</div>
     </div>
 
     <div id="panel-comparativa" class="tab-content" style="display:none">
-      <h2>⚖️ Comparativa: Carrera de Psicología vs Ciencias de la Educación</h2>
+      <h2>⚖️ Comparativa: Psicología vs Ciencias de la Educación</h2>
       <div id="comparativa-content">Cargando comparativa...</div>
     </div>
 
@@ -109,21 +109,42 @@
     <div class="modal-content">
       <span class="close" onclick="cerrarModalAdmin()">&times;</span>
       <h3>Mesa de Control - Cargar Resultado</h3>
-      <h4 id="modal-partido-titulo" style="color:#60a5fa; margin:10px 0;"></h4>
+      <h4 id="modal-partido-titulo" style="color:#d4af37; margin:10px 0;"></h4>
       <input type="hidden" id="admin-id-partido">
 
       <div class="goles-input">
         <div>
           <label id="lbl-equipo-a">Equipo A</label>
-          <input type="number" id="goles-a" placeholder="Goles A" min="0">
+          <input type="number" id="goles-a" placeholder="0" min="0">
         </div>
         <div>
           <label id="lbl-equipo-b">Equipo B</label>
-          <input type="number" id="goles-b" placeholder="Goles B" min="0">
+          <input type="number" id="goles-b" placeholder="0" min="0">
         </div>
       </div>
 
-      <button class="btn-guardar" onclick="enviarResultado()">Guardar Resultado</button>
+      <hr style="border-color:#333; margin:15px 0;">
+      <h4 style="color:#d4af37; margin-bottom:5px;">Registrar Incidencia (Goles / Tarjetas)</h4>
+      
+      <label>Equipo del Jugador:</label>
+      <select id="incidencia-equipo"></select>
+
+      <label>Nombre del Jugador:</label>
+      <input type="text" id="incidencia-jugador" placeholder="Ej: Carlos Gómez">
+
+      <label>Tipo de Evento:</label>
+      <select id="incidencia-tipo">
+        <option value="Gol">⚽ Gol</option>
+        <option value="Tarjeta Amarilla">🟨 Tarjeta Amarilla</option>
+        <option value="Tarjeta Roja">🟥 Tarjeta Roja</option>
+        <option value="Tarjeta Azul">🟦 Tarjeta Azul</option>
+      </select>
+
+      <button type="button" class="btn-add-incidencia" onclick="agregarIncidencia()">➕ Añadir Incidencia</button>
+
+      <ul id="lista-incidencias" class="incidencias-list"></ul>
+
+      <button class="btn-guardar" onclick="enviarResultado()">Guardar Resultado y Clasificar Ganador</button>
     </div>
   </div>
 
@@ -162,7 +183,7 @@
       <label>Fecha y Hora:</label>
       <input type="datetime-local" id="crear-fecha-hora">
 
-      <button class="btn-guardar" onclick="enviarNuevoPartido()" style="background-color:#10b981; margin-top:15px;">Crear y Publicar Partido</button>
+      <button class="btn-guardar" onclick="enviarNuevoPartido()" style="margin-top:15px;">Crear y Publicar Partido</button>
       <div id="crear-msj" style="color:#f87171; margin-top:10px; font-size:12px;"></div>
     </div>
   </div>
