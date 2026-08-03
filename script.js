@@ -1,17 +1,29 @@
+// ============================================================
+// CONFIGURACIÓN E INICIALIZACIÓN DE SUPABASE
+// ============================================================
 let esModoLogistica = false;
 let esModoSuperAdmin = false;
 
-// Claves obtenidas de Supabase
 const SUPABASE_URL = "https://zkklifirmzvlwapivbrc.supabase.co";
 const SUPABASE_KEY = "sb_publishable_Od54CMAGf_6wyGbeU-vvCw_FWzvrvbd";
 
+// Inicializar cliente Supabase con el identificador dbClient
 const dbClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 let datosTorneo = { partidos: [], incidencias: [] };
+let incidenciasTemp = [];
 
+// Lista Oficial de los 9 Cursos de la Facultad de Filosofía (UNA - San Estanislao)
 const CURSOS_EQUIPOS = [
-  "Imperial Lions (1 Ciencias)", "Zero One (2 Ciencias)", "Celans (3 Ciencias)", "Dements (4 Ciencias)",
-  "Phoenix Legacy (1 Psico)", "Phisius (2 Psico)", "Danaus (3 Psico)", "Hudex (4 Psico)", "Águilas Doradas (5 Psico)"
+  "Imperial Lions (1 Ciencias)", 
+  "Zero One (2 Ciencias)", 
+  "Celans (3 Ciencias)", 
+  "Dements (4 Ciencias)",
+  "Phoenix Legacy (1 Psico)", 
+  "Phisius (2 Psico)", 
+  "Danaus (3 Psico)", 
+  "Hudex (4 Psico)", 
+  "Águilas Doradas (5 Psico)"
 ];
 
 function normalizarTexto(txt) {
@@ -19,33 +31,36 @@ function normalizarTexto(txt) {
   return txt.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
 }
 
-// Alternar Modo Logística (1234) / Super Admin (alucas)
+// Alternar Modo Logística (1234) / Super Admin (alucas) / Espectador
 function activarModoLogistica() {
   if (esModoLogistica || esModoSuperAdmin) {
     esModoLogistica = false;
     esModoSuperAdmin = false;
     document.body.classList.remove("modo-logistica", "modo-superadmin");
     alert("Modo Espectador activado.");
+    cargarDatos();
     return;
   }
 
-  const pass = prompt("Ingrese contraseña de acceso:");
+  const pass = prompt("Ingrese contraseña de acceso de la Organización:");
   if (pass === "1234") {
     esModoLogistica = true;
     esModoSuperAdmin = false;
     document.body.classList.add("modo-logistica");
     alert("¡Modo Logística activado!");
+    cargarDatos();
   } else if (pass === "alucas") {
     esModoLogistica = true;
     esModoSuperAdmin = true;
     document.body.classList.add("modo-logistica", "modo-superadmin");
     alert("¡Modo Super Admin (Lucas) activado!");
+    cargarDatos();
   } else if (pass !== null) {
     alert("Contraseña incorrecta.");
   }
 }
 
-// Suscripción Realtime
+// Suscripción en Tiempo Real (Realtime WebSockets)
 try {
   dbClient
     .channel('cambios-partidos')
@@ -57,6 +72,9 @@ try {
   console.log("Error al suscribir a Realtime:", e);
 }
 
+// ============================================================
+// CARGA Y PROCESAMIENTO DE DATOS
+// ============================================================
 async function cargarDatos() {
   try {
     const { data: partidos } = await dbClient
@@ -83,17 +101,22 @@ async function cargarDatos() {
 
     datosTorneo.incidencias = incidencias || [];
 
+    // Renderizar Portada Dinámica y Pestañas
+    renderizarPortadaEnVivo();
     renderizarArbolGrafico("Futsal Masculino", "futsal-content");
-    renderizarArbolGrafico("Fútbol de Campo Masculino", "futbol-content");
+    renderizarPartidosDisciplina("Fútbol de Campo Masculino", "futbol-content");
     renderizarArbolGrafico("Volley Mixto", "voley-content");
-    renderizarArbolGrafico("Pikivoley Masculino", "pikivoley-content");
+    renderizarPartidosDisciplina("Pikivoley Masculino", "pikivoley-content");
 
     renderizarMedalleroReal();
     renderizarEstadisticasEquipos();
+    renderizarGoleadoresTop();
     renderizarCuadroHonor();
     renderizarComparativaCarreras();
+    renderizarFixtureGeneral();
+    renderizarSuspendidos();
   } catch (err) {
-    console.error("Error al cargar datos:", err);
+    console.error("Error al cargar datos desde Supabase:", err);
   }
 }
 
@@ -102,6 +125,76 @@ function renderizarNombreVisible(nombreCompleto) {
   return nombreCompleto.split(" (")[0];
 }
 
+// ============================================================
+// PORTADA DINÁMICA: "EN VIVO / PRÓXIMO ENCUENTRO"
+// ============================================================
+function renderizarPortadaEnVivo() {
+  const container = document.getElementById("envivo-content");
+  if (!container) return;
+
+  const partidoEnVivo = datosTorneo.partidos.find(p => p.estado === 'En Vivo');
+
+  if (partidoEnVivo) {
+    const panelTarget = mapearDisciplinaAPanel(partidoEnVivo.disciplina);
+    container.innerHTML = `
+      <div class="live-match-card" onclick="manejarClicPartido('${partidoEnVivo.id}', '${partidoEnVivo.disciplina}', '${partidoEnVivo.fase}', '${partidoEnVivo.equipoA}', '${partidoEnVivo.equipoB}')" style="cursor:pointer;">
+        <span class="badge-live">🔴 EN VIVO AHORA</span>
+        <h3 style="color:#d4af37; margin:12px 0 8px 0; font-size:18px;">${partidoEnVivo.disciplina} — ${partidoEnVivo.fase}</h3>
+        <div class="marcador-box">
+          <span>${renderizarNombreVisible(partidoEnVivo.equipoA)}</span>
+          <strong style="font-size:26px;">${partidoEnVivo.golesA !== "" ? partidoEnVivo.golesA : "0"} : ${partidoEnVivo.golesB !== "" ? partidoEnVivo.golesB : "0"}</strong>
+          <span>${renderizarNombreVisible(partidoEnVivo.equipoB)}</span>
+        </div>
+        <button class="btn-ir-bracket" onclick="event.stopPropagation(); openTab(event, '${panelTarget}')">🏆 Ver Posiciones / Bracket de ${partidoEnVivo.disciplina}</button>
+      </div>
+    `;
+  } else {
+    const proximo = datosTorneo.partidos.find(p => p.estado === 'Pendiente') || datosTorneo.partidos[0];
+    if (proximo) {
+      const panelTarget = mapearDisciplinaAPanel(proximo.disciplina);
+      container.innerHTML = `
+        <div class="card-partido" onclick="manejarClicPartido('${proximo.id}', '${proximo.disciplina}', '${proximo.fase}', '${proximo.equipoA}', '${proximo.equipoB}')" style="border-color:#3b82f6; cursor:pointer;">
+          <div class="card-header-info">
+            <span class="badge-orden" style="background:#1e40af;">PRÓXIMO ENCUENTRO</span>
+            <span class="badge-fase">${proximo.fase}</span>
+          </div>
+          <h3 style="color:#d4af37; margin:10px 0;">${proximo.disciplina}</h3>
+          <div class="marcador-box">
+            <span>${renderizarNombreVisible(proximo.equipoA)}</span>
+            <strong style="color:#aaa; font-size:18px;">VS</strong>
+            <span>${renderizarNombreVisible(proximo.equipoB)}</span>
+          </div>
+          <small style="color:#aaa;">📅 ${proximo.fechaHora} | Orden #${proximo.orden}</small>
+          <button class="btn-ir-bracket" onclick="event.stopPropagation(); openTab(event, '${panelTarget}')">🏆 Ir a Pestaña de ${proximo.disciplina}</button>
+        </div>
+      `;
+    } else {
+      container.innerHTML = `<p style="color:#aaa;">No hay encuentros agendados por el momento.</p>`;
+    }
+  }
+}
+
+function mapearDisciplinaAPanel(disc) {
+  const d = normalizarTexto(disc);
+  if (d.includes("futsal")) return "panel-futsal";
+  if (d.includes("futbol")) return "panel-futbol";
+  if (d.includes("volley") || d.includes("voley")) return "panel-voley";
+  if (d.includes("piki")) return "panel-pikivoley";
+  return "panel-medallero";
+}
+
+// Clic Inteligente: Muestras detalles a Espectadores / Carga a Organización
+function manejarClicPartido(idPartido, disciplina, fase, eqA, eqB) {
+  if (esModoLogistica) {
+    abrirModalAdmin(idPartido, disciplina, fase, eqA, eqB);
+  } else {
+    abrirModalDetalles(idPartido, disciplina, fase, eqA, eqB);
+  }
+}
+
+// ============================================================
+// VISTA EN ÁRBOL GRÁFICO (BRACKETS PARA FUTSAL Y VÓLEY)
+// ============================================================
 function obtenerGanador(p) {
   if (!p || p.estado !== 'Finalizado') return null;
   const gA = Number(p.golesA);
@@ -125,6 +218,7 @@ function renderizarArbolGrafico(disciplina, containerId) {
   const semisBD = partidos.filter(p => normalizarTexto(p.fase).includes("semi")).sort((a,b) => a.orden - b.orden);
   const finalBD = partidos.find(p => normalizarTexto(p.fase).includes("final") && !normalizarTexto(p.fase).includes("semi"));
 
+  // Avance Automático de Ganadores
   const ganR1_0 = obtenerGanador(r1[0]);
   const ganR1_1 = obtenerGanador(r1);
   const ganR1_2 = obtenerGanador(r1);
@@ -205,7 +299,7 @@ function crearNodoHTML(p) {
   const winB = p.estado === 'Finalizado' && Number(p.golesB) > Number(p.golesA) ? 'winner' : '';
 
   return `
-    <div class="bracket-node" onclick="abrirModalAdmin('${p.id}', '${p.disciplina}', '${p.fase}', '${p.equipoA}', '${p.equipoB}')">
+    <div class="bracket-node" onclick="manejarClicPartido('${p.id}', '${p.disciplina}', '${p.fase}', '${p.equipoA}', '${p.equipoB}')">
       <div class="team ${winA}">
         <span>${renderizarNombreVisible(p.equipoA)}</span>
         <b>${p.estado === 'Finalizado' || p.estado === 'En Vivo' ? p.golesA : '-'}</b>
@@ -218,11 +312,14 @@ function crearNodoHTML(p) {
   `;
 }
 
+// ============================================================
+// VISTA EN TARJETAS (FÚTBOL DE CAMPO Y PIKIVOLEY)
+// ============================================================
 function renderizarPartidosDisciplina(disciplina, contenedorId) {
   const contenedor = document.getElementById(contenedorId);
   if (!contenedor) return;
 
-  const partidos = datosTorneo.partidos.filter(p => p.disciplina === disciplina);
+  const partidos = datosTorneo.partidos.filter(p => normalizarTexto(p.disciplina) === normalizarTexto(disciplina));
 
   if (partidos.length === 0) {
     contenedor.innerHTML = `<p style="color:#aaa;">No hay partidos programados para ${disciplina}.</p>`;
@@ -232,7 +329,7 @@ function renderizarPartidosDisciplina(disciplina, contenedorId) {
   let html = `<div class="grid-partidos">`;
   partidos.forEach(p => {
     html += `
-      <div class="card-partido">
+      <div class="card-partido" onclick="manejarClicPartido('${p.id}', '${p.disciplina}', '${p.fase}', '${p.equipoA}', '${p.equipoB}')" style="cursor:pointer;">
         <div>
           <div class="card-header-info">
             <span class="badge-orden">Partido #${p.orden || 1}</span>
@@ -243,9 +340,9 @@ function renderizarPartidosDisciplina(disciplina, contenedorId) {
             <strong>${p.golesA !== "" ? p.golesA : "-"} : ${p.golesB !== "" ? p.golesB : "-"}</strong>
             <span>${renderizarNombreVisible(p.equipoB)}</span>
           </div>
-          <small style="color:#aaa;">${p.fechaHora} | Estado: ${p.estado}</small>
+          <small style="color:#aaa;">📅 ${p.fechaHora} | Estado: <b>${p.estado}</b></small>
         </div>
-        <button class="btn-cargar-card solo-logistica" onclick="abrirModalAdmin('${p.id}', '${p.disciplina}', '${p.fase}', '${p.equipoA}', '${p.equipoB}')">✏️ Cargar Resultado / Tarjetas</button>
+        <button class="btn-cargar-card solo-logistica" onclick="event.stopPropagation(); abrirModalAdmin('${p.id}', '${p.disciplina}', '${p.fase}', '${p.equipoA}', '${p.equipoB}')">✏️ Cargar Resultado / Tarjetas</button>
       </div>
     `;
   });
@@ -253,21 +350,7 @@ function renderizarPartidosDisciplina(disciplina, contenedorId) {
   contenedor.innerHTML = html;
 }
 
-function openTab(evt, tabName) {
-  if (evt) evt.preventDefault();
-  const tabcontent = document.getElementsByClassName("tab-content");
-  for (let i = 0; i < tabcontent.length; i++) {
-    tabcontent[i].style.display = "none";
-  }
-  const tablinks = document.getElementsByClassName("tab-link");
-  for (let i = 0; i < tablinks.length; i++) {
-    tablinks[i].className = tablinks[i].className.replace(" active", "");
-  }
-  const targetTab = document.getElementById(tabName);
-  if (targetTab) targetTab.style.display = "block";
-  if (evt && evt.currentTarget) evt.currentTarget.className += " active";
-}
-
+// Filtros por Categoría de Sexo
 function filtrarFutsalSexo(sexo) {
   const disciplina = sexo === 'M' ? "Futsal Masculino" : "Futsal Femenino";
   renderizarArbolGrafico(disciplina, "futsal-content");
@@ -275,7 +358,68 @@ function filtrarFutsalSexo(sexo) {
 
 function filtrarFutbolSexo(sexo) {
   const disciplina = sexo === 'M' ? "Fútbol de Campo Masculino" : "Fútbol de Campo Femenino";
-  renderizarArbolGrafico(disciplina, "futbol-content");
+  renderizarPartidosDisciplina(disciplina, "futbol-content");
+}
+
+function openTab(evt, tabName) {
+  if (evt) evt.preventDefault();
+  const tabcontent = document.getElementsByClassName("tab-content");
+  for (let i = 0; i < tabcontent.length; i++) { tabcontent[i].style.display = "none"; }
+  const tablinks = document.getElementsByClassName("tab-link");
+  for (let i = 0; i < tablinks.length; i++) { tablinks[i].className = tablinks[i].className.replace(" active", ""); }
+  const targetTab = document.getElementById(tabName);
+  if (targetTab) targetTab.style.display = "block";
+  if (evt && evt.currentTarget) evt.currentTarget.className += " active";
+}
+
+// ============================================================
+// MODALES Y OPERACIONES DE ORGANIZACIÓN (LOGÍSTICA Y SUPER ADMIN)
+// ============================================================
+
+// Modal Solo Lectura para Espectadores
+async function abrirModalDetalles(idPartido, disciplina = "", fase = "", eqA = "", eqB = "") {
+  let partido = datosTorneo.partidos.find(p => p.id === idPartido);
+
+  document.getElementById("detalles-partido-titulo").innerText = `${disciplina}: ${renderizarNombreVisible(eqA)} vs ${renderizarNombreVisible(eqB)}`;
+  document.getElementById("detalles-partido-fase").innerText = `Fase: ${fase} | Estado: ${partido ? partido.estado : 'Pendiente'}`;
+  document.getElementById("detalles-equipo-a").innerText = renderizarNombreVisible(eqA);
+  document.getElementById("detalles-equipo-b").innerText = renderizarNombreVisible(eqB);
+  document.getElementById("detalles-marcador").innerText = `${partido && partido.golesA !== "" ? partido.golesA : "-"} : ${partido && partido.golesB !== "" ? partido.golesB : "-"}`;
+
+  const ul = document.getElementById("detalles-lista-incidencias");
+  ul.innerHTML = "<li>Cargando incidencias...</li>";
+
+  const { data: incidencias } = await dbClient
+    .from('incidencias')
+    .select('*')
+    .eq('id_partido', idPartido);
+
+  if (!incidencias || incidencias.length === 0) {
+    ul.innerHTML = "<li style='color:#aaa;'>Sin incidencias ni tarjetas registradas en este encuentro.</li>";
+  } else {
+    let html = "";
+    incidencias.forEach(inc => {
+      let icono = "⚽";
+      if (inc.tipo_evento === "Tarjeta Amarilla") icono = "🟨";
+      if (inc.tipo_evento === "Tarjeta Roja") icono = "🟥";
+      if (inc.tipo_evento === "Tarjeta Azul") icono = "🟦";
+
+      html += `<li>${icono} <b>${inc.jugador_nombre}</b> (${renderizarNombreVisible(inc.curso_equipo)}) - ${inc.tipo_evento}</li>`;
+    });
+    ul.innerHTML = html;
+  }
+
+  document.getElementById("modal-detalles-partido").style.display = "block";
+}
+
+function cerrarModalDetalles() {
+  document.getElementById("modal-detalles-partido").style.display = "none";
+}
+
+async function cambiarEstadoPartido(nuevoEstado) {
+  const idPartido = document.getElementById("admin-id-partido").value;
+  await dbClient.from('partidos').update({ estado: nuevoEstado }).eq('id', idPartido);
+  cargarDatos();
 }
 
 async function abrirModalAdmin(idPartido, disciplina = "", fase = "", eqA = "", eqB = "") {
@@ -398,12 +542,12 @@ async function cargarIncidenciasModal(idPartido) {
   const listContainer = document.getElementById("lista-incidencias");
   if (!listContainer) return;
 
-  const { data: incidencias, error } = await dbClient
+  const { data: incidencias } = await dbClient
     .from('incidencias')
     .select('*')
     .eq('id_partido', idPartido);
 
-  if (error || !incidencias || incidencias.length === 0) {
+  if (!incidencias || incidencias.length === 0) {
     listContainer.innerHTML = "<li style='color:#aaa;'>Sin incidencias registradas.</li>";
     return;
   }
@@ -602,14 +746,17 @@ async function guardarPuntosManuales() {
   }
 }
 
+// ============================================================
+// TABLAS ESTADÍSTICAS Y VISTAS GENERALES
+// ============================================================
 async function renderizarMedalleroReal() {
   const contenedor = document.getElementById("medallero-content");
   if (!contenedor) return;
 
   try {
-    const { data: medallero, error } = await dbClient.from('medallero').select('*');
+    const { data: medallero } = await dbClient.from('medallero').select('*');
 
-    if (error || !medallero || medallero.length === 0) {
+    if (!medallero || medallero.length === 0) {
       renderizarMedalleroGeneral();
       return;
     }

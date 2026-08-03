@@ -18,41 +18,27 @@
     <button class="btn-crear-partido solo-logistica" onclick="abrirModalCrearPartido()">➕ Agregar Partido</button>
   </header>
 
-  <!-- Barra de Navegación -->
+  <!-- Barra de Navegación por Pestañas -->
   <nav class="tab-bar">
-    <button class="tab-link active" onclick="openTab(event, 'panel-medallero')">🏆 Tabla General de Deportes</button>
-    <button class="tab-link" onclick="openTab(event, 'panel-estadisticas')">📊 Rendimiento por Curso</button>
-    <button class="tab-link" onclick="openTab(event, 'panel-cuadro-honor')">🎖️ Cuadro de Honor</button>
-    <button class="tab-link" onclick="openTab(event, 'panel-comparativa')">⚖️ Psicología vs Ciencias</button>
+    <button class="tab-link active" onclick="openTab(event, 'panel-envivo')">🔴 En Vivo / Próximo</button>
     <button class="tab-link" onclick="openTab(event, 'panel-futsal')">⚽ Futsal</button>
     <button class="tab-link" onclick="openTab(event, 'panel-futbol')">⚽ Fútbol de Campo</button>
     <button class="tab-link" onclick="openTab(event, 'panel-voley')">🏐 Vóley Mixto</button>
     <button class="tab-link" onclick="openTab(event, 'panel-pikivoley')">🦶🏐 Pikivoley</button>
+    <button class="tab-link" onclick="openTab(event, 'panel-medallero')">🏆 Tabla General</button>
+    <button class="tab-link" onclick="openTab(event, 'panel-estadisticas')">📊 Rendimiento Cursos</button>
+    <button class="tab-link" onclick="openTab(event, 'panel-cuadro-honor')">🎖️ Cuadro de Honor</button>
+    <button class="tab-link" onclick="openTab(event, 'panel-comparativa')">⚖️ Psicología vs Educación</button>
+    <button class="tab-link" onclick="openTab(event, 'panel-fixture')">📅 Fixture General</button>
+    <button class="tab-link" onclick="openTab(event, 'panel-reglamento')">📜 Reglamento & Sanciones</button>
   </nav>
 
+  <!-- Paneles de Contenido -->
   <main class="main-content">
     
-    <div id="panel-medallero" class="tab-content" style="display:block">
-      <div class="header-seccion">
-        <h2>🏆 Tabla General de Deportes</h2>
-        <button class="btn-crear-partido solo-superadmin" onclick="abrirModalAjustarPuntos()">✏️ Ajustar Puntos Manuales</button>
-      </div>
-      <div id="medallero-content">Cargando puntuaciones oficiales...</div>
-    </div>
-
-    <div id="panel-estadisticas" class="tab-content" style="display:none">
-      <h2>📊 Rendimiento Detallado por Curso</h2>
-      <div id="estadisticas-content">Cargando rendimiento...</div>
-    </div>
-
-    <div id="panel-cuadro-honor" class="tab-content" style="display:none">
-      <h2>🎖️ Cuadro de Honor por Disciplinas</h2>
-      <div id="cuadro-honor-content">Cargando destacados...</div>
-    </div>
-
-    <div id="panel-comparativa" class="tab-content" style="display:none">
-      <h2>⚖️ Comparativa: Psicología vs Ciencias de la Educación</h2>
-      <div id="comparativa-content">Cargando comparativa...</div>
+    <div id="panel-envivo" class="tab-content" style="display:block">
+      <h2>🔴 Cobertura en Vivo / Próximo Encuentro</h2>
+      <div id="envivo-content">Buscando encuentros en vivo...</div>
     </div>
 
     <div id="panel-futsal" class="tab-content" style="display:none">
@@ -95,30 +81,94 @@
       <div id="pikivoley-content">Cargando partidos de pikivoley...</div>
     </div>
 
+    <div id="panel-medallero" class="tab-content" style="display:none">
+      <div class="header-seccion">
+        <h2>🏆 Tabla General de Deportes</h2>
+        <button class="btn-crear-partido solo-superadmin" onclick="abrirModalAjustarPuntos()">✏️ Ajustar Puntos Manuales</button>
+      </div>
+      <div id="medallero-content">Cargando puntuaciones oficiales...</div>
+    </div>
+
+    <div id="panel-estadisticas" class="tab-content" style="display:none">
+      <h2>📊 Rendimiento Detallado por Curso</h2>
+      <div id="estadisticas-content">Cargando rendimiento...</div>
+      
+      <h3 style="margin-top:25px; color:#d4af37;">⚽ Tabla de Goleadores y Anotadores</h3>
+      <div id="goleadores-content">Cargando goleadores...</div>
+    </div>
+
+    <div id="panel-cuadro-honor" class="tab-content" style="display:none">
+      <h2>🎖️ Cuadro de Honor por Disciplinas</h2>
+      <div id="cuadro-honor-content">Cargando destacados...</div>
+    </div>
+
+    <div id="panel-comparativa" class="tab-content" style="display:none">
+      <h2>⚖️ Comparativa: Psicología vs Ciencias de la Educación</h2>
+      <div id="comparativa-content">Cargando comparativa...</div>
+    </div>
+
+    <div id="panel-fixture" class="tab-content" style="display:none">
+      <h2>📅 Cronograma de Jornada / Fixture General</h2>
+      <div id="fixture-content">Cargando cronograma...</div>
+    </div>
+
+    <div id="panel-reglamento" class="tab-content" style="display:none">
+      <h2>📜 Reglamento Oficial & Control de Suspendidos</h2>
+      
+      <h3 style="color:#ef4444;">🚫 Reporte de Jugadores Suspendidos / Inhabilitados</h3>
+      <div id="suspendidos-content">Analizando sanciones...</div>
+
+      <h3 style="color:#d4af37; margin-top:25px;">📘 Extractos del Reglamento InterFilo 2026</h3>
+      <div class="reglamento-box">
+        <details>
+          <summary><b>1. Acreditación e Inscripción de Equipos</b></summary>
+          <p>Todo competidor debe estar matriculado regularmente. No se permite traspaso de jugadores entre listas de buena fe una vez iniciado el torneo.</p>
+        </details>
+        <details>
+          <summary><b>2. Desempates y Definiciones</b></summary>
+          <p>En Futsal y Fútbol de Campo no se juegan prórrogas: se define directamente por tanda de 5 penales y muerte súbita. En Vóley y Pikivoley los sets son definitivos a 18 y 10 puntos respectivamente.</p>
+        </details>
+        <details>
+          <summary><b>3. Áreas Restringidas y Comportamiento</b></summary>
+          <p>La Mesa de Control es área de acceso exclusivo para árbitros y capitanes debidamente identificados. Intimidaciones o desacatos conllevan descalificación directa.</p>
+        </details>
+      </div>
+    </div>
+
   </main>
 
   <footer class="footer">
     <div class="footer-creditos">
       Dev. by Lukasy | <a href="https://www.instagram.com/lukasy.exe" target="_blank" rel="noopener noreferrer">@lukasyexe</a>
     </div>
-    <!-- Búho Flotante Neón Dorado -->
     <button id="btn-buho" class="btn-modo-acceso" onclick="activarModoLogistica()" title="Acceso Organización">🦉</button>
   </footer>
 
-  <!-- Modal 1: Marcador -->
+  <!-- Modal 1: Cargar Marcador e Incidencias (Mesa de Control) -->
   <div id="modal-admin" class="modal">
     <div class="modal-content">
       <span class="close" onclick="cerrarModalAdmin()">&times;</span>
-      <h3>Mesa de Control - Cargar Resultado</h3>
+      <h3>Mesa de Control - Cargar Partido</h3>
       <h4 id="modal-partido-titulo" style="color:#d4af37; margin:10px 0;"></h4>
       <input type="hidden" id="admin-id-partido">
 
+      <!-- Botones de Cambio de Estado Rápido -->
+      <div class="estado-selector-box">
+        <label style="font-size:12px; color:#aaa;">Cambiar Estado del Encuentro:</label>
+        <div class="estado-btn-group">
+          <button type="button" class="btn-estado btn-est-envivo" onclick="cambiarEstadoPartido('En Vivo')">🔴 EN VIVO</button>
+          <button type="button" class="btn-estado btn-est-finalizado" onclick="cambiarEstadoPartido('Finalizado')">🟢 FINALIZADO</button>
+          <button type="button" class="btn-estado btn-est-pendiente" onclick="cambiarEstadoPartido('Pendiente')">🟡 PRÓXIMAMENTE</button>
+        </div>
+      </div>
+
+      <!-- Marcador Rápido Punto a Punto -->
       <div class="quick-score-box">
-        <button class="btn-score-quick equipo-a" onclick="sumarPuntoRapido('A', 1)">
+        <button type="button" class="btn-score-quick equipo-a" onclick="sumarPuntoRapido('A', 1)">
           <span id="btn-quick-lbl-a">Equipo A</span>
           <span class="score-num-big">+1 Pt</span>
         </button>
-        <button class="btn-score-quick equipo-b" onclick="sumarPuntoRapido('B', 1)">
+        <button type="button" class="btn-score-quick equipo-b" onclick="sumarPuntoRapido('B', 1)">
           <span id="btn-quick-lbl-b">Equipo B</span>
           <span class="score-num-big">+1 Pt</span>
         </button>
@@ -127,11 +177,11 @@
       <div class="goles-input">
         <div>
           <label id="lbl-equipo-a">Equipo A</label>
-          <input type="number" id="goles-a" placeholder="Goles/Puntos A" min="0">
+          <input type="number" id="goles-a" placeholder="Goles A" min="0">
         </div>
         <div>
           <label id="lbl-equipo-b">Equipo B</label>
-          <input type="number" id="goles-b" placeholder="Goles/Puntos B" min="0">
+          <input type="number" id="goles-b" placeholder="Goles B" min="0">
         </div>
       </div>
 
@@ -149,8 +199,8 @@
       
       <ul id="lista-incidencias" class="incidencias-list"></ul>
 
-      <button class="btn-guardar" onclick="enviarResultado()">Finalizar y Publicar Partido</button>
-      <button class="btn-eliminar solo-superadmin" onclick="eliminarPartido()">🗑️ Eliminar Partido (Super Admin)</button>
+      <button type="button" class="btn-guardar" onclick="enviarResultado()">Finalizar y Publicar Partido</button>
+      <button type="button" class="btn-eliminar solo-superadmin" onclick="eliminarPartido()">🗑️ Eliminar Partido (Super Admin)</button>
     </div>
   </div>
 
@@ -192,7 +242,7 @@
       <label>Fecha y Hora:</label>
       <input type="text" id="crear-fecha-hora" placeholder="Ej. 20/07 15:30 HS">
 
-      <button class="btn-guardar" onclick="enviarNuevoPartido()">Crear y Publicar Partido</button>
+      <button type="button" class="btn-guardar" onclick="enviarNuevoPartido()">Crear y Publicar Partido</button>
       <p id="crear-msj"></p>
     </div>
   </div>
@@ -222,8 +272,26 @@
       <label>Nuevos Puntos (ej. 100 o 50):</label>
       <input type="number" id="ajuste-puntos-input" placeholder="Ingresar Puntos" min="0">
 
-      <button class="btn-guardar" onclick="guardarPuntosManuales()">Guardar Ajuste de Puntos</button>
+      <button type="button" class="btn-guardar" onclick="guardarPuntosManuales()">Guardar Ajuste de Puntos</button>
       <p id="ajuste-msj"></p>
+    </div>
+  </div>
+
+  <!-- Modal 4: Vista de Detalles para Espectadores (Solo Lectura) -->
+  <div id="modal-detalles-partido" class="modal">
+    <div class="modal-content">
+      <span class="close" onclick="cerrarModalDetalles()">&times;</span>
+      <h3 id="detalles-partido-titulo" style="color:#d4af37; margin-bottom:5px;"></h3>
+      <p id="detalles-partido-fase" style="font-size:12px; color:#aaa; margin-top:0;"></p>
+
+      <div class="marcador-box" style="font-size:22px; padding:15px; background:#0d0d0d; border-radius:8px;">
+        <span id="detalles-equipo-a"></span>
+        <strong id="detalles-marcador" style="font-size:26px; color:#60a5fa;"></strong>
+        <span id="detalles-equipo-b"></span>
+      </div>
+
+      <h4 style="margin:15px 0 8px 0; color:#d4af37;">⚽ Incidencias y Tarjetas Registradas:</h4>
+      <ul id="detalles-lista-incidencias" class="incidencias-list"></ul>
     </div>
   </div>
 
