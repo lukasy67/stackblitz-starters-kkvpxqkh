@@ -123,9 +123,9 @@ function renderizarArbolGrafico(disciplina, containerId) {
   const finalBD = partidos.find(p => normalizarTexto(p.fase).includes("final") && !normalizarTexto(p.fase).includes("semi"));
 
   // Corrección de los 4 índices del arreglo
-  const ganR1_0 = obtenerGanador(r1[0]);
-  const ganR1_1 = obtenerGanador(r1);
-  const ganR1_2 = obtenerGanador(r1);
+  const ganR1_0 = obtenerGanador(r1[0]);  
+  const ganR1_1 = obtenerGanador(r1);  
+  const ganR1_2 = obtenerGanador(r1);  
   const ganR1_3 = obtenerGanador(r1);
 
   const semi1 = {
