@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>InterFilo 2026 - Universidad Nacional de Asunción</title>
   <link rel="stylesheet" href="styles.css">
-  <!-- SDK CDN de Supabase -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
@@ -19,37 +18,35 @@
     <button class="btn-crear-partido solo-logistica" onclick="abrirModalCrearPartido()">➕ Agregar Partido</button>
   </header>
 
-  <!-- Barra de Navegación por Pestañas -->
+  <!-- Barra de Navegación -->
   <nav class="tab-bar">
-    <button class="tab-link active" onclick="openTab(event, 'panel-medallero')">🏆 Puntuación por Modalidad</button>
+    <button class="tab-link active" onclick="openTab(event, 'panel-medallero')">🏆 Tabla General de Deportes</button>
     <button class="tab-link" onclick="openTab(event, 'panel-estadisticas')">📊 Rendimiento por Curso</button>
-    <button class="tab-link" onclick="openTab(event, 'panel-cuadro-honor')">🏅 Cuadro de Honor</button>
-    <button class="tab-link" onclick="openTab(event, 'panel-comparativa')">⚖️ Psicologia vs Ciencias</button>
+    <button class="tab-link" onclick="openTab(event, 'panel-cuadro-honor')">🎖️ Cuadro de Honor</button>
+    <button class="tab-link" onclick="openTab(event, 'panel-comparativa')">⚖️ Psicología vs Ciencias</button>
     <button class="tab-link" onclick="openTab(event, 'panel-futsal')">⚽ Futsal</button>
     <button class="tab-link" onclick="openTab(event, 'panel-futbol')">⚽ Fútbol de Campo</button>
     <button class="tab-link" onclick="openTab(event, 'panel-voley')">🏐 Vóley Mixto</button>
     <button class="tab-link" onclick="openTab(event, 'panel-pikivoley')">🦶🏐 Pikivoley</button>
   </nav>
 
-  <!-- Paneles de Contenido -->
   <main class="main-content">
     
     <div id="panel-medallero" class="tab-content" style="display:block">
       <div class="header-seccion">
-        <h2>🏆 Medallero General y Tabla de Campeones</h2>
-        <!-- Botón visible únicamente en Modo Super Admin -->
+        <h2>🏆 Tabla General de Deportes</h2>
         <button class="btn-crear-partido solo-superadmin" onclick="abrirModalAjustarPuntos()">✏️ Ajustar Puntos Manuales</button>
       </div>
-      <div id="medallero-content">Cargando medallero...</div>
+      <div id="medallero-content">Cargando puntuaciones oficiales...</div>
     </div>
 
     <div id="panel-estadisticas" class="tab-content" style="display:none">
-      <h2>📊 Rendimiento Detallado por Curso (PJ, PG, GF, GC, Dif)</h2>
+      <h2>📊 Rendimiento Detallado por Curso</h2>
       <div id="estadisticas-content">Cargando rendimiento...</div>
     </div>
 
     <div id="panel-cuadro-honor" class="tab-content" style="display:none">
-      <h2>🏅 Cuadro de Honor por Disciplinas</h2>
+      <h2>🎖️ Cuadro de Honor por Disciplinas</h2>
       <div id="cuadro-honor-content">Cargando destacados...</div>
     </div>
 
@@ -100,15 +97,15 @@
 
   </main>
 
-  <!-- Pie de Página Institucional y Créditos -->
   <footer class="footer">
     <div class="footer-creditos">
-      Dev. by Lukasy | <a href="https://www.instagram.com/lukasy.exe?igsh=MzNieGgzajJsdmVy&utm_source=qr" target="_blank" rel="noopener noreferrer">@lukasyexe</a>
+      Dev. by Lukasy | <a href="https://www.instagram.com/lukasy.exe" target="_blank" rel="noopener noreferrer">@lukasyexe</a>
     </div>
-    <button id="btn-buho" class="btn-buho" onclick="activarModoLogistica()" title="Acceso Logística">🦉</button>
+    <!-- Búho Flotante Neón Dorado -->
+    <button id="btn-buho" class="btn-modo-acceso" onclick="activarModoLogistica()" title="Acceso Organización">🦉</button>
   </footer>
 
-  <!-- Modal 1: Cargar Marcador e Incidencias -->
+  <!-- Modal 1: Marcador -->
   <div id="modal-admin" class="modal">
     <div class="modal-content">
       <span class="close" onclick="cerrarModalAdmin()">&times;</span>
@@ -116,58 +113,53 @@
       <h4 id="modal-partido-titulo" style="color:#d4af37; margin:10px 0;"></h4>
       <input type="hidden" id="admin-id-partido">
 
-      <!-- Marcador Punto a Punto Rápido en Vivo -->
-      <label style="color:#d4af37; font-weight:bold;">⚡ Marcador Rápido en Vivo (Click suma punto instantáneo):</label>
       <div class="quick-score-box">
-        <button type="button" class="btn-score-quick equipo-a" onclick="sumarPuntoRapido('A', 1)">
+        <button class="btn-score-quick equipo-a" onclick="sumarPuntoRapido('A', 1)">
           <span id="btn-quick-lbl-a">Equipo A</span>
-          <span class="score-num-big">+1 Punto</span>
+          <span class="score-num-big">+1 Pt</span>
         </button>
-        <button type="button" class="btn-score-quick equipo-b" onclick="sumarPuntoRapido('B', 1)">
+        <button class="btn-score-quick equipo-b" onclick="sumarPuntoRapido('B', 1)">
           <span id="btn-quick-lbl-b">Equipo B</span>
-          <span class="score-num-big">+1 Punto</span>
+          <span class="score-num-big">+1 Pt</span>
         </button>
       </div>
 
       <div class="goles-input">
         <div>
           <label id="lbl-equipo-a">Equipo A</label>
-          <input type="number" id="goles-a" placeholder="0" min="0">
+          <input type="number" id="goles-a" placeholder="Goles/Puntos A" min="0">
         </div>
         <div>
           <label id="lbl-equipo-b">Equipo B</label>
-          <input type="number" id="goles-b" placeholder="0" min="0">
+          <input type="number" id="goles-b" placeholder="Goles/Puntos B" min="0">
         </div>
       </div>
 
       <hr style="border-color:#333; margin:15px 0;">
-      <h4 style="color:#d4af37; margin-bottom:5px;">Registrar Incidencia (Goles / Tarjetas)</h4>
-      
-      <label>Equipo del Jugador:</label>
+      <h4 style="margin:5px 0; color:#aaa;">Cargar Tarjetas e Incidencias:</h4>
+      <input type="text" id="incidencia-jugador" placeholder="Nombre del Jugador">
       <select id="incidencia-equipo"></select>
-
-      <label>Nombre del Jugador:</label>
-      <input type="text" id="incidencia-jugador" placeholder="Ej: Carlos Gómez">
-
-      <label>Tipo de Evento:</label>
-      <select id="incidencia-tipo"></select>
-
-      <button type="button" class="btn-add-incidencia" onclick="agregarIncidencia()">➕ Añadir Incidencia</button>
-
+      <select id="incidencia-tipo">
+        <option value="Gol">⚽ Gol</option>
+        <option value="Tarjeta Amarilla">🟨 Tarjeta Amarilla</option>
+        <option value="Tarjeta Roja">🟥 Tarjeta Roja</option>
+        <option value="Tarjeta Azul">🟦 Tarjeta Azul</option>
+      </select>
+      <button type="button" class="btn-add-incidencia" onclick="agregarIncidencia()">➕ Agregar Incidencia</button>
+      
       <ul id="lista-incidencias" class="incidencias-list"></ul>
 
-      <button class="btn-guardar" onclick="enviarResultado()">Finalizar Partido y Clasificar Ganador</button>
-
-      <button id="btn-eliminar-partido" class="btn-eliminar solo-superadmin" onclick="eliminarPartido()">🗑️ Eliminar / Resetear Partido</button>
+      <button class="btn-guardar" onclick="enviarResultado()">Finalizar y Publicar Partido</button>
+      <button class="btn-eliminar solo-superadmin" onclick="eliminarPartido()">🗑️ Eliminar Partido (Super Admin)</button>
     </div>
   </div>
 
-  <!-- Modal 2: Crear Nuevo Partido -->
+  <!-- Modal 2: Crear Partido -->
   <div id="modal-crear-partido" class="modal">
     <div class="modal-content">
       <span class="close" onclick="cerrarModalCrearPartido()">&times;</span>
       <h3>➕ Crear Nuevo Partido</h3>
-
+      
       <label>Disciplina:</label>
       <select id="crear-disciplina">
         <option value="Futsal Masculino">Futsal Masculino</option>
@@ -178,13 +170,16 @@
         <option value="Pikivoley Masculino">Pikivoley Masculino</option>
       </select>
 
-      <label>Número / Orden de Partido:</label>
-      <input type="number" id="crear-orden" value="1" min="1">
+      <label>Número de Orden de Partido:</label>
+      <input type="number" id="crear-orden" placeholder="Ej. 1, 2, 3..." min="1">
 
       <label>Fase del Encuentro:</label>
       <select id="crear-fase">
         <option value="1ª Ronda Eliminatoria">1ª Ronda Eliminatoria</option>
-        <option value="Semifinales">Semifinales</option>
+        <option value="Preliminar Interna">Preliminar Interna (Equipos A vs B)</option>
+        <option value="Ronda de Reingreso">Ronda de Reingreso / Repechaje</option>
+        <option value="Cuartos de Final">Cuartos de Final</option>
+        <option value="Semifinal">Semifinal</option>
         <option value="Final">Final</option>
       </select>
 
@@ -195,43 +190,43 @@
       <select id="crear-equipo-b"></select>
 
       <label>Fecha y Hora:</label>
-      <input type="datetime-local" id="crear-fecha-hora">
+      <input type="text" id="crear-fecha-hora" placeholder="Ej. 20/07 15:30 HS">
 
-      <button class="btn-guardar" onclick="enviarNuevoPartido()" style="margin-top:15px;">Crear y Publicar Partido</button>
-      <div id="crear-msj" style="color:#f87171; margin-top:10px; font-size:12px;"></div>
+      <button class="btn-guardar" onclick="enviarNuevoPartido()">Crear y Publicar Partido</button>
+      <p id="crear-msj"></p>
+    </div>
+  </div>
+
+  <!-- Modal 3: Ajuste Manual de Puntos (Super Admin) -->
+  <div id="modal-ajustar-puntos" class="modal">
+    <div class="modal-content">
+      <span class="close" onclick="cerrarModalAjustarPuntos()">&times;</span>
+      <h3>✏️ Ajuste Manual de Puntos (Super Admin)</h3>
+      
+      <label>Curso / Equipo:</label>
+      <select id="ajuste-curso-select"></select>
+
+      <label>Disciplina:</label>
+      <select id="ajuste-disciplina-select">
+        <option value="futsalM">Futsal Masculino</option>
+        <option value="futsalF">Futsal Femenino</option>
+        <option value="futbol">Fútbol de Campo</option>
+        <option value="voley">Vóley Mixto</option>
+        <option value="pikivoley">Pikivoley Masculino</option>
+        <option value="esports">E-Sports (Clash Royale)</option>
+        <option value="ajedrez">Ajedrez</option>
+        <option value="maraton">Maratón</option>
+        <option value="ciclismo">Ciclismo</option>
+      </select>
+
+      <label>Nuevos Puntos (ej. 100 o 50):</label>
+      <input type="number" id="ajuste-puntos-input" placeholder="Ingresar Puntos" min="0">
+
+      <button class="btn-guardar" onclick="guardarPuntosManuales()">Guardar Ajuste de Puntos</button>
+      <p id="ajuste-msj"></p>
     </div>
   </div>
 
   <script src="script.js"></script>
-  <!-- Modal 3: Ajuste Manual de Puntos por Modalidad (Super Admin) -->
-<div id="modal-ajustar-puntos" class="modal">
-  <div class="modal-content">
-    <span class="close" onclick="cerrarModalAjustarPuntos()">&times;</span>
-    <h3>✏️ Ajuste Manual de Puntos (Super Admin)</h3>
-    <p style="font-size:12px; color:#aaa;">Permite corregir o insertar puntajes manualmente en el Medallero.</p>
-
-    <label>Curso / Equipo:</label>
-    <select id="ajuste-curso-select"></select>
-
-    <label>Disciplina:</label>
-    <select id="ajuste-disciplina-select">
-      <option value="futsalM">Futsal Masculino</option>
-      <option value="futsalF">Futsal Femenino</option>
-      <option value="futbol">Fútbol de Campo</option>
-      <option value="voley">Vóley Mixto</option>
-      <option value="pikivoley">Pikivoley Masculino</option>
-      <option value="esports">E-Sports (Clash Royale)</option>
-      <option value="ajedrez">Ajedrez</option>
-      <option value="maraton">Maratón</option>
-      <option value="ciclismo">Ciclismo</option>
-    </select>
-
-    <label>Nuevos Puntos Acreditar (ej. 100 o 50):</label>
-    <input type="number" id="ajuste-puntos-input" placeholder="Ingresar Puntos (ej. 100)" min="0">
-
-    <button class="btn-guardar" onclick="guardarPuntosManuales()">Guardar Ajuste de Puntos</button>
-    <p id="ajuste-msj"></p>
-  </div>
-</div>
 </body>
 </html>
