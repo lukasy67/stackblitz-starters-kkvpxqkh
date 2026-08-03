@@ -1,8 +1,9 @@
-// URL Corregida de Supabase
+// Claves obtenidas de Supabase
 const SUPABASE_URL = "https://zkklifirmzvlwapivbrc.supabase.co";
 const SUPABASE_KEY = "sb_publishable_Od54CMAGf_6wyGbeU-vvCw_FWzvrvbd";
 
-const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+// Inicializar cliente con el nombre dbClient para evitar conflicto con window.supabase
+const dbClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 let datosTorneo = { partidos: [], incidencias: [] };
 let incidenciasTemp = [];
@@ -12,60 +13,74 @@ const CURSOS_EQUIPOS = [
   "Alpha (1 Ciencias)", "Vanguardia (2 Ciencias)", "Legión (3 Ciencias)", "Mastery (5 Psico)", "Avanzada (4 Psico)"
 ];
 
-// Escuchar cambios en tiempo real
-supabase
-  .channel('cambios-partidos')
-  .on('postgres_changes', { event: '*', schema: 'public', table: 'partidos' }, () => {
-    cargarDatos();
-  })
-  .subscribe();
+// Suscripción en Tiempo Real
+try {
+  dbClient
+    .channel('cambios-partidos')
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'partidos' }, () => {
+      cargarDatos();
+    })
+    .subscribe();
+} catch (e) {
+  console.log("Error al suscribir a Realtime:", e);
+}
 
 // Conmutación de Pestañas
 function openTab(evt, tabName) {
+  if (evt) evt.preventDefault();
   var i, tabcontent, tablinks;
   tabcontent = document.getElementsByClassName("tab-content");
-  for (i = 0; i < tabcontent.length; i++) { tabcontent[i].style.display = "none"; }
+  for (i = 0; i < tabcontent.length; i++) {
+    tabcontent[i].style.display = "none";
+  }
   tablinks = document.getElementsByClassName("tab-link");
-  for (i = 0; i < tablinks.length; i++) { tablinks[i].className = tablinks[i].className.replace(" active", ""); }
-  document.getElementById(tabName).style.display = "block";
-  evt.currentTarget.className += " active";
+  for (i = 0; i < tablinks.length; i++) {
+    tablinks[i].className = tablinks[i].className.replace(" active", "");
+  }
+  const targetTab = document.getElementById(tabName);
+  if (targetTab) {
+    targetTab.style.display = "block";
+  }
+  if (evt && evt.currentTarget) {
+    evt.currentTarget.className += " active";
+  }
 }
 
 // Cargar Datos desde Supabase
 async function cargarDatos() {
   try {
-    const { data: partidos, error } = await supabase
+    const { data: partidos, error } = await dbClient
       .from('partidos')
       .select('*')
       .order('orden', { ascending: true });
 
-    if (error) throw error;
+    if (error) {
+      console.error("Error al consultar Supabase:", error);
+    } else {
+      datosTorneo.partidos = (partidos || []).map(p => ({
+        id: p.id,
+        disciplina: p.disciplina,
+        fase: p.fase,
+        equipoA: p.equipo_a,
+        equipoB: p.equipo_b,
+        golesA: p.goles_a !== null && p.goles_a !== undefined ? p.goles_a : "",
+        golesB: p.goles_b !== null && p.goles_b !== undefined ? p.goles_b : "",
+        estado: p.estado || 'Pendiente',
+        fechaHora: p.fecha_hora,
+        orden: p.orden || 1
+      }));
+    }
 
-    // Mapear campos de Supabase a objetos JavaScript
-    datosTorneo.partidos = (partidos || []).map(p => ({
-      id: p.id,
-      disciplina: p.disciplina,
-      fase: p.fase,
-      equipoA: p.equipo_a,
-      equipoB: p.equipo_b,
-      golesA: p.goles_a !== null ? p.goles_a : "",
-      golesB: p.goles_b !== null ? p.goles_b : "",
-      estado: p.estado || 'Pendiente',
-      fechaHora: p.fecha_hora,
-      orden: p.orden || 1
-    }));
-
-    // Renderizar Vistas
-    renderizarArbolVisual("Futsal Masculino", "futsal-content");
+    renderizarPartidosDisciplina("Futsal Masculino", "futsal-content");
     renderizarPartidosDisciplina("Fútbol de Campo Masculino", "futbol-content");
-    renderizarArbolVisual("Volley Mixto", "voley-content");
+    renderizarPartidosDisciplina("Volley Mixto", "voley-content");
     renderizarPartidosDisciplina("Pikivoley Masculino", "pikivoley-content");
     renderizarMedalleroSimulado();
     renderizarEstadisticasEquipos();
     renderizarCuadroHonor();
     renderizarComparativaCarreras();
   } catch (err) {
-    console.error("Error al cargar datos desde Supabase:", err);
+    console.error("Error al cargar datos:", err);
   }
 }
 
@@ -74,9 +89,10 @@ function renderizarNombreVisible(nombreCompleto) {
   return nombreCompleto.split(" (")[0];
 }
 
-// Renderizado por Tarjetas
 function renderizarPartidosDisciplina(disciplina, contenedorId) {
   const contenedor = document.getElementById(contenedorId);
+  if (!contenedor) return;
+
   const partidos = datosTorneo.partidos.filter(p => p.disciplina === disciplina);
 
   if (partidos.length === 0) {
@@ -108,20 +124,6 @@ function renderizarPartidosDisciplina(disciplina, contenedorId) {
   contenedor.innerHTML = html;
 }
 
-// Renderizado de Árbol Gráfico
-function renderizarArbolVisual(disciplina, contenedorId) {
-  const contenedor = document.getElementById(contenedorId);
-  const partidos = datosTorneo.partidos.filter(p => p.disciplina === disciplina);
-
-  if (partidos.length === 0) {
-    contenedor.innerHTML = `<p style="color:#aaa;">No hay partidos cargados para ${disciplina}.</p>`;
-    return;
-  }
-
-  renderizarPartidosDisciplina(disciplina, contenedorId);
-}
-
-// Filtros por Cuerpos de Competencia
 function filtrarFutsalSexo(sexo) {
   const disc = sexo === 'M' ? "Futsal Masculino" : "Futsal Femenino";
   renderizarPartidosDisciplina(disc, "futsal-content");
@@ -173,23 +175,27 @@ async function enviarResultado() {
   const golesA = document.getElementById("goles-a").value;
   const golesB = document.getElementById("goles-b").value;
 
-  document.getElementById("admin-msj").innerText = "Guardando en Supabase...";
+  document.getElementById("admin-msj").innerText = "Guardando...";
 
-  const { error } = await supabase
-    .from('partidos')
-    .update({ 
-      goles_a: parseInt(golesA), 
-      goles_b: parseInt(golesB), 
-      estado: 'Finalizado' 
-    })
-    .eq('id', idPartido);
+  try {
+    const { error } = await dbClient
+      .from('partidos')
+      .update({ 
+        goles_a: parseInt(golesA), 
+        goles_b: parseInt(golesB), 
+        estado: 'Finalizado' 
+      })
+      .eq('id', idPartido);
 
-  if (error) {
-    document.getElementById("admin-msj").innerText = "Error: " + error.message;
-  } else {
-    document.getElementById("admin-msj").innerText = "¡Resultado actualizado!";
-    setTimeout(cerrarModalAdmin, 1000);
-    cargarDatos();
+    if (error) {
+      document.getElementById("admin-msj").innerText = "Error: " + error.message;
+    } else {
+      document.getElementById("admin-msj").innerText = "¡Resultado actualizado!";
+      setTimeout(cerrarModalAdmin, 1000);
+      cargarDatos();
+    }
+  } catch (err) {
+    document.getElementById("admin-msj").innerText = "Error de conexión";
   }
 }
 
@@ -227,35 +233,40 @@ async function enviarNuevoPartido() {
 
   const idNuevo = "PAR-" + new Date().getTime();
 
-  document.getElementById("crear-msj").innerText = "Guardando en Supabase...";
+  document.getElementById("crear-msj").innerText = "Guardando...";
 
-  const { error } = await supabase
-    .from('partidos')
-    .insert([
-      {
-        id: idNuevo,
-        disciplina: disciplina,
-        fase: fase,
-        equipo_a: equipoA,
-        equipo_b: equipoB,
-        fecha_hora: fechaHora,
-        orden: parseInt(orden),
-        estado: 'Pendiente'
-      }
-    ]);
+  try {
+    const { error } = await dbClient
+      .from('partidos')
+      .insert([
+        {
+          id: idNuevo,
+          disciplina: disciplina,
+          fase: fase,
+          equipo_a: equipoA,
+          equipo_b: equipoB,
+          fecha_hora: fechaHora,
+          orden: parseInt(orden),
+          estado: 'Pendiente'
+        }
+      ]);
 
-  if (error) {
-    document.getElementById("crear-msj").innerText = "Error: " + error.message;
-  } else {
-    document.getElementById("crear-msj").innerText = "¡Partido creado con éxito!";
-    setTimeout(cerrarModalCrearPartido, 1000);
-    cargarDatos();
+    if (error) {
+      document.getElementById("crear-msj").innerText = "Error: " + error.message;
+    } else {
+      document.getElementById("crear-msj").innerText = "¡Partido creado con éxito!";
+      setTimeout(cerrarModalCrearPartido, 1000);
+      cargarDatos();
+    }
+  } catch (err) {
+    document.getElementById("crear-msj").innerText = "Error de conexión";
   }
 }
 
-// Vistas Estáticas Auxiliares
+// Tablas Auxiliares
 function renderizarMedalleroSimulado() {
   const contenedor = document.getElementById("medallero-content");
+  if (!contenedor) return;
   contenedor.innerHTML = `
     <table class="tabla-deportiva">
       <thead><tr><th>Curso / Equipo</th><th>Futsal M</th><th>Futsal F</th><th>Fútbol</th><th>Vóley</th><th>Pikivoley</th><th>E-Sports</th><th>Ajedrez</th><th>TOTAL PTS</th></tr></thead>
@@ -269,17 +280,25 @@ function renderizarMedalleroSimulado() {
 
 function renderizarEstadisticasEquipos() {
   const contenedor = document.getElementById("estadisticas-content");
+  if (!contenedor) return;
   contenedor.innerHTML = `<table class="tabla-deportiva"><thead><tr><th>Curso / Equipo</th><th>Goles a Favor</th><th>Goles en Contra</th><th>Diferencia Goles</th><th>Tarjetas</th><th>Efectividad</th></tr></thead><tbody><tr><td><strong>Dements (4 Ciencias)</strong></td><td>12</td><td>4</td><td>+8</td><td>2 Amarillas</td><td>75%</td></tr></tbody></table>`;
 }
 
 function renderizarCuadroHonor() {
   const contenedor = document.getElementById("cuadro-honor-content");
+  if (!contenedor) return;
   contenedor.innerHTML = `<table class="tabla-deportiva"><thead><tr><th>Reconocimiento / Récord</th><th>Equipo Destacado</th><th>Registro</th></tr></thead><tbody><tr><td>⚽ Máximo Goleador (Mejor Ataque)</td><td><strong>PsychoKings (2 Psico)</strong></td><td>15 Goles</td></tr></tbody></table>`;
 }
 
 function renderizarComparativaCarreras() {
   const contenedor = document.getElementById("comparativa-content");
+  if (!contenedor) return;
   contenedor.innerHTML = `<table class="tabla-deportiva"><thead><tr><th>Métrica Consolidada</th><th>Psicología (5 Cursos)</th><th>Ciencias de la Educación (4 Cursos)</th></tr></thead><tbody><tr><td>⚽ Goles Totales Convertidos</td><td>23 Goles</td><td>20 Goles</td></tr></tbody></table>`;
 }
 
-window.onload = cargarDatos;
+// Escuchar evento DOM ready
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', cargarDatos);
+} else {
+  cargarDatos();
+}
