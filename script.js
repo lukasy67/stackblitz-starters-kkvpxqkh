@@ -1,5 +1,5 @@
 // Claves obtenidas de Supabase (Project Settings > API)
-const SUPABASE_URL = "https://zkklifirmzvlwapivbrc.supabase.co/rest/v1/";
+const SUPABASE_URL = "https://zkklifirmzvlwapivbrc.supabase.co";
 const SUPABASE_KEY = "sb_publishable_Od54CMAGf_6wyGbeU-vvCw_FWzvrvbd";
 
 const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
