@@ -26,6 +26,7 @@
     <button class="tab-link" onclick="openTab(event, 'panel-voley')">🏐 Vóley Mixto</button>
     <button class="tab-link" onclick="openTab(event, 'panel-pikivoley')">🦶🏐 Pikivoley</button>
     <button class="tab-link" onclick="openTab(event, 'panel-medallero')">🏆 Tabla General</button>
+    <button class="tab-link" onclick="openTab(event, 'panel-quiniela')">🎯 Quiniela</button>
     <button class="tab-link" onclick="openTab(event, 'panel-estadisticas')">📊 Rendimiento Cursos</button>
     <button class="tab-link" onclick="openTab(event, 'panel-cuadro-honor')">🎖️ Cuadro de Honor</button>
     <button class="tab-link" onclick="openTab(event, 'panel-comparativa')">⚖️ Psicología vs Educación</button>
@@ -39,6 +40,23 @@
     <div id="panel-envivo" class="tab-content" style="display:block">
       <h2>🔴 Cobertura en Vivo / Próximo Encuentro</h2>
       <div id="envivo-content">Buscando encuentros en vivo...</div>
+
+      <div class="reacciones-botonera">
+        <button class="btn-reaccion" onclick="enviarReaccion('🔥')" title="Fuego">🔥</button>
+        <button class="btn-reaccion" onclick="enviarReaccion('😱')" title="Sorpresa">😱</button>
+        <button class="btn-reaccion" onclick="enviarReaccion('😂')" title="Risa">😂</button>
+      </div>
+
+      <div class="muro-comentarios-box">
+        <h3 style="margin:0 0 12px 0; color:#d4af37;">💬 Muro de Comentarios (Anónimo)</h3>
+        <div class="muro-comentarios-form">
+          <input type="text" id="comentario-input" maxlength="200" placeholder="Escribe algo para la hinchada..." onkeydown="if(event.key==='Enter') enviarComentario();">
+          <button class="btn-enviar-comentario" onclick="enviarComentario()">Enviar</button>
+        </div>
+        <ul id="muro-comentarios-lista" class="muro-comentarios-lista">
+          <li style="color:#aaa;">Cargando comentarios...</li>
+        </ul>
+      </div>
     </div>
 
     <div id="panel-futsal" class="tab-content" style="display:none">
@@ -47,8 +65,8 @@
         <button class="btn-crear-partido solo-logistica" onclick="abrirModalCrearPartido('Futsal Masculino')">➕ Agregar Partido de Futsal</button>
       </div>
       <div class="sub-tabs">
-        <button class="sub-link active" onclick="filtrarFutsalSexo('M')">Masculino</button>
-        <button class="sub-link" onclick="filtrarFutsalSexo('F')">Femenino</button>
+        <button class="sub-link active" onclick="filtrarFutsalSexo('M', event)">Masculino</button>
+        <button class="sub-link" onclick="filtrarFutsalSexo('F', event)">Femenino</button>
       </div>
       <div id="futsal-content">Cargando partidos de futsal...</div>
     </div>
@@ -59,8 +77,8 @@
         <button class="btn-crear-partido solo-logistica" onclick="abrirModalCrearPartido('Fútbol de Campo Masculino')">➕ Agregar Partido de Fútbol</button>
       </div>
       <div class="sub-tabs">
-        <button class="sub-link active" onclick="filtrarFutbolSexo('M')">Masculino</button>
-        <button class="sub-link" onclick="filtrarFutbolSexo('F')">Femenino</button>
+        <button class="sub-link active" onclick="filtrarFutbolSexo('M', event)">Masculino</button>
+        <button class="sub-link" onclick="filtrarFutbolSexo('F', event)">Femenino</button>
       </div>
       <div id="futbol-content">Cargando partidos de fútbol...</div>
     </div>
@@ -133,6 +151,37 @@
           <p>La Mesa de Control es área de acceso exclusivo para árbitros y capitanes debidamente identificados. Intimidaciones o desacatos conllevan descalificación directa.</p>
         </details>
       </div>
+    </div>
+
+    <div id="panel-quiniela" class="tab-content" style="display:none">
+      <h2>🎯 Quiniela / Predicciones</h2>
+      <p style="color:#aaa; font-size:13px;">Pronosticá quién se corona campeón en Futsal Masculino, Fútbol de Campo Masculino, Vóley Mixto y Pikivoley. Los aciertos se calculan automáticamente cuando se juega la Final de cada disciplina.</p>
+
+      <div class="quiniela-form-box">
+        <label>Tu Nombre:</label>
+        <input type="text" id="quiniela-nombre" placeholder="Ej. Juan Pérez">
+
+        <label>Tu Curso:</label>
+        <select id="quiniela-curso"></select>
+
+        <label>Campeón de Futsal Masculino:</label>
+        <select id="quiniela-pred-futsal"></select>
+
+        <label>Campeón de Fútbol de Campo Masculino:</label>
+        <select id="quiniela-pred-futbol"></select>
+
+        <label>Campeón de Vóley Mixto:</label>
+        <select id="quiniela-pred-voley"></select>
+
+        <label>Campeón de Pikivoley Masculino:</label>
+        <select id="quiniela-pred-pikivoley"></select>
+
+        <button type="button" class="btn-guardar" onclick="enviarPrediccion()">🎯 Enviar Mi Predicción</button>
+        <p id="quiniela-msj"></p>
+      </div>
+
+      <h3 style="color:#d4af37;">🏅 Ranking de Aciertos</h3>
+      <div id="quiniela-ranking-content">Cargando ranking...</div>
     </div>
 
   </main>
@@ -294,6 +343,8 @@
       <ul id="detalles-lista-incidencias" class="incidencias-list"></ul>
     </div>
   </div>
+
+  <div id="reacciones-overlay" class="reacciones-overlay"></div>
 
   <script src="script.js"></script>
 </body>

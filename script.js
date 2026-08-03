@@ -13,6 +13,21 @@ const dbClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 let datosTorneo = { partidos: [], incidencias: [] };
 let incidenciasTemp = [];
 
+// Estado de las nuevas funciones interactivas
+let comentariosCache = [];
+let apoyosCache = [];
+let prediccionesCache = [];
+
+function escaparHTML(texto) {
+  if (texto === null || texto === undefined) return "";
+  return String(texto)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
+
 // Lista Oficial de los 9 Cursos de la Facultad de Filosofía (UNA - San Estanislao)
 const CURSOS_EQUIPOS = [
   "Imperial Lions (1 Ciencias)", 
@@ -72,6 +87,33 @@ try {
   console.log("Error al suscribir a Realtime:", e);
 }
 
+// Comentarios, apoyos y predicciones: refrescar datos cuando cambian
+try {
+  dbClient
+    .channel('cambios-interactividad')
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'comentarios' }, () => cargarDatos())
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'apoyos' }, () => cargarDatos())
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'predicciones' }, () => cargarDatos())
+    .subscribe();
+} catch (e) {
+  console.log("Error al suscribir a Realtime (interactividad):", e);
+}
+
+// Reacciones: no recarga toda la página, solo dispara la animación flotante
+// para que se vea al instante en la pantalla de TODOS los conectados.
+try {
+  dbClient
+    .channel('reacciones-en-vivo')
+    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'reacciones' }, (payload) => {
+      if (payload && payload.new && payload.new.emoji) {
+        lanzarEmojiFlotante(payload.new.emoji);
+      }
+    })
+    .subscribe();
+} catch (e) {
+  console.log("Error al suscribir a Realtime (reacciones):", e);
+}
+
 // ============================================================
 // CARGA Y PROCESAMIENTO DE DATOS
 // ============================================================
@@ -85,6 +127,24 @@ async function cargarDatos() {
     const { data: incidencias } = await dbClient
       .from('incidencias')
       .select('*');
+
+    const { data: comentarios } = await dbClient
+      .from('comentarios')
+      .select('*')
+      .order('created_at', { ascending: true });
+
+    const { data: apoyos } = await dbClient
+      .from('apoyos')
+      .select('*');
+
+    const { data: predicciones } = await dbClient
+      .from('predicciones')
+      .select('*')
+      .order('created_at', { ascending: true });
+
+    comentariosCache = comentarios || [];
+    apoyosCache = apoyos || [];
+    prediccionesCache = predicciones || [];
 
     datosTorneo.partidos = (partidos || []).map(p => ({
       id: p.id,
@@ -115,6 +175,9 @@ async function cargarDatos() {
     renderizarComparativaCarreras();
     renderizarFixtureGeneral();
     renderizarSuspendidos();
+    renderizarMuroComentarios();
+    renderizarFormularioQuiniela();
+    renderizarQuinielaRanking();
   } catch (err) {
     console.error("Error al cargar datos desde Supabase:", err);
   }
@@ -146,6 +209,7 @@ function renderizarPortadaEnVivo() {
           <span>${renderizarNombreVisible(partidoEnVivo.equipoB)}</span>
         </div>
         <button class="btn-ir-bracket" onclick="event.stopPropagation(); openTab(event, '${panelTarget}')">🏆 Ver Posiciones / Bracket de ${partidoEnVivo.disciplina}</button>
+        ${generarBarraApoyoHTML(partidoEnVivo.id, partidoEnVivo.equipoA, partidoEnVivo.equipoB)}
       </div>
     `;
   } else {
@@ -166,6 +230,7 @@ function renderizarPortadaEnVivo() {
           </div>
           <small style="color:#aaa;">📅 ${proximo.fechaHora} | Orden #${proximo.orden}</small>
           <button class="btn-ir-bracket" onclick="event.stopPropagation(); openTab(event, '${panelTarget}')">🏆 Ir a Pestaña de ${proximo.disciplina}</button>
+          ${generarBarraApoyoHTML(proximo.id, proximo.equipoA, proximo.equipoB)}
         </div>
       `;
     } else {
@@ -220,9 +285,9 @@ function renderizarArbolGrafico(disciplina, containerId) {
 
   // Avance Automático de Ganadores
   const ganR1_0 = obtenerGanador(r1[0]);
-  const ganR1_1 = obtenerGanador(r1);
-  const ganR1_2 = obtenerGanador(r1);
-  const ganR1_3 = obtenerGanador(r1);
+  const ganR1_1 = obtenerGanador(r1[1]);
+  const ganR1_2 = obtenerGanador(r1[2]);
+  const ganR1_3 = obtenerGanador(r1[3]);
 
   const semi1 = {
     id: semisBD[0] ? semisBD[0].id : `VIRTUAL-SEMI-1-${disciplina}`,
@@ -236,14 +301,14 @@ function renderizarArbolGrafico(disciplina, containerId) {
   };
 
   const semi2 = {
-    id: semisBD ? semisBD.id : `VIRTUAL-SEMI-2-${disciplina}`,
+    id: semisBD[1] ? semisBD[1].id : `VIRTUAL-SEMI-2-${disciplina}`,
     fase: "Semifinales",
     disciplina: disciplina,
-    equipoA: ganR1_2 || (semisBD ? semisBD.equipoA : 'Por definir'),
-    equipoB: ganR1_3 || (semisBD ? semisBD.equipoB : 'Por definir'),
-    golesA: semisBD ? semisBD.golesA : '',
-    golesB: semisBD ? semisBD.golesB : '',
-    estado: semisBD ? semisBD.estado : 'Pendiente'
+    equipoA: ganR1_2 || (semisBD[1] ? semisBD[1].equipoA : 'Por definir'),
+    equipoB: ganR1_3 || (semisBD[1] ? semisBD[1].equipoB : 'Por definir'),
+    golesA: semisBD[1] ? semisBD[1].golesA : '',
+    golesB: semisBD[1] ? semisBD[1].golesB : '',
+    estado: semisBD[1] ? semisBD[1].estado : 'Pendiente'
   };
 
   const ganSemi1 = obtenerGanador(semi1);
@@ -341,6 +406,7 @@ function renderizarPartidosDisciplina(disciplina, contenedorId) {
             <span>${renderizarNombreVisible(p.equipoB)}</span>
           </div>
           <small style="color:#aaa;">📅 ${p.fechaHora} | Estado: <b>${p.estado}</b></small>
+          ${generarBarraApoyoHTML(p.id, p.equipoA, p.equipoB)}
         </div>
         <button class="btn-cargar-card solo-logistica" onclick="event.stopPropagation(); abrirModalAdmin('${p.id}', '${p.disciplina}', '${p.fase}', '${p.equipoA}', '${p.equipoB}')">✏️ Cargar Resultado / Tarjetas</button>
       </div>
@@ -351,14 +417,25 @@ function renderizarPartidosDisciplina(disciplina, contenedorId) {
 }
 
 // Filtros por Categoría de Sexo
-function filtrarFutsalSexo(sexo) {
-  const disciplina = sexo === 'M' ? "Futsal Masculino" : "Futsal Femenino";
-  renderizarArbolGrafico(disciplina, "futsal-content");
+function marcarSubTabActiva(boton) {
+  if (!boton || !boton.parentElement) return;
+  const hermanos = boton.parentElement.getElementsByClassName("sub-link");
+  for (let i = 0; i < hermanos.length; i++) {
+    hermanos[i].classList.remove("active");
+  }
+  boton.classList.add("active");
 }
 
-function filtrarFutbolSexo(sexo) {
+function filtrarFutsalSexo(sexo, evt) {
+  const disciplina = sexo === 'M' ? "Futsal Masculino" : "Futsal Femenino";
+  renderizarArbolGrafico(disciplina, "futsal-content");
+  marcarSubTabActiva((evt && evt.currentTarget) || (window.event && window.event.currentTarget));
+}
+
+function filtrarFutbolSexo(sexo, evt) {
   const disciplina = sexo === 'M' ? "Fútbol de Campo Masculino" : "Fútbol de Campo Femenino";
   renderizarPartidosDisciplina(disciplina, "futbol-content");
+  marcarSubTabActiva((evt && evt.currentTarget) || (window.event && window.event.currentTarget));
 }
 
 function openTab(evt, tabName) {
@@ -767,11 +844,11 @@ async function renderizarMedalleroReal() {
       return totB - totA;
     });
 
-    let html = `<div style="overflow-x:auto;"><table class="tabla-deportiva"><thead><tr><th>Pos.</th><th>Curso / Equipo</th><th>Futsal M</th><th>Futsal F</th><th>Fútbol</th><th>Vóley</th><th>Pikivoley</th><th>E-Sports</th><th>Ajedrez</th><th>TOTAL PTS</th></tr></thead><tbody>`;
+    let html = `<div style="overflow-x:auto;"><table class="tabla-deportiva"><thead><tr><th>Pos.</th><th>Curso / Equipo</th><th>Futsal M</th><th>Futsal F</th><th>Fútbol</th><th>Vóley</th><th>Pikivoley</th><th>E-Sports</th><th>Ajedrez</th><th>Maratón</th><th>Ciclismo</th><th>TOTAL PTS</th></tr></thead><tbody>`;
 
     medallero.forEach((f, index) => {
       const total = (f.futsalM||0)+(f.futsalF||0)+(f.futbol||0)+(f.voley||0)+(f.pikivoley||0)+(f.esports||0)+(f.ajedrez||0)+(f.maraton||0)+(f.ciclismo||0);
-      html += `<tr><td><b>#${index + 1}</b></td><td><strong>${renderizarNombreVisible(f.curso_equipo)}</strong></td><td>${f.futsalM||0}</td><td>${f.futsalF||0}</td><td>${f.futbol||0}</td><td>${f.voley||0}</td><td>${f.pikivoley||0}</td><td>${f.esports||0}</td><td>${f.ajedrez||0}</td><td><b style="color:#d4af37; font-size:15px;">${total} PTS</b></td></tr>`;
+      html += `<tr><td><b>#${index + 1}</b></td><td><strong>${renderizarNombreVisible(f.curso_equipo)}</strong></td><td>${f.futsalM||0}</td><td>${f.futsalF||0}</td><td>${f.futbol||0}</td><td>${f.voley||0}</td><td>${f.pikivoley||0}</td><td>${f.esports||0}</td><td>${f.ajedrez||0}</td><td>${f.maraton||0}</td><td>${f.ciclismo||0}</td><td><b style="color:#d4af37; font-size:15px;">${total} PTS</b></td></tr>`;
     });
 
     html += `</tbody></table></div>`;
@@ -923,6 +1000,398 @@ function renderizarComparativaCarreras() {
       </div>
     </div>
   `;
+}
+
+// ============================================================
+// TABLA DE GOLEADORES / ANOTADORES
+// ============================================================
+function renderizarGoleadoresTop() {
+  const container = document.getElementById("goleadores-content");
+  if (!container) return;
+
+  const goleadores = {};
+
+  datosTorneo.incidencias.forEach(inc => {
+    if (inc.tipo_evento === 'Gol') {
+      const clave = `${inc.jugador_nombre}|${inc.curso_equipo || ''}`;
+      if (!goleadores[clave]) {
+        goleadores[clave] = {
+          jugador: inc.jugador_nombre,
+          equipo: inc.curso_equipo || '',
+          goles: 0
+        };
+      }
+      goleadores[clave].goles++;
+    }
+  });
+
+  const lista = Object.values(goleadores).sort((a, b) => b.goles - a.goles).slice(0, 15);
+
+  if (lista.length === 0) {
+    container.innerHTML = `<p style="color:#aaa;">Aún no hay goles registrados.</p>`;
+    return;
+  }
+
+  let html = `<div style="overflow-x:auto;"><table class="tabla-deportiva"><thead><tr><th>Pos.</th><th>Jugador</th><th>Curso / Equipo</th><th>Goles</th></tr></thead><tbody>`;
+  lista.forEach((g, index) => {
+    html += `<tr><td><b>#${index + 1}</b></td><td>${g.jugador}</td><td>${renderizarNombreVisible(g.equipo)}</td><td><b style="color:#d4af37;">${g.goles}</b></td></tr>`;
+  });
+  html += `</tbody></table></div>`;
+  container.innerHTML = html;
+}
+
+// ============================================================
+// FIXTURE GENERAL (CRONOGRAMA COMPLETO)
+// ============================================================
+function renderizarFixtureGeneral() {
+  const container = document.getElementById("fixture-content");
+  if (!container) return;
+
+  if (!datosTorneo.partidos || datosTorneo.partidos.length === 0) {
+    container.innerHTML = `<p style="color:#aaa;">Aún no hay partidos cargados.</p>`;
+    return;
+  }
+
+  const partidosOrdenados = [...datosTorneo.partidos].sort((a, b) => a.orden - b.orden);
+
+  const badgeEstado = (estado) => {
+    if (estado === 'En Vivo') return `<span style="color:#ef4444; font-weight:bold;">🔴 En Vivo</span>`;
+    if (estado === 'Finalizado') return `<span style="color:#10b981; font-weight:bold;">🟢 Finalizado</span>`;
+    return `<span style="color:#f59e0b; font-weight:bold;">🟡 Próximamente</span>`;
+  };
+
+  let html = `<div style="overflow-x:auto;"><table class="tabla-deportiva"><thead><tr><th>#</th><th>Disciplina</th><th>Fase</th><th>Partido</th><th>Resultado</th><th>Fecha / Hora</th><th>Estado</th></tr></thead><tbody>`;
+
+  partidosOrdenados.forEach(p => {
+    const resultado = (p.golesA !== "" && p.golesB !== "") ? `${p.golesA} - ${p.golesB}` : "vs";
+    html += `
+      <tr onclick="manejarClicPartido('${p.id}', '${p.disciplina}', '${p.fase}', '${p.equipoA}', '${p.equipoB}')" style="cursor:pointer;">
+        <td>${p.orden}</td>
+        <td>${p.disciplina}</td>
+        <td>${p.fase}</td>
+        <td>${renderizarNombreVisible(p.equipoA)} vs ${renderizarNombreVisible(p.equipoB)}</td>
+        <td>${resultado}</td>
+        <td>${p.fechaHora || '-'}</td>
+        <td>${badgeEstado(p.estado)}</td>
+      </tr>
+    `;
+  });
+
+  html += `</tbody></table></div>`;
+  container.innerHTML = html;
+}
+
+// ============================================================
+// REPORTE DE JUGADORES SUSPENDIDOS / INHABILITADOS
+// ============================================================
+function renderizarSuspendidos() {
+  const container = document.getElementById("suspendidos-content");
+  if (!container) return;
+
+  const conteo = {};
+
+  datosTorneo.incidencias.forEach(inc => {
+    if (inc.tipo_evento && inc.tipo_evento.includes('Tarjeta')) {
+      const clave = `${inc.jugador_nombre}|${inc.curso_equipo || ''}`;
+      if (!conteo[clave]) {
+        conteo[clave] = {
+          jugador: inc.jugador_nombre,
+          equipo: inc.curso_equipo || '',
+          amarillas: 0,
+          rojas: 0,
+          azules: 0
+        };
+      }
+      if (inc.tipo_evento === 'Tarjeta Amarilla') conteo[clave].amarillas++;
+      if (inc.tipo_evento === 'Tarjeta Roja') conteo[clave].rojas++;
+      if (inc.tipo_evento === 'Tarjeta Azul') conteo[clave].azules++;
+    }
+  });
+
+  // Un jugador queda suspendido con tarjeta roja directa o al acumular 2 amarillas
+  const suspendidos = Object.values(conteo).filter(j => j.rojas >= 1 || j.amarillas >= 2);
+
+  if (suspendidos.length === 0) {
+    container.innerHTML = `<p style="color:#aaa;">No hay jugadores suspendidos por el momento.</p>`;
+    return;
+  }
+
+  let html = `<div style="overflow-x:auto;"><table class="tabla-deportiva"><thead><tr><th>Jugador</th><th>Curso / Equipo</th><th>🟨</th><th>🟥</th><th>🟦</th><th>Motivo</th></tr></thead><tbody>`;
+
+  suspendidos.forEach(j => {
+    const motivo = j.rojas >= 1 ? "Tarjeta Roja Directa" : "Acumulación de Amarillas (2)";
+    html += `<tr><td><b>${j.jugador}</b></td><td>${renderizarNombreVisible(j.equipo)}</td><td>${j.amarillas}</td><td>${j.rojas}</td><td>${j.azules}</td><td style="color:#ef4444; font-weight:bold;">${motivo}</td></tr>`;
+  });
+
+  html += `</tbody></table></div>`;
+  container.innerHTML = html;
+}
+
+// ============================================================
+// BARRA DE APOYO / HINCHADA
+// ============================================================
+function generarBarraApoyoHTML(idPartido, equipoA, equipoB) {
+  // No se puede votar en cruces virtuales de brackets (aún no existen en la BD)
+  if (!idPartido || idPartido.startsWith('VIRTUAL-')) return '';
+  if (!equipoA || !equipoB || equipoA === 'Por definir' || equipoB === 'Por definir') return '';
+
+  const votos = apoyosCache.filter(v => v.id_partido === idPartido);
+  const votosA = votos.filter(v => v.equipo === 'A').length;
+  const votosB = votos.filter(v => v.equipo === 'B').length;
+  const total = votosA + votosB;
+  const pctA = total > 0 ? Math.round((votosA / total) * 100) : 50;
+  const pctB = 100 - pctA;
+  const yaVoto = localStorage.getItem('voto_apoyo_' + idPartido);
+
+  return `
+    <div class="apoyo-box" onclick="event.stopPropagation();">
+      <div class="apoyo-header">🔥 BARRA DE APOYO</div>
+      <div class="apoyo-barra">
+        <div class="apoyo-fill-a" style="width:${pctA}%;"></div>
+        <div class="apoyo-fill-b" style="width:${pctB}%;"></div>
+      </div>
+      <div class="apoyo-botones">
+        <button class="btn-apoyo" ${yaVoto ? 'disabled' : ''} onclick="votarApoyo('${idPartido}', 'A')">
+          <span>👊 ${renderizarNombreVisible(equipoA)}</span><b>${pctA}%</b>
+        </button>
+        <button class="btn-apoyo" ${yaVoto ? 'disabled' : ''} onclick="votarApoyo('${idPartido}', 'B')">
+          <span>${renderizarNombreVisible(equipoB)} 👊</span><b>${pctB}%</b>
+        </button>
+      </div>
+      <small class="apoyo-total">${total} voto${total === 1 ? '' : 's'} registrado${total === 1 ? '' : 's'}${yaVoto ? ' · ¡ya votaste!' : ''}</small>
+    </div>
+  `;
+}
+
+async function votarApoyo(idPartido, lado) {
+  if (localStorage.getItem('voto_apoyo_' + idPartido)) {
+    alert('Ya emitiste tu voto de apoyo en este partido.');
+    return;
+  }
+
+  const idNuevo = 'APOYO-' + new Date().getTime();
+  const { error } = await dbClient.from('apoyos').insert([{
+    id: idNuevo,
+    id_partido: idPartido,
+    equipo: lado
+  }]);
+
+  if (error) {
+    alert('Error al registrar tu voto: ' + error.message);
+    return;
+  }
+
+  localStorage.setItem('voto_apoyo_' + idPartido, lado);
+  cargarDatos();
+}
+
+// ============================================================
+// REACCIONES RÁPIDAS FLOTANTES
+// ============================================================
+async function enviarReaccion(emoji) {
+  lanzarEmojiFlotante(emoji); // feedback inmediato para quien reacciona
+
+  const partidoActual = datosTorneo.partidos.find(p => p.estado === 'En Vivo');
+  const idNuevo = 'REAC-' + new Date().getTime();
+
+  try {
+    await dbClient.from('reacciones').insert([{
+      id: idNuevo,
+      id_partido: partidoActual ? partidoActual.id : null,
+      emoji: emoji
+    }]);
+  } catch (e) {
+    console.log('Error al enviar reacción:', e);
+  }
+}
+
+function lanzarEmojiFlotante(emoji) {
+  const overlay = document.getElementById('reacciones-overlay');
+  if (!overlay) return;
+
+  const span = document.createElement('span');
+  span.className = 'emoji-flotante';
+  span.textContent = emoji;
+  span.style.left = (10 + Math.random() * 80) + '%';
+  span.style.setProperty('--drift', (Math.random() * 80 - 40) + 'px');
+
+  overlay.appendChild(span);
+  setTimeout(() => span.remove(), 2700);
+}
+
+// ============================================================
+// MURO DE COMENTARIOS ANÓNIMOS (COLA FIFO, MÁX. 10)
+// ============================================================
+async function enviarComentario() {
+  const input = document.getElementById('comentario-input');
+  if (!input) return;
+  const texto = input.value.trim();
+
+  if (!texto) return;
+  if (texto.length > 200) {
+    alert('El comentario no puede superar los 200 caracteres.');
+    return;
+  }
+
+  const idNuevo = 'COM-' + new Date().getTime();
+  const { error } = await dbClient.from('comentarios').insert([{ id: idNuevo, mensaje: texto }]);
+
+  if (error) {
+    alert('Error al enviar el comentario: ' + error.message);
+    return;
+  }
+
+  input.value = '';
+  await limpiarComentariosExcedentes();
+  cargarDatos();
+}
+
+// Mantiene la cola FIFO: si hay más de 10 comentarios, borra los más antiguos
+async function limpiarComentariosExcedentes() {
+  const { data: todos } = await dbClient
+    .from('comentarios')
+    .select('*')
+    .order('created_at', { ascending: true });
+
+  if (todos && todos.length > 10) {
+    const sobrantes = todos.slice(0, todos.length - 10);
+    for (const c of sobrantes) {
+      await dbClient.from('comentarios').delete().eq('id', c.id);
+    }
+  }
+}
+
+function renderizarMuroComentarios() {
+  const lista = document.getElementById('muro-comentarios-lista');
+  if (!lista) return;
+
+  if (!comentariosCache || comentariosCache.length === 0) {
+    lista.innerHTML = `<li style="color:#aaa;">Sé el primero en comentar 👀</li>`;
+    return;
+  }
+
+  // Mostrar el más reciente arriba
+  const html = [...comentariosCache].reverse().map(c =>
+    `<li class="comentario-item">💬 ${escaparHTML(c.mensaje)}</li>`
+  ).join('');
+
+  lista.innerHTML = html;
+}
+
+// ============================================================
+// QUINIELA / PREDICCIONES
+// ============================================================
+function renderizarFormularioQuiniela() {
+  const selCurso = document.getElementById('quiniela-curso');
+  const selFutsal = document.getElementById('quiniela-pred-futsal');
+  const selFutbol = document.getElementById('quiniela-pred-futbol');
+  const selVoley = document.getElementById('quiniela-pred-voley');
+  const selPiki = document.getElementById('quiniela-pred-pikivoley');
+
+  if (!selCurso || !selFutsal || !selFutbol || !selVoley || !selPiki) return;
+
+  // Evitar re-poblar si el alumno ya está eligiendo algo (para no resetear el form en cada recarga)
+  if (selCurso.dataset.cargado === 'true') return;
+
+  const opciones = CURSOS_EQUIPOS.map(c => `<option value="${c}">${renderizarNombreVisible(c)}</option>`).join('');
+  selCurso.innerHTML = opciones;
+  selFutsal.innerHTML = opciones;
+  selFutbol.innerHTML = opciones;
+  selVoley.innerHTML = opciones;
+  selPiki.innerHTML = opciones;
+
+  selCurso.dataset.cargado = 'true';
+
+  if (localStorage.getItem('ya_predije')) {
+    document.getElementById('quiniela-msj').innerText = 'Ya enviaste tu predicción desde este dispositivo. ¡Suerte!';
+  }
+}
+
+async function enviarPrediccion() {
+  const nombre = document.getElementById('quiniela-nombre').value.trim();
+  const curso = document.getElementById('quiniela-curso').value;
+  const predFutsal = document.getElementById('quiniela-pred-futsal').value;
+  const predFutbol = document.getElementById('quiniela-pred-futbol').value;
+  const predVoley = document.getElementById('quiniela-pred-voley').value;
+  const predPiki = document.getElementById('quiniela-pred-pikivoley').value;
+  const msj = document.getElementById('quiniela-msj');
+
+  if (!nombre) {
+    msj.innerText = 'Por favor ingresá tu nombre.';
+    return;
+  }
+
+  if (localStorage.getItem('ya_predije')) {
+    msj.innerText = 'Ya enviaste tu predicción desde este dispositivo.';
+    return;
+  }
+
+  const idNuevo = 'PRED-' + new Date().getTime();
+  msj.innerText = 'Enviando predicción...';
+
+  const { error } = await dbClient.from('predicciones').insert([{
+    id: idNuevo,
+    nombre: nombre,
+    curso: curso,
+    pred_futsal: predFutsal,
+    pred_futbol: predFutbol,
+    pred_voley: predVoley,
+    pred_pikivoley: predPiki
+  }]);
+
+  if (error) {
+    msj.innerText = 'Error: ' + error.message;
+    return;
+  }
+
+  localStorage.setItem('ya_predije', 'true');
+  msj.innerText = '¡Predicción registrada! Buena suerte 🎯';
+  cargarDatos();
+}
+
+// Determina el campeón de una disciplina buscando el ganador de su partido de "Final"
+function obtenerCampeonDisciplina(disciplina) {
+  const partidos = datosTorneo.partidos.filter(p => normalizarTexto(p.disciplina) === normalizarTexto(disciplina));
+  const finalMatch = partidos.find(p => {
+    const f = normalizarTexto(p.fase);
+    return f.includes('final') && !f.includes('semi');
+  });
+  return obtenerGanador(finalMatch);
+}
+
+function renderizarQuinielaRanking() {
+  const container = document.getElementById('quiniela-ranking-content');
+  if (!container) return;
+
+  if (!prediccionesCache || prediccionesCache.length === 0) {
+    container.innerHTML = `<p style="color:#aaa;">Todavía nadie cargó su predicción. ¡Sé el primero!</p>`;
+    return;
+  }
+
+  const campFutsal = obtenerCampeonDisciplina('Futsal Masculino');
+  const campFutbol = obtenerCampeonDisciplina('Fútbol de Campo Masculino');
+  const campVoley = obtenerCampeonDisciplina('Volley Mixto');
+  const campPiki = obtenerCampeonDisciplina('Pikivoley Masculino');
+
+  const ranking = prediccionesCache.map(p => {
+    let aciertos = 0;
+    if (campFutsal && p.pred_futsal === campFutsal) aciertos++;
+    if (campFutbol && p.pred_futbol === campFutbol) aciertos++;
+    if (campVoley && p.pred_voley === campVoley) aciertos++;
+    if (campPiki && p.pred_pikivoley === campPiki) aciertos++;
+    return { nombre: p.nombre, curso: p.curso, aciertos };
+  }).sort((a, b) => b.aciertos - a.aciertos);
+
+  let html = `<div style="overflow-x:auto;"><table class="tabla-deportiva"><thead><tr><th>Pos.</th><th>Alumno</th><th>Curso</th><th>Aciertos</th></tr></thead><tbody>`;
+
+  ranking.forEach((r, index) => {
+    const claseBadge = index === 0 ? 'badge-posicion-1' : index === 1 ? 'badge-posicion-2' : index === 2 ? 'badge-posicion-3' : '';
+    html += `<tr><td><b class="${claseBadge}">#${index + 1}</b></td><td>${escaparHTML(r.nombre)}</td><td>${renderizarNombreVisible(r.curso)}</td><td><b style="color:#d4af37;">${r.aciertos} / 4</b></td></tr>`;
+  });
+
+  html += `</tbody></table></div>
+  <p style="color:#888; font-size:11px; margin-top:8px;">Los aciertos se actualizan automáticamente a medida que se juegan las finales de cada disciplina.</p>`;
+  container.innerHTML = html;
 }
 
 window.onload = function() {

@@ -419,3 +419,331 @@ body.modo-superadmin .btn-cargar-card {
   font-weight: bold;
   margin-top: 10px;
 }
+
+/* ============================================================ */
+/* MEJORA DE BOTONES: ESTADO DEL ENCUENTRO Y MARCADOR RÁPIDO     */
+/* ============================================================ */
+
+.estado-selector-box {
+  background-color: #0d0d0d;
+  border: 1px solid #262626;
+  border-radius: 8px;
+  padding: 12px;
+  margin: 10px 0;
+}
+
+.estado-btn-group {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.btn-estado {
+  flex: 1;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  padding: 10px 8px;
+  font-size: 12px;
+  font-weight: bold;
+  cursor: pointer;
+  color: #ffffff;
+  background-color: #1c1c1c;
+  transition: all 0.15s ease;
+}
+
+.btn-estado:hover {
+  transform: translateY(-1px);
+  filter: brightness(1.15);
+}
+
+.btn-est-envivo {
+  background-color: rgba(239, 68, 68, 0.15);
+  border-color: #ef4444;
+  color: #ef4444;
+}
+
+.btn-est-finalizado {
+  background-color: rgba(16, 185, 129, 0.15);
+  border-color: #10b981;
+  color: #10b981;
+}
+
+.btn-est-pendiente {
+  background-color: rgba(245, 158, 11, 0.15);
+  border-color: #f59e0b;
+  color: #f59e0b;
+}
+
+.quick-score-box {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin: 10px 0;
+}
+
+.btn-score-quick {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  background: linear-gradient(135deg, #1c1c1c, #141414);
+  border: 1px solid #333333;
+  border-radius: 10px;
+  padding: 14px 8px;
+  cursor: pointer;
+  color: #ffffff;
+  transition: all 0.15s ease;
+}
+
+.btn-score-quick:hover {
+  border-color: #d4af37;
+  background: linear-gradient(135deg, #262626, #1a1a1a);
+}
+
+.btn-score-quick span:first-child {
+  font-size: 12px;
+  font-weight: bold;
+  color: #dddddd;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.score-num-big {
+  font-size: 20px;
+  font-weight: bold;
+  color: #d4af37;
+}
+
+.btn-score-quick.equipo-a {
+  border-left: 3px solid #3b82f6;
+}
+
+.btn-score-quick.equipo-b {
+  border-left: 3px solid #d4af37;
+}
+
+/* ============================================================ */
+/* BARRA DE APOYO / HINCHADA                                     */
+/* ============================================================ */
+
+.apoyo-box {
+  background-color: #0d0d0d;
+  border: 1px solid #262626;
+  border-radius: 8px;
+  padding: 10px 12px;
+  margin-top: 12px;
+}
+
+.apoyo-header {
+  font-size: 11px;
+  color: #d4af37;
+  font-weight: bold;
+  margin-bottom: 6px;
+  letter-spacing: 0.5px;
+}
+
+.apoyo-barra {
+  display: flex;
+  width: 100%;
+  height: 10px;
+  border-radius: 6px;
+  overflow: hidden;
+  background-color: #1c1c1c;
+  margin-bottom: 8px;
+}
+
+.apoyo-fill-a {
+  background-color: #3b82f6;
+  height: 100%;
+  transition: width 0.4s ease;
+}
+
+.apoyo-fill-b {
+  background-color: #d4af37;
+  height: 100%;
+  transition: width 0.4s ease;
+}
+
+.apoyo-botones {
+  display: flex;
+  gap: 8px;
+}
+
+.btn-apoyo {
+  flex: 1;
+  background-color: #161616;
+  border: 1px solid #333333;
+  border-radius: 6px;
+  padding: 8px 6px;
+  font-size: 11px;
+  font-weight: bold;
+  color: #ffffff;
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 4px;
+}
+
+.btn-apoyo:hover:not(:disabled) {
+  border-color: #d4af37;
+}
+
+.btn-apoyo:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.apoyo-total {
+  display: block;
+  margin-top: 6px;
+  color: #888;
+  font-size: 10px;
+  text-align: center;
+}
+
+/* ============================================================ */
+/* REACCIONES RÁPIDAS FLOTANTES                                  */
+/* ============================================================ */
+
+.reacciones-overlay {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 5000;
+  overflow: hidden;
+}
+
+.emoji-flotante {
+  position: absolute;
+  bottom: 70px;
+  font-size: 30px;
+  animation: flotarEmoji 2.6s ease-out forwards;
+  pointer-events: none;
+}
+
+@keyframes flotarEmoji {
+  0% { transform: translateY(0) translateX(0) scale(0.7) rotate(0deg); opacity: 1; }
+  60% { opacity: 1; }
+  100% { transform: translateY(-380px) translateX(var(--drift, 0px)) scale(1.5) rotate(15deg); opacity: 0; }
+}
+
+.reacciones-botonera {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  margin-top: 14px;
+}
+
+.btn-reaccion {
+  background-color: #161616;
+  border: 1px solid #333333;
+  border-radius: 50px;
+  padding: 10px 18px;
+  font-size: 20px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.btn-reaccion:hover {
+  border-color: #d4af37;
+  transform: scale(1.15);
+  background-color: #1f1f1f;
+}
+
+/* ============================================================ */
+/* MURO DE COMENTARIOS ANÓNIMOS                                  */
+/* ============================================================ */
+
+.muro-comentarios-box {
+  background-color: #141414;
+  border: 1px solid #262626;
+  border-radius: 12px;
+  padding: 16px;
+  margin-top: 20px;
+}
+
+.muro-comentarios-form {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.muro-comentarios-form input {
+  flex: 1;
+  padding: 10px 12px;
+  background-color: #0d0d0d;
+  border: 1px solid #444;
+  color: #fff;
+  border-radius: 6px;
+}
+
+.btn-enviar-comentario {
+  background-color: #d4af37;
+  color: #000;
+  border: none;
+  padding: 0 18px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: bold;
+  white-space: nowrap;
+}
+
+.muro-comentarios-lista {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  max-height: 280px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.comentario-item {
+  background-color: #1c1c1c;
+  border: 1px solid #2a2a2a;
+  border-radius: 8px;
+  padding: 10px 12px;
+  font-size: 14px;
+  color: #eee;
+  word-break: break-word;
+}
+
+/* ============================================================ */
+/* QUINIELA / PREDICCIONES                                       */
+/* ============================================================ */
+
+.quiniela-form-box {
+  background-color: #161616;
+  border: 1px solid #333333;
+  border-radius: 10px;
+  padding: 18px;
+  max-width: 480px;
+  margin-bottom: 20px;
+}
+
+.quiniela-form-box label {
+  display: block;
+  margin: 10px 0 4px 0;
+  font-size: 13px;
+  color: #aaa;
+}
+
+.quiniela-form-box input,
+.quiniela-form-box select {
+  width: 100%;
+  padding: 9px;
+  background-color: #0d0d0d;
+  border: 1px solid #444;
+  color: #fff;
+  border-radius: 6px;
+  box-sizing: border-box;
+}
+
+.badge-posicion-1 { color: #d4af37; font-weight: bold; }
+.badge-posicion-2 { color: #c0c0c0; font-weight: bold; }
+.badge-posicion-3 { color: #cd7f32; font-weight: bold; }
