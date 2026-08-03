@@ -13,6 +13,12 @@ const CURSOS_EQUIPOS = [
   "Alpha (1 Ciencias)", "Vanguardia (2 Ciencias)", "Legión (3 Ciencias)", "Mastery (5 Psico)", "Avanzada (4 Psico)"  
 ];  
 
+// Normalizar texto para comparación robusta
+function normalizarTexto(txt) {
+  if (!txt) return "";
+  return txt.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
+}
+
 // Alternar Modo Logística con el búho 🦉
 function activarModoLogistica() {
   if (esModoLogistica) {
@@ -82,47 +88,100 @@ async function cargarDatos() {
   }  
 }  
 
+// Obtener ganador de un partido
+function obtenerGanador(p) {
+  if (!p || p.estado !== 'Finalizado') return null;
+  const gA = Number(p.golesA);
+  const gB = Number(p.golesB);
+  if (gA > gB) return p.equipoA;
+  if (gB > gA) return p.equipoB;
+  return null;
+}
+
+// RENDERIZADO CORREGIDO CON ÍNDICES CORRECTOS DE R1 (r1[0], r1, r1, r1)
 function renderizarArbolGrafico(disciplina, containerId) {  
   const container = document.getElementById(containerId);  
   if (!container) return;  
   
-  const partidos = datosTorneo.partidos.filter(p => p.disciplina === disciplina);  
-  const fases = ["1ª Ronda Eliminatoria", "Semifinales", "Final"];  
+  const partidos = datosTorneo.partidos.filter(p => normalizarTexto(p.disciplina) === normalizarTexto(disciplina));  
   
-  let html = `<div class="bracket-tree-wrapper">`;  
-  
-  fases.forEach((fase) => {  
-    const partidosFase = partidos.filter(p => p.fase === fase);  
-    
-    html += `<div class="bracket-col">`;  
-    html += `<div class="bracket-title">${fase}</div>`;  
-  
-    if (fase === "1ª Ronda Eliminatoria") {  
-      for (let i = 0; i < partidosFase.length; i += 2) {  
-        html += `<div class="bracket-match-pair">`;  
-        if (partidosFase[i]) html += crearNodoHTML(partidosFase[i]);  
-        if (partidosFase[i + 1]) html += crearNodoHTML(partidosFase[i + 1]);  
-        html += `</div>`;  
-      }  
-    } else {  
-      partidosFase.forEach(p => {  
-        html += `<div style="margin: auto 0;">${crearNodoHTML(p)}</div>`;  
-      });  
-    }  
-  
-    html += `</div>`;  
-  });  
-  
-  // Campeón de la disciplina
-  const partidoFinal = partidos.find(p => p.fase === "Final" && p.estado === "Finalizado");
-  let campeonTexto = "🏆 Por Definir";
-  if (partidoFinal) {
-    const gA = Number(partidoFinal.golesA);
-    const gB = Number(partidoFinal.golesB);
-    if (gA > gB) campeonTexto = `🏆 ${partidoFinal.equipoA}`;
-    else if (gB > gA) campeonTexto = `🏆 ${partidoFinal.equipoB}`;
-  }
+  const r1 = partidos.filter(p => {
+    const f = normalizarTexto(p.fase);
+    return f.includes("ronda") || f.includes("cuartos") || f.includes("eliminatoria");
+  }).sort((a,b) => a.orden - b.orden);  
 
+  const semisBD = partidos.filter(p => normalizarTexto(p.fase).includes("semi")).sort((a,b) => a.orden - b.orden);  
+  const finalBD = partidos.find(p => normalizarTexto(p.fase).includes("final") && !normalizarTexto(p.fase).includes("semi"));
+
+  // Lectura corregida de ganadores de Ronda 1
+  const ganR1_0 = obtenerGanador(r1[0]);
+  const ganR1_1 = obtenerGanador(r1);
+  const ganR1_2 = obtenerGanador(r1);
+  const ganR1_3 = obtenerGanador(r1);
+
+  const semi1 = {
+    id: semisBD[0] ? semisBD[0].id : `VIRTUAL-SEMI-1-${disciplina}`,
+    fase: "Semifinales",
+    disciplina: disciplina,
+    equipoA: ganR1_0 || (semisBD[0] ? semisBD[0].equipoA : 'Por definir'),
+    equipoB: ganR1_1 || (semisBD[0] ? semisBD[0].equipoB : 'Por definir'),
+    golesA: semisBD[0] ? semisBD[0].golesA : '',
+    golesB: semisBD[0] ? semisBD[0].golesB : '',
+    estado: semisBD[0] ? semisBD[0].estado : 'Pendiente'
+  };
+
+  const semi2 = {
+    id: semisBD ? semisBD.id : `VIRTUAL-SEMI-2-${disciplina}`,
+    fase: "Semifinales",
+    disciplina: disciplina,
+    equipoA: ganR1_2 || (semisBD ? semisBD.equipoA : 'Por definir'),
+    equipoB: ganR1_3 || (semisBD ? semisBD.equipoB : 'Por definir'),
+    golesA: semisBD ? semisBD.golesA : '',
+    golesB: semisBD ? semisBD.golesB : '',
+    estado: semisBD ? semisBD.estado : 'Pendiente'
+  };
+
+  const ganSemi1 = obtenerGanador(semi1);
+  const ganSemi2 = obtenerGanador(semi2);
+
+  const finalMatch = {
+    id: finalBD ? finalBD.id : `VIRTUAL-FINAL-${disciplina}`,
+    fase: "Final",
+    disciplina: disciplina,
+    equipoA: ganSemi1 || (finalBD ? finalBD.equipoA : 'Por definir'),
+    equipoB: ganSemi2 || (finalBD ? finalBD.equipoB : 'Por definir'),
+    golesA: finalBD ? finalBD.golesA : '',
+    golesB: finalBD ? finalBD.golesB : '',
+    estado: finalBD ? finalBD.estado : 'Pendiente'
+  };
+
+  const ganFinal = obtenerGanador(finalMatch);
+  const campeonTexto = ganFinal ? `🏆 ${ganFinal}` : "🏆 Por Definir";
+
+  let html = `<div class="bracket-tree-wrapper">`;  
+
+  // Columna 1ª Ronda
+  html += `<div class="bracket-col"><div class="bracket-title">1ª Ronda Eliminatoria</div>`;
+  for (let i = 0; i < r1.length; i += 2) {  
+    html += `<div class="bracket-match-pair">`;  
+    if (r1[i]) html += crearNodoHTML(r1[i]);  
+    if (r1[i + 1]) html += crearNodoHTML(r1[i + 1]);  
+    html += `</div>`;  
+  }  
+  html += `</div>`;
+
+  // Columna Semifinales
+  html += `<div class="bracket-col"><div class="bracket-title">Semifinales</div>`;
+  html += `<div style="margin: auto 0;">${crearNodoHTML(semi1)}</div>`;
+  html += `<div style="margin: auto 0;">${crearNodoHTML(semi2)}</div>`;
+  html += `</div>`;
+
+  // Columna Final
+  html += `<div class="bracket-col"><div class="bracket-title">Final</div>`;
+  html += `<div style="margin: auto 0;">${crearNodoHTML(finalMatch)}</div>`;
+  html += `</div>`;
+
+  // Columna Campeón
   html += `  
     <div class="bracket-col">  
       <div class="bracket-title">🏆 Campeón</div>  
@@ -139,7 +198,7 @@ function crearNodoHTML(p) {
   const winB = p.estado === 'Finalizado' && Number(p.golesB) > Number(p.golesA) ? 'winner' : '';  
   
   return `  
-    <div class="bracket-node" onclick="abrirModalAdmin('${p.id}')">  
+    <div class="bracket-node" onclick="abrirModalAdmin('${p.id}', '${p.disciplina}', '${p.fase}', '${p.equipoA}', '${p.equipoB}')">  
       <div class="team ${winA}">  
         <span>${p.equipoA || 'Por definir'}</span>  
         <b>${p.estado === 'Finalizado' ? p.golesA : '-'}</b>  
@@ -152,25 +211,26 @@ function crearNodoHTML(p) {
   `;  
 }  
 
-async function abrirModalAdmin(idPartido) {  
+async function abrirModalAdmin(idPartido, disciplina = "", fase = "", eqA = "", eqB = "") {  
   if (!esModoLogistica) return;  
 
-  const partido = datosTorneo.partidos.find(p => p.id === idPartido);  
-  if (!partido) return;  
+  let partido = datosTorneo.partidos.find(p => p.id === idPartido);  
 
-  document.getElementById("admin-id-partido").value = partido.id;  
-  document.getElementById("modal-partido-titulo").innerText = `${partido.equipoA || 'Por definir'} vs ${partido.equipoB || 'Por definir'}`;  
-  document.getElementById("lbl-equipo-a").innerText = partido.equipoA || "Equipo A";  
-  document.getElementById("lbl-equipo-b").innerText = partido.equipoB || "Equipo B";  
-  document.getElementById("goles-a").value = partido.golesA !== undefined ? partido.golesA : "";  
-  document.getElementById("goles-b").value = partido.golesB !== undefined ? partido.golesB : "";  
+  document.getElementById("admin-id-partido").value = idPartido;  
+  document.getElementById("modal-partido-titulo").innerText = `${eqA || 'Por definir'} vs ${eqB || 'Por definir'}`;  
+  document.getElementById("modal-partido-titulo").dataset.disciplina = disciplina;
+  document.getElementById("modal-partido-titulo").dataset.fase = fase;
+  document.getElementById("lbl-equipo-a").innerText = eqA || "Equipo A";  
+  document.getElementById("lbl-equipo-b").innerText = eqB || "Equipo B";  
+  document.getElementById("goles-a").value = partido && partido.golesA !== undefined ? partido.golesA : "";  
+  document.getElementById("goles-b").value = partido && partido.golesB !== undefined ? partido.golesB : "";  
 
   const selEquipo = document.getElementById("incidencia-equipo");
   selEquipo.innerHTML = "";
-  if (partido.equipoA) selEquipo.innerHTML += `<option value="${partido.equipoA}">${partido.equipoA}</option>`;
-  if (partido.equipoB) selEquipo.innerHTML += `<option value="${partido.equipoB}">${partido.equipoB}</option>`;
+  if (eqA && eqA !== 'Por definir') selEquipo.innerHTML += `<option value="${eqA}">${eqA}</option>`;
+  if (eqB && eqB !== 'Por definir') selEquipo.innerHTML += `<option value="${eqB}">${eqB}</option>`;
 
-  await cargarIncidenciasModal(partido.id);
+  await cargarIncidenciasModal(idPartido);
   document.getElementById("modal-admin").style.display = "block";  
 }  
 
@@ -244,96 +304,46 @@ async function enviarResultado() {
     return;  
   }  
 
-  const partidoActual = datosTorneo.partidos.find(p => p.id === idPartido);
   const gA = parseInt(golesA);
   const gB = parseInt(golesB);
 
-  const { error } = await dbClient  
-    .from('partidos')  
-    .update({  
-      goles_a: gA,  
-      goles_b: gB,  
-      estado: 'Finalizado'  
-    })  
-    .eq('id', idPartido);  
+  const existe = datosTorneo.partidos.find(p => p.id === idPartido);
 
-  if (error) {  
-    alert("Error al guardar: " + error.message);  
-    return;
-  }  
+  if (!existe && idPartido.startsWith("VIRTUAL-")) {
+    const disciplina = document.getElementById("modal-partido-titulo").dataset.disciplina || "Futsal Masculino";
+    const fase = document.getElementById("modal-partido-titulo").dataset.fase || "Semifinales";
+    const eqA = document.getElementById("lbl-equipo-a").innerText;
+    const eqB = document.getElementById("lbl-equipo-b").innerText;
 
-  if (partidoActual && gA !== gB) {
-    const ganador = gA > gB ? partidoActual.equipoA : partidoActual.equipoB;
-    await clasificarGanador(partidoActual, ganador);
+    const idReal = "PAR-" + new Date().getTime();
+    await dbClient.from('partidos').insert([{
+      id: idReal,
+      disciplina: disciplina,
+      fase: fase,
+      equipo_a: eqA,
+      equipo_b: eqB,
+      goles_a: gA,
+      goles_b: gB,
+      estado: 'Finalizado'
+    }]);
+  } else {
+    await dbClient
+      .from('partidos')
+      .update({
+        goles_a: gA,
+        goles_b: gB,
+        estado: 'Finalizado'
+      })
+      .eq('id', idPartido);
   }
 
   cerrarModalAdmin();  
   cargarDatos();  
 }  
 
-// Avance automático de ganadores garantizando inserción o actualización de la fila en Supabase
-async function clasificarGanador(partidoActual, ganador) {
-  const partidosDisciplina = datosTorneo.partidos
-    .filter(p => p.disciplina === partidoActual.disciplina)
-    .sort((a, b) => a.orden - b.orden);
-
-  if (partidoActual.fase === "1ª Ronda Eliminatoria") {
-    const r1 = partidosDisciplina.filter(p => p.fase === "1ª Ronda Eliminatoria");
-    const idx = r1.findIndex(p => p.id === partidoActual.id);
-    const semis = partidosDisciplina.filter(p => p.fase === "Semifinales");
-
-    if (idx !== -1) {
-      const targetSemiIdx = Math.floor(idx / 2);
-      const targetSemi = semis[targetSemiIdx];
-
-      if (!targetSemi) {
-        const idSemi = `PAR-SEMI-${partidoActual.disciplina.replace(/\s+/g, '-')}-${targetSemiIdx + 1}`;
-        const nuevoEquipoA = (idx % 2 === 0) ? ganador : null;
-        const nuevoEquipoB = (idx % 2 !== 0) ? ganador : null;
-
-        await dbClient.from('partidos').insert([{
-          id: idSemi,
-          disciplina: partidoActual.disciplina,
-          fase: "Semifinales",
-          equipo_a: nuevoEquipoA,
-          equipo_b: nuevoEquipoB,
-          estado: 'Pendiente',
-          orden: 10 + targetSemiIdx
-        }]);
-      } else {
-        const campoAActualizar = (idx % 2 === 0) ? { equipo_a: ganador } : { equipo_b: ganador };
-        await dbClient.from('partidos').update(campoAActualizar).eq('id', targetSemi.id);
-      }
-    }
-  } else if (partidoActual.fase === "Semifinales") {
-    const semis = partidosDisciplina.filter(p => p.fase === "Semifinales");
-    const idx = semis.findIndex(p => p.id === partidoActual.id);
-    const finales = partidosDisciplina.filter(p => p.fase === "Final");
-    const targetFinal = finales[0];
-
-    if (!targetFinal) {
-      const idFinal = `PAR-FINAL-${partidoActual.disciplina.replace(/\s+/g, '-')}`;
-      const nuevoEquipoA = (idx === 0) ? ganador : null;
-      const nuevoEquipoB = (idx !== 0) ? ganador : null;
-
-      await dbClient.from('partidos').insert([{
-        id: idFinal,
-        disciplina: partidoActual.disciplina,
-        fase: "Final",
-        equipo_a: nuevoEquipoA,
-        equipo_b: nuevoEquipoB,
-        estado: 'Pendiente',
-        orden: 99
-      }]);
-    } else {
-      const campoAActualizar = (idx === 0) ? { equipo_a: ganador } : { equipo_b: ganador };
-      await dbClient.from('partidos').update(campoAActualizar).eq('id', targetFinal.id);
-    }
-  }
-}
-
 // -------------------------------------------------------------
-// PESTAÑAS DE ESTADÍSTICAS Y PROMEDIOS CALCULADOS
+// TABLA GENERAL DE PUNTUACIÓN SEGÚN EL REGLAMENTO OFICIAL
+// 1er Lugar = 100 Pts | 2do Lugar = 50 Pts (Pikivoley: 0 Pts)
 // -------------------------------------------------------------
 
 function renderizarMedalleroGeneral() {
@@ -342,7 +352,117 @@ function renderizarMedalleroGeneral() {
 
   const stats = {};
   CURSOS_EQUIPOS.forEach(eq => {
-    stats[eq] = { pj: 0, pg: 0, pp: 0, gf: 0, gc: 0, pts: 0 };
+    stats[eq] = {
+      futsalM: 0, futsalF: 0, futbolM: 0, futbolF: 0,
+      voley: 0, piki: 0, maratonM: 0, maratonF: 0,
+      ajedrez: 0, clash: 0, total: 0
+    };
+  });
+
+  const disciplinasList = [
+    "Futsal Masculino", "Futsal Femenino", "Fútbol de Campo Masculino", 
+    "Fútbol de Campo Femenino", "Volley Mixto", "Pikivoley Masculino",
+    "Maratón Masculino", "Maratón Femenino", "Ajedrez", "Clash Royale"
+  ];
+
+  disciplinasList.forEach(disc => {
+    const partidosDisc = datosTorneo.partidos.filter(p => normalizarTexto(p.disciplina) === normalizarTexto(disc));
+    const finalMatch = partidosDisc.find(p => normalizarTexto(p.fase).includes("final") && !normalizarTexto(p.fase).includes("semi") && p.estado === "Finalizado");
+
+    if (finalMatch) {
+      const gA = Number(finalMatch.golesA);
+      const gB = Number(finalMatch.golesB);
+      if (gA !== gB) {
+        const campeon = gA > gB ? finalMatch.equipoA : finalMatch.equipoB;
+        const subcampeon = gA > gB ? finalMatch.equipoB : finalMatch.equipoA;
+
+        const claveStat = obtenerClaveDisciplina(disc);
+        const ptsSub = disc.includes("Pikivoley") ? 0 : 50;
+
+        if (stats[campeon]) stats[campeon][claveStat] = 100;
+        if (stats[subcampeon]) stats[subcampeon][claveStat] = ptsSub;
+      }
+    }
+  });
+
+  Object.keys(stats).forEach(eq => {
+    const s = stats[eq];
+    s.total = s.futsalM + s.futsalF + s.futbolM + s.futbolF + s.voley + s.piki + s.maratonM + s.maratonF + s.ajedrez + s.clash;
+  });
+
+  const lista = Object.keys(stats)
+    .map(eq => ({ equipo: eq, ...stats[eq] }))
+    .sort((a, b) => b.total - a.total);
+
+  let html = `
+    <div style="overflow-x:auto;">
+    <table class="tabla-deportiva">
+      <thead>
+        <tr>
+          <th>Pos.</th>
+          <th>Equipo / Curso</th>
+          <th>Futsal M.</th>
+          <th>Futsal F.</th>
+          <th>Fútbol M.</th>
+          <th>Fútbol F.</th>
+          <th>Vóley</th>
+          <th>Piki</th>
+          <th>Maratón M.</th>
+          <th>Maratón F.</th>
+          <th>Ajedrez</th>
+          <th>Clash R.</th>
+          <th>PUNTAJE TOTAL</th>
+        </tr>
+      </thead>
+      <tbody>
+  `;
+
+  lista.forEach((item, index) => {
+    html += `
+      <tr>
+        <td><b>#${index + 1}</b></td>
+        <td><b>${item.equipo}</b></td>
+        <td>${item.futsalM}</td>
+        <td>${item.futsalF}</td>
+        <td>${item.futbolM}</td>
+        <td>${item.futbolF}</td>
+        <td>${item.voley}</td>
+        <td>${item.piki}</td>
+        <td>${item.maratonM}</td>
+        <td>${item.maratonF}</td>
+        <td>${item.ajedrez}</td>
+        <td>${item.clash}</td>
+        <td><b style="color:#d4af37; font-size:16px;">${item.total} PTS</b></td>
+      </tr>
+    `;
+  });
+
+  html += `</tbody></table></div>`;
+  container.innerHTML = html;
+}
+
+function obtenerClaveDisciplina(disc) {
+  const d = normalizarTexto(disc);
+  if (d.includes("futsal") && d.includes("masculino")) return "futsalM";
+  if (d.includes("futsal") && d.includes("femenino")) return "futsalF";
+  if (d.includes("futbol") && d.includes("masculino")) return "futbolM";
+  if (d.includes("futbol") && d.includes("femenino")) return "futbolF";
+  if (d.includes("volley") || d.includes("voley")) return "voley";
+  if (d.includes("piki")) return "piki";
+  if (d.includes("maraton") && d.includes("masculino")) return "maratonM";
+  if (d.includes("maraton") && d.includes("femenino")) return "maratonF";
+  if (d.includes("ajedrez")) return "ajedrez";
+  if (d.includes("clash")) return "clash";
+  return "total";
+}
+
+function renderizarEstadisticasEquipos() {
+  const container = document.getElementById("estadisticas-content");
+  if (!container) return;
+
+  const stats = {};
+  CURSOS_EQUIPOS.forEach(eq => {
+    stats[eq] = { pj: 0, pg: 0, pp: 0, gf: 0, gc: 0 };
   });
 
   datosTorneo.partidos.forEach(p => {
@@ -354,66 +474,54 @@ function renderizarMedalleroGeneral() {
         stats[p.equipoA].pj++;
         stats[p.equipoA].gf += gA;
         stats[p.equipoA].gc += gB;
-        if (gA > gB) { stats[p.equipoA].pg++; stats[p.equipoA].pts += 3; }
-        else { stats[p.equipoA].pp++; }
+        if (gA > gB) stats[p.equipoA].pg++;
+        else stats[p.equipoA].pp++;
       }
 
       if (stats[p.equipoB]) {
         stats[p.equipoB].pj++;
         stats[p.equipoB].gf += gB;
         stats[p.equipoB].gc += gA;
-        if (gB > gA) { stats[p.equipoB].pg++; stats[p.equipoB].pts += 3; }
-        else { stats[p.equipoB].pp++; }
+        if (gB > gA) stats[p.equipoB].pg++;
+        else stats[p.equipoB].pp++;
       }
     }
   });
 
-  const lista = Object.keys(stats)
-    .map(eq => ({ equipo: eq, ...stats[eq] }))
-    .sort((a, b) => b.pts - a.pts || (b.gf - b.gc) - (a.gf - a.gc));
+  const lista = Object.keys(stats).map(eq => ({ equipo: eq, ...stats[eq] }));
 
   let html = `
     <table class="tabla-deportiva">
       <thead>
         <tr>
-          <th>Pos.</th>
           <th>Equipo / Curso</th>
           <th>PJ</th>
           <th>PG</th>
           <th>PP</th>
           <th>GF</th>
           <th>GC</th>
-          <th>Dif</th>
-          <th>Puntos</th>
+          <th>Dif. Goles</th>
         </tr>
       </thead>
       <tbody>
   `;
 
-  lista.forEach((item, index) => {
+  lista.forEach(item => {
     html += `
       <tr>
-        <td><b>#${index + 1}</b></td>
-        <td>${item.equipo}</td>
+        <td><b>${item.equipo}</b></td>
         <td>${item.pj}</td>
         <td>${item.pg}</td>
         <td>${item.pp}</td>
         <td>${item.gf}</td>
         <td>${item.gc}</td>
         <td>${item.gf - item.gc}</td>
-        <td><b style="color:#d4af37">${item.pts}</b></td>
       </tr>
     `;
   });
 
   html += `</tbody></table>`;
   container.innerHTML = html;
-}
-
-function renderizarEstadisticasEquipos() {
-  const container = document.getElementById("estadisticas-content");
-  if (!container) return;
-  renderizarMedalleroGeneral();
 }
 
 function renderizarCuadroHonor() {

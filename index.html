@@ -21,8 +21,8 @@
 
   <!-- Barra de Navegación por Pestañas -->
   <nav class="tab-bar">
-    <button class="tab-link active" onclick="openTab(event, 'panel-medallero')">🏆 Medallero General</button>
-    <button class="tab-link" onclick="openTab(event, 'panel-estadisticas')">📊 Estadísticas Equipos</button>
+    <button class="tab-link active" onclick="openTab(event, 'panel-medallero')">🏆 Puntuación por Modalidad</button>
+    <button class="tab-link" onclick="openTab(event, 'panel-estadisticas')">📊 Rendimiento por Curso</button>
     <button class="tab-link" onclick="openTab(event, 'panel-cuadro-honor')">🏅 Cuadro de Honor</button>
     <button class="tab-link" onclick="openTab(event, 'panel-comparativa')">⚖️ Psicologia vs Ciencias</button>
     <button class="tab-link" onclick="openTab(event, 'panel-futsal')">⚽ Futsal</button>
@@ -35,22 +35,22 @@
   <main class="main-content">
     
     <div id="panel-medallero" class="tab-content" style="display:block">
-      <h2>🏆 Medallero General y Tabla de Puntuación</h2>
-      <div id="medallero-content">Cargando medallero...</div>
+      <h2>🏆 Tabla General de Puntuación por Modalidad (100 / 50 Puntos)</h2>
+      <div id="medallero-content">Cargando puntuaciones oficiales...</div>
     </div>
 
     <div id="panel-estadisticas" class="tab-content" style="display:none">
-      <h2>📊 Tabla Completa de Rendimiento por Curso</h2>
-      <div id="estadisticas-content">Cargando estadísticas...</div>
+      <h2>📊 Rendimiento Detallado por Curso (PJ, PG, GF, GC, Dif)</h2>
+      <div id="estadisticas-content">Cargando rendimiento...</div>
     </div>
 
     <div id="panel-cuadro-honor" class="tab-content" style="display:none">
-      <h2>🏅 Cuadro de Honor por Categorías y Disciplinas</h2>
+      <h2>🏅 Cuadro de Honor por Disciplinas</h2>
       <div id="cuadro-honor-content">Cargando destacados...</div>
     </div>
 
     <div id="panel-comparativa" class="tab-content" style="display:none">
-      <h2>⚖️ Comparativa General: Psicología vs Ciencias de la Educación</h2>
+      <h2>⚖️ Comparativa: Psicología vs Ciencias de la Educación</h2>
       <div id="comparativa-content">Cargando comparativa...</div>
     </div>
 
@@ -96,7 +96,7 @@
 
   </main>
 
-  <!-- Pie de Página -->
+  <!-- Pie de Página Institucional y Créditos -->
   <footer class="footer">
     <div class="footer-creditos">
       Dev. by Lukasy | <a href="https://www.instagram.com/lukasy.exe?igsh=MzNieGgzajJsdmVy&utm_source=qr" target="_blank" rel="noopener noreferrer">@lukasyexe</a>
