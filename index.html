@@ -112,6 +112,19 @@
       <h4 id="modal-partido-titulo" style="color:#d4af37; margin:10px 0;"></h4>
       <input type="hidden" id="admin-id-partido">
 
+      <!-- Marcador Punto a Punto Rápido en Vivo -->
+      <label style="color:#d4af37; font-weight:bold;">⚡ Marcador Rápido en Vivo (Click suma punto instantáneo):</label>
+      <div class="quick-score-box">
+        <button type="button" class="btn-score-quick equipo-a" onclick="sumarPuntoRapido('A', 1)">
+          <span id="btn-quick-lbl-a">Equipo A</span>
+          <span class="score-num-big">+1 Punto</span>
+        </button>
+        <button type="button" class="btn-score-quick equipo-b" onclick="sumarPuntoRapido('B', 1)">
+          <span id="btn-quick-lbl-b">Equipo B</span>
+          <span class="score-num-big">+1 Punto</span>
+        </button>
+      </div>
+
       <div class="goles-input">
         <div>
           <label id="lbl-equipo-a">Equipo A</label>
@@ -133,18 +146,15 @@
       <input type="text" id="incidencia-jugador" placeholder="Ej: Carlos Gómez">
 
       <label>Tipo de Evento:</label>
-      <select id="incidencia-tipo">
-        <option value="Gol">⚽ Gol</option>
-        <option value="Tarjeta Amarilla">🟨 Tarjeta Amarilla</option>
-        <option value="Tarjeta Roja">🟥 Tarjeta Roja</option>
-        <option value="Tarjeta Azul">🟦 Tarjeta Azul</option>
-      </select>
+      <select id="incidencia-tipo"></select>
 
       <button type="button" class="btn-add-incidencia" onclick="agregarIncidencia()">➕ Añadir Incidencia</button>
 
       <ul id="lista-incidencias" class="incidencias-list"></ul>
 
-      <button class="btn-guardar" onclick="enviarResultado()">Guardar Resultado y Clasificar Ganador</button>
+      <button class="btn-guardar" onclick="enviarResultado()">Finalizar Partido y Clasificar Ganador</button>
+
+      <button id="btn-eliminar-partido" class="btn-eliminar solo-superadmin" onclick="eliminarPartido()">🗑️ Eliminar / Resetear Partido</button>
     </div>
   </div>
 

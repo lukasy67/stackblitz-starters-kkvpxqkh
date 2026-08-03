@@ -1,4 +1,5 @@
 let esModoLogistica = false;
+let esModoSuperAdmin = false;
 
 // Claves de Supabase  
 const SUPABASE_URL = "https://zkklifirmzvlwapivbrc.supabase.co";  
@@ -13,26 +14,32 @@ const CURSOS_EQUIPOS = [
   "Alpha (1 Ciencias)", "Vanguardia (2 Ciencias)", "Legión (3 Ciencias)", "Mastery (5 Psico)", "Avanzada (4 Psico)"  
 ];  
 
-// Normalizar texto para comparación robusta
 function normalizarTexto(txt) {
   if (!txt) return "";
   return txt.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
 }
 
-// Alternar Modo Logística con el búho 🦉
+// Alternar Modo Logística (1234) / Super Admin (alucas)
 function activarModoLogistica() {
-  if (esModoLogistica) {
+  if (esModoLogistica || esModoSuperAdmin) {
     esModoLogistica = false;
-    document.body.classList.remove("modo-logistica");
+    esModoSuperAdmin = false;
+    document.body.classList.remove("modo-logistica", "modo-superadmin");
     alert("Modo Espectador activado.");
     return;
   }
 
-  const pass = prompt("Ingrese la contraseña de Logística:");
+  const pass = prompt("Ingrese contraseña de acceso:");
   if (pass === "1234") {
     esModoLogistica = true;
+    esModoSuperAdmin = false;
     document.body.classList.add("modo-logistica");
-    alert("¡Modo Logística activado! Se han habilitado las funciones de gestión.");
+    alert("¡Modo Logística activado!");
+  } else if (pass === "alucas") {
+    esModoLogistica = true;
+    esModoSuperAdmin = true;
+    document.body.classList.add("modo-logistica", "modo-superadmin");
+    alert("¡Modo Super Admin (Lucas) activado!");
   } else if (pass !== null) {
     alert("Contraseña incorrecta.");
   }
@@ -76,9 +83,12 @@ async function cargarDatos() {
 
     datosTorneo.incidencias = incidencias || [];
   
-    // Renderizar Vistas
+    // Renderizar Vistas en todas las pestañas
     renderizarArbolGrafico("Futsal Masculino", "futsal-content");  
+    renderizarArbolGrafico("Fútbol de Campo Masculino", "futbol-content");  
     renderizarArbolGrafico("Volley Mixto", "voley-content");  
+    renderizarArbolGrafico("Pikivoley Masculino", "pikivoley-content");  
+
     renderizarMedalleroGeneral();
     renderizarEstadisticasEquipos();
     renderizarCuadroHonor();
@@ -88,7 +98,6 @@ async function cargarDatos() {
   }  
 }  
 
-// Obtener ganador de un partido
 function obtenerGanador(p) {
   if (!p || p.estado !== 'Finalizado') return null;
   const gA = Number(p.golesA);
@@ -98,7 +107,7 @@ function obtenerGanador(p) {
   return null;
 }
 
-// RENDERIZADO CORREGIDO CON ÍNDICES CORRECTOS DE R1 (r1[0], r1, r1, r1)
+// RENDERIZADO REACTIVO CORREGIDO (r1[0], r1, r1, r1)
 function renderizarArbolGrafico(disciplina, containerId) {  
   const container = document.getElementById(containerId);  
   if (!container) return;  
@@ -113,7 +122,7 @@ function renderizarArbolGrafico(disciplina, containerId) {
   const semisBD = partidos.filter(p => normalizarTexto(p.fase).includes("semi")).sort((a,b) => a.orden - b.orden);  
   const finalBD = partidos.find(p => normalizarTexto(p.fase).includes("final") && !normalizarTexto(p.fase).includes("semi"));
 
-  // Lectura corregida de ganadores de Ronda 1
+  // Corrección de los 4 índices del arreglo
   const ganR1_0 = obtenerGanador(r1[0]);
   const ganR1_1 = obtenerGanador(r1);
   const ganR1_2 = obtenerGanador(r1);
@@ -201,11 +210,11 @@ function crearNodoHTML(p) {
     <div class="bracket-node" onclick="abrirModalAdmin('${p.id}', '${p.disciplina}', '${p.fase}', '${p.equipoA}', '${p.equipoB}')">  
       <div class="team ${winA}">  
         <span>${p.equipoA || 'Por definir'}</span>  
-        <b>${p.estado === 'Finalizado' ? p.golesA : '-'}</b>  
+        <b>${p.estado === 'Finalizado' || p.estado === 'En Vivo' ? p.golesA : '-'}</b>  
       </div>  
       <div class="team ${winB}">  
         <span>${p.equipoB || 'Por definir'}</span>  
-        <b>${p.estado === 'Finalizado' ? p.golesB : '-'}</b>  
+        <b>${p.estado === 'Finalizado' || p.estado === 'En Vivo' ? p.golesB : '-'}</b>  
       </div>  
     </div>  
   `;  
@@ -222,6 +231,10 @@ async function abrirModalAdmin(idPartido, disciplina = "", fase = "", eqA = "", 
   document.getElementById("modal-partido-titulo").dataset.fase = fase;
   document.getElementById("lbl-equipo-a").innerText = eqA || "Equipo A";  
   document.getElementById("lbl-equipo-b").innerText = eqB || "Equipo B";  
+  
+  document.getElementById("btn-quick-lbl-a").innerText = eqA || "Equipo A";
+  document.getElementById("btn-quick-lbl-b").innerText = eqB || "Equipo B";
+
   document.getElementById("goles-a").value = partido && partido.golesA !== undefined ? partido.golesA : "";  
   document.getElementById("goles-b").value = partido && partido.golesB !== undefined ? partido.golesB : "";  
 
@@ -230,6 +243,20 @@ async function abrirModalAdmin(idPartido, disciplina = "", fase = "", eqA = "", 
   if (eqA && eqA !== 'Por definir') selEquipo.innerHTML += `<option value="${eqA}">${eqA}</option>`;
   if (eqB && eqB !== 'Por definir') selEquipo.innerHTML += `<option value="${eqB}">${eqB}</option>`;
 
+  // Adaptar Opciones de Incidencias (Omitir Gol en Vóley / Pikivoley)
+  const selTipoIncidencia = document.getElementById("incidencia-tipo");
+  selTipoIncidencia.innerHTML = "";
+  const discNorm = normalizarTexto(disciplina);
+
+  if (!discNorm.includes("volley") && !discNorm.includes("voley") && !discNorm.includes("piki")) {
+    selTipoIncidencia.innerHTML += `<option value="Gol">⚽ Gol</option>`;
+  }
+  selTipoIncidencia.innerHTML += `
+    <option value="Tarjeta Amarilla">🟨 Tarjeta Amarilla</option>
+    <option value="Tarjeta Roja">🟥 Tarjeta Roja</option>
+    <option value="Tarjeta Azul">🟦 Tarjeta Azul</option>
+  `;
+
   await cargarIncidenciasModal(idPartido);
   document.getElementById("modal-admin").style.display = "block";  
 }  
@@ -237,6 +264,48 @@ async function abrirModalAdmin(idPartido, disciplina = "", fase = "", eqA = "", 
 function cerrarModalAdmin() {  
   document.getElementById("modal-admin").style.display = "none";  
 }  
+
+// MARCADOR RÁPIDO EN VIVO (PUNTO A PUNTO INSTANTÁNEO)
+async function sumarPuntoRapido(equipo, cambio) {
+  const idPartido = document.getElementById("admin-id-partido").value;
+  let valA = Number(document.getElementById("goles-a").value || 0);
+  let valB = Number(document.getElementById("goles-b").value || 0);
+
+  if (equipo === 'A') valA = Math.max(0, valA + cambio);
+  if (equipo === 'B') valB = Math.max(0, valB + cambio);
+
+  document.getElementById("goles-a").value = valA;
+  document.getElementById("goles-b").value = valB;
+
+  const existe = datosTorneo.partidos.find(p => p.id === idPartido);
+
+  if (!existe && idPartido.startsWith("VIRTUAL-")) {
+    const disciplina = document.getElementById("modal-partido-titulo").dataset.disciplina || "Volley Mixto";
+    const fase = document.getElementById("modal-partido-titulo").dataset.fase || "Semifinales";
+    const eqA = document.getElementById("lbl-equipo-a").innerText;
+    const eqB = document.getElementById("lbl-equipo-b").innerText;
+
+    const idReal = "PAR-" + new Date().getTime();
+    await dbClient.from('partidos').insert([{
+      id: idReal,
+      disciplina: disciplina,
+      fase: fase,
+      equipo_a: eqA,
+      equipo_b: eqB,
+      goles_a: valA,
+      goles_b: valB,
+      estado: 'En Vivo'
+    }]);
+  } else {
+    await dbClient.from('partidos').update({
+      goles_a: valA,
+      goles_b: valB,
+      estado: 'En Vivo'
+    }).eq('id', idPartido);
+  }
+
+  cargarDatos();
+}
 
 async function agregarIncidencia() {
   const idPartido = document.getElementById("admin-id-partido").value;
@@ -249,10 +318,13 @@ async function agregarIncidencia() {
     return;
   }
 
+  const idGenerado = "INC-" + new Date().getTime();
+
   const { error } = await dbClient
     .from('incidencias')
     .insert([
       {
+        id: idGenerado,
         id_partido: idPartido,
         jugador_nombre: jugador,
         curso_equipo: equipo,
@@ -341,10 +413,26 @@ async function enviarResultado() {
   cargarDatos();  
 }  
 
-// -------------------------------------------------------------
-// TABLA GENERAL DE PUNTUACIÓN SEGÚN EL REGLAMENTO OFICIAL
-// 1er Lugar = 100 Pts | 2do Lugar = 50 Pts (Pikivoley: 0 Pts)
-// -------------------------------------------------------------
+async function eliminarPartido() {
+  if (!esModoSuperAdmin) {
+    alert("Esta función es exclusiva del Super Administrador.");
+    return;
+  }
+
+  const idPartido = document.getElementById("admin-id-partido").value;
+  if (!confirm("¿Estás seguro de que deseas eliminar este partido y sus incidencias?")) return;
+
+  await dbClient.from('incidencias').delete().eq('id_partido', idPartido);
+  const { error } = await dbClient.from('partidos').delete().eq('id', idPartido);
+
+  if (error) {
+    alert("Error al eliminar partido: " + error.message);
+  } else {
+    alert("Partido eliminado correctamente.");
+    cerrarModalAdmin();
+    cargarDatos();
+  }
+}
 
 function renderizarMedalleroGeneral() {
   const container = document.getElementById("medallero-content");
@@ -401,14 +489,14 @@ function renderizarMedalleroGeneral() {
         <tr>
           <th>Pos.</th>
           <th>Equipo / Curso</th>
-          <th>Futsal M.</th>
-          <th>Futsal F.</th>
-          <th>Fútbol M.</th>
-          <th>Fútbol F.</th>
+          <th>Futsal M</th>
+          <th>Futsal F</th>
+          <th>Fútbol M</th>
+          <th>Fútbol F</th>
           <th>Vóley</th>
           <th>Piki</th>
-          <th>Maratón M.</th>
-          <th>Maratón F.</th>
+          <th>Maratón M</th>
+          <th>Maratón F</th>
           <th>Ajedrez</th>
           <th>Clash R.</th>
           <th>PUNTAJE TOTAL</th>
@@ -432,7 +520,7 @@ function renderizarMedalleroGeneral() {
         <td>${item.maratonF}</td>
         <td>${item.ajedrez}</td>
         <td>${item.clash}</td>
-        <td><b style="color:#d4af37; font-size:16px;">${item.total} PTS</b></td>
+        <td><b style="color:#d4af37; font-size:15px;">${item.total} PTS</b></td>
       </tr>
     `;
   });
@@ -709,6 +797,11 @@ function openTab(evt, tabName) {
 function filtrarFutsalSexo(sexo) {  
   const disciplina = sexo === 'M' ? "Futsal Masculino" : "Futsal Femenino";  
   renderizarArbolGrafico(disciplina, "futsal-content");  
+}  
+
+function filtrarFutbolSexo(sexo) {  
+  const disciplina = sexo === 'M' ? "Fútbol de Campo Masculino" : "Fútbol de Campo Femenino";  
+  renderizarArbolGrafico(disciplina, "futbol-content");  
 }  
 
 window.onload = function() {  

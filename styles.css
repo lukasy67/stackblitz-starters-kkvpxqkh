@@ -93,6 +93,48 @@ body {
   border: 1px solid #222222;
 }
 
+/* Marcador Rápido Punto a Punto en Vivo */
+.quick-score-box {
+  display: flex;
+  gap: 15px;
+  margin: 12px 0 18px 0;
+}
+
+.btn-score-quick {
+  flex: 1;
+  padding: 14px 10px;
+  border-radius: 10px;
+  border: none;
+  color: #ffffff;
+  font-weight: bold;
+  font-size: 13px;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  transition: transform 0.1s, box-shadow 0.2s;
+}
+
+.btn-score-quick:active {
+  transform: scale(0.96);
+}
+
+.btn-score-quick.equipo-a {
+  background: linear-gradient(135deg, #1e40af, #3b82f6);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+}
+
+.btn-score-quick.equipo-b {
+  background: linear-gradient(135deg, #991b1b, #ef4444);
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.4);
+}
+
+.score-num-big {
+  font-size: 22px;
+  font-weight: 800;
+}
+
 /* Tablas Deportivas */
 .tabla-deportiva {
   width: 100%;
@@ -138,11 +180,11 @@ body {
 
 .modal-content {
   background-color: #161616;
-  margin: 3% auto;
+  margin: 2% auto;
   padding: 20px;
   border-radius: 10px;
   width: 90%;
-  max-width: 450px;
+  max-width: 460px;
   border: 1px solid #d4af37;
 }
 
@@ -218,14 +260,30 @@ body {
   background-color: #f59e0b;
 }
 
-/* Árbol de Brackets Grafico */
+.btn-eliminar {
+  width: 100%;
+  background-color: #ef4444;
+  color: #ffffff;
+  border: none;
+  padding: 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: bold;
+  margin-top: 8px;
+}
+
+.btn-eliminar:hover {
+  background-color: #dc2626;
+}
+
+/* Árbol de Brackets Grafico Alineado */
 .bracket-tree-wrapper {
   display: flex;
-  align-items: center;
+  align-items: stretch;
   justify-content: flex-start;
-  gap: 40px;
+  gap: 0;
   overflow-x: auto;
-  padding: 30px 20px;
+  padding: 30px 10px;
   background-color: #0d0d0d;
   border-radius: 12px;
   border: 1px solid #262626;
@@ -235,8 +293,8 @@ body {
   display: flex;
   flex-direction: column;
   justify-content: space-around;
-  min-width: 200px;
-  gap: 25px;
+  min-width: 210px;
+  padding: 0 15px;
 }
 
 .bracket-title {
@@ -245,23 +303,24 @@ body {
   font-weight: bold;
   font-size: 13px;
   text-transform: uppercase;
-  margin-bottom: 10px;
+  margin-bottom: 15px;
 }
 
 .bracket-match-pair {
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 25px;
   position: relative;
+  padding-right: 15px;
 }
 
 .bracket-match-pair::after {
   content: "";
   position: absolute;
-  right: -20px;
-  top: 25%;
-  bottom: 25%;
-  width: 20px;
+  right: 0;
+  top: 20%;
+  bottom: 20%;
+  width: 15px;
   border: 2px solid #d4af37;
   border-left: none;
   border-radius: 0 6px 6px 0;
@@ -271,7 +330,7 @@ body {
   background-color: #161616;
   border: 1px solid #d4af37;
   border-radius: 8px;
-  padding: 10px;
+  padding: 10px 12px;
   position: relative;
   cursor: pointer;
   transition: transform 0.2s, box-shadow 0.2s;
@@ -279,7 +338,7 @@ body {
 
 .bracket-node:hover {
   transform: translateY(-2px);
-  box-shadow: 0 0 10px rgba(212, 175, 55, 0.3);
+  box-shadow: 0 0 12px rgba(212, 175, 55, 0.4);
 }
 
 .bracket-node .team {
@@ -311,9 +370,9 @@ body {
 .bracket-col:not(:first-child) .bracket-node::before {
   content: "";
   position: absolute;
-  left: -20px;
+  left: -15px;
   top: 50%;
-  width: 20px;
+  width: 15px;
   height: 2px;
   background-color: #d4af37;
 }
@@ -330,7 +389,7 @@ body {
   box-shadow: 0 0 15px rgba(212, 175, 55, 0.2);
 }
 
-/* Tarjetas Informativas Cuadro de Honor */
+/* Tarjetas Informativas */
 .grid-honor {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
@@ -360,8 +419,8 @@ body {
   color: #ffffff;
 }
 
-/* Modo Logística */
-.solo-logistica {
+/* Visibilidad por Roles */
+.solo-logistica, .solo-superadmin {
   display: none !important;
 }
 
@@ -369,6 +428,12 @@ body.modo-logistica .solo-logistica {
   display: inline-block !important;
 }
 
+body.modo-superadmin .solo-logistica,
+body.modo-superadmin .solo-superadmin {
+  display: inline-block !important;
+}
+
+/* Pie de Página */
 .footer {
   display: flex;
   justify-content: space-between;
@@ -409,7 +474,7 @@ body.modo-logistica .solo-logistica {
   transform: scale(1.2);
 }
 
-body.modo-logistica .btn-buho {
+body.modo-logistica .btn-buho, body.modo-superadmin .btn-buho {
   opacity: 1;
   filter: drop-shadow(0 0 8px #d4af37);
 }
