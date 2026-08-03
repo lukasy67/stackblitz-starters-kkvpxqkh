@@ -25,45 +25,66 @@ try {
   console.log("Error al suscribir a Realtime:", e);
 }
 
-function renderizarArbolVisual(disciplina, containerId) {
+function renderizarArbolGrafico(disciplina, containerId) {
   const container = document.getElementById(containerId);
   if (!container) return;
 
   const partidos = datosTorneo.partidos.filter(p => p.disciplina === disciplina);
-  const fases = ["Cuartos de Final", "Semifinales", "Final"];
+  const fases = ["1ª Ronda Eliminatoria", "Semifinales", "Final"];
 
-  let html = `<div class="bracket-tree-container">`;
+  let html = `<div class="bracket-tree-wrapper">`;
 
-  fases.forEach(fase => {
+  fases.forEach((fase) => {
     const partidosFase = partidos.filter(p => p.fase === fase);
-    if (partidosFase.length > 0) {
-      html += `<div class="bracket-round">`;
-      html += `<div class="bracket-round-title">${fase}</div>`;
+    
+    html += `<div class="bracket-col">`;
+    html += `<div class="bracket-title">${fase}</div>`;
 
+    if (fase === "1ª Ronda Eliminatoria") {
+      // Agrupa de a 2 partidos para generar el corchete de unión
+      for (let i = 0; i < partidosFase.length; i += 2) {
+        html += `<div class="bracket-match-pair">`;
+        if (partidosFase[i]) html += crearNodoHTML(partidosFase[i]);
+        if (partidosFase[i + 1]) html += crearNodoHTML(partidosFase[i + 1]);
+        html += `</div>`;
+      }
+    } else {
       partidosFase.forEach(p => {
-        const winA = p.estado === 'Finalizado' && p.goles_a > p.goles_b ? 'winner' : '';
-        const winB = p.estado === 'Finalizado' && p.goles_b > p.goles_a ? 'winner' : '';
-
-        html += `
-          <div class="bracket-card" onclick="abrirModalAdmin('${p.id}')">
-            <div class="bracket-team-row ${winA}">
-              <span>${p.equipo_a || 'Por definir'}</span>
-              <span class="bracket-team-score">${p.goles_a ?? 0}</span>
-            </div>
-            <div class="bracket-team-row ${winB}">
-              <span>${p.equipo_b || 'Por definir'}</span>
-              <span class="bracket-team-score">${p.goles_b ?? 0}</span>
-            </div>
-          </div>
-        `;
+        html += `<div style="margin: auto 0;">${crearNodoHTML(p)}</div>`;
       });
-
-      html += `</div>`;
     }
+
+    html += `</div>`;
   });
+
+  // Columna del Campeón
+  html += `
+    <div class="bracket-col">
+      <div class="bracket-title">🏆 Campeón</div>
+      <div class="champion-box">🏆 Por Definir</div>
+    </div>
+  `;
 
   html += `</div>`;
   container.innerHTML = html;
+}
+
+function crearNodoHTML(p) {
+  const winA = p.estado === 'Finalizado' && Number(p.goles_a) > Number(p.goles_b) ? 'winner' : '';
+  const winB = p.estado === 'Finalizado' && Number(p.goles_b) > Number(p.goles_a) ? 'winner' : '';
+
+  return `
+    <div class="bracket-node" onclick="abrirModalAdmin('${p.id}')">
+      <div class="team ${winA}">
+        <span>${p.equipo_a || 'Por definir'}</span>
+        <b>${p.estado === 'Finalizado' ? p.goles_a : '-'}</b>
+      </div>
+      <div class="team ${winB}">
+        <span>${p.equipo_b || 'Por definir'}</span>
+        <b>${p.estado === 'Finalizado' ? p.goles_b : '-'}</b>
+      </div>
+    </div>
+  `;
 }
 
 // Conmutación de Pestañas

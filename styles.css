@@ -315,3 +315,123 @@ body {
   height: 2px;
   background-color: #3b82f6;
 }
+/* ============================================================
+   ÁRBOLES DE BRACKETS CONECTADOS (ESTILO TORNEO)
+   ============================================================ */
+
+   .bracket-tree-wrapper {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 45px;
+    overflow-x: auto;
+    padding: 30px 20px;
+    background-color: #121212;
+    border-radius: 12px;
+    border: 1px solid #222;
+  }
+  
+  .bracket-col {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-around;
+    min-width: 210px;
+    gap: 30px;
+  }
+  
+  .bracket-title {
+    text-align: center;
+    color: #3b82f6;
+    font-weight: bold;
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 10px;
+  }
+  
+  /* Parejas de partidos en primera ronda */
+  .bracket-match-pair {
+    display: flex;
+    flex-direction: column;
+    gap: 25px;
+    position: relative;
+  }
+  
+  /* Línea conector vertical (corchete ']') hacia la siguiente ronda */
+  .bracket-match-pair::after {
+    content: "";
+    position: absolute;
+    right: -22px;
+    top: 25%;
+    bottom: 25%;
+    width: 22px;
+    border: 2px solid #3b82f6;
+    border-left: none;
+    border-radius: 0 6px 6px 0;
+  }
+  
+  /* Nodo / Caja de partido */
+  .bracket-node {
+    background-color: #1a1a1a;
+    border: 1px solid #3b82f6;
+    border-radius: 8px;
+    padding: 10px;
+    position: relative;
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+  
+  .bracket-node:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 0 10px rgba(59, 130, 246, 0.4);
+  }
+  
+  .bracket-node .team {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 5px 0;
+    font-size: 13px;
+    color: #e5e7eb;
+  }
+  
+  .bracket-node .team:first-child {
+    border-bottom: 1px solid #2a2a2a;
+  }
+  
+  .bracket-node .team.winner {
+    color: #10b981;
+    font-weight: bold;
+  }
+  
+  .bracket-node .team b {
+    background-color: #262626;
+    color: #60a5fa;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+  }
+  
+  /* Línea horizontal de entrada para las rondas avanzadas */
+  .bracket-col:not(:first-child) .bracket-node::before {
+    content: "";
+    position: absolute;
+    left: -22px;
+    top: 50%;
+    width: 22px;
+    height: 2px;
+    background-color: #3b82f6;
+  }
+  
+  /* Cuadro final del Campeón */
+  .champion-box {
+    background: linear-gradient(135deg, #1f2937, #111827);
+    border: 2px solid #f59e0b;
+    border-radius: 10px;
+    padding: 20px;
+    text-align: center;
+    color: #fbbf24;
+    font-weight: bold;
+    font-size: 15px;
+    box-shadow: 0 0 15px rgba(245, 158, 11, 0.25);
+  }
