@@ -93,7 +93,7 @@ body {
   border: 1px solid #222222;
 }
 
-/* Tablas Deportivas y Estadísticas */
+/* Tablas Deportivas */
 .tabla-deportiva {
   width: 100%;
   border-collapse: collapse;
@@ -349,13 +349,15 @@ body {
 .card-honor h3 {
   color: #d4af37;
   margin-top: 0;
-  font-size: 15px;
+  font-size: 14px;
+  text-transform: uppercase;
 }
 
 .card-honor p {
   font-size: 18px;
   font-weight: bold;
-  margin: 5px 0 0 0;
+  margin: 8px 0 0 0;
+  color: #ffffff;
 }
 
 /* Modo Logística */

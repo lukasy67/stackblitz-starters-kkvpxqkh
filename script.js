@@ -70,7 +70,7 @@ async function cargarDatos() {
 
     datosTorneo.incidencias = incidencias || [];
   
-    // Renderizar Brackets y Paneles de Estadísticas General
+    // Renderizar Vistas
     renderizarArbolGrafico("Futsal Masculino", "futsal-content");  
     renderizarArbolGrafico("Volley Mixto", "voley-content");  
     renderizarMedalleroGeneral();
@@ -113,6 +113,7 @@ function renderizarArbolGrafico(disciplina, containerId) {
     html += `</div>`;  
   });  
   
+  // Campeón de la disciplina
   const partidoFinal = partidos.find(p => p.fase === "Final" && p.estado === "Finalizado");
   let campeonTexto = "🏆 Por Definir";
   if (partidoFinal) {
@@ -177,7 +178,6 @@ function cerrarModalAdmin() {
   document.getElementById("modal-admin").style.display = "none";  
 }  
 
-// Registrar Incidencia sin error de columna id_registro
 async function agregarIncidencia() {
   const idPartido = document.getElementById("admin-id-partido").value;
   const equipo = document.getElementById("incidencia-equipo").value;
@@ -189,7 +189,6 @@ async function agregarIncidencia() {
     return;
   }
 
-  // Se inserta omitiendo el campo id_registro para que PostgreSQL/Supabase genere la clave autoincrementable/UUID
   const { error } = await dbClient
     .from('incidencias')
     .insert([
@@ -272,6 +271,7 @@ async function enviarResultado() {
   cargarDatos();  
 }  
 
+// Avance automático de ganadores garantizando inserción o actualización de la fila en Supabase
 async function clasificarGanador(partidoActual, ganador) {
   const partidosDisciplina = datosTorneo.partidos
     .filter(p => p.disciplina === partidoActual.disciplina)
@@ -282,10 +282,25 @@ async function clasificarGanador(partidoActual, ganador) {
     const idx = r1.findIndex(p => p.id === partidoActual.id);
     const semis = partidosDisciplina.filter(p => p.fase === "Semifinales");
 
-    if (idx !== -1 && semis.length > 0) {
+    if (idx !== -1) {
       const targetSemiIdx = Math.floor(idx / 2);
       const targetSemi = semis[targetSemiIdx];
-      if (targetSemi) {
+
+      if (!targetSemi) {
+        const idSemi = `PAR-SEMI-${partidoActual.disciplina.replace(/\s+/g, '-')}-${targetSemiIdx + 1}`;
+        const nuevoEquipoA = (idx % 2 === 0) ? ganador : null;
+        const nuevoEquipoB = (idx % 2 !== 0) ? ganador : null;
+
+        await dbClient.from('partidos').insert([{
+          id: idSemi,
+          disciplina: partidoActual.disciplina,
+          fase: "Semifinales",
+          equipo_a: nuevoEquipoA,
+          equipo_b: nuevoEquipoB,
+          estado: 'Pendiente',
+          orden: 10 + targetSemiIdx
+        }]);
+      } else {
         const campoAActualizar = (idx % 2 === 0) ? { equipo_a: ganador } : { equipo_b: ganador };
         await dbClient.from('partidos').update(campoAActualizar).eq('id', targetSemi.id);
       }
@@ -294,9 +309,23 @@ async function clasificarGanador(partidoActual, ganador) {
     const semis = partidosDisciplina.filter(p => p.fase === "Semifinales");
     const idx = semis.findIndex(p => p.id === partidoActual.id);
     const finales = partidosDisciplina.filter(p => p.fase === "Final");
+    const targetFinal = finales[0];
 
-    if (idx !== -1 && finales.length > 0) {
-      const targetFinal = finales[0];
+    if (!targetFinal) {
+      const idFinal = `PAR-FINAL-${partidoActual.disciplina.replace(/\s+/g, '-')}`;
+      const nuevoEquipoA = (idx === 0) ? ganador : null;
+      const nuevoEquipoB = (idx !== 0) ? ganador : null;
+
+      await dbClient.from('partidos').insert([{
+        id: idFinal,
+        disciplina: partidoActual.disciplina,
+        fase: "Final",
+        equipo_a: nuevoEquipoA,
+        equipo_b: nuevoEquipoB,
+        estado: 'Pendiente',
+        orden: 99
+      }]);
+    } else {
       const campoAActualizar = (idx === 0) ? { equipo_a: ganador } : { equipo_b: ganador };
       await dbClient.from('partidos').update(campoAActualizar).eq('id', targetFinal.id);
     }
@@ -304,7 +333,7 @@ async function clasificarGanador(partidoActual, ganador) {
 }
 
 // -------------------------------------------------------------
-// PESTAÑAS DE ESTADÍSTICAS GENERALES Y PROMEDIOS
+// PESTAÑAS DE ESTADÍSTICAS Y PROMEDIOS CALCULADOS
 // -------------------------------------------------------------
 
 function renderizarMedalleroGeneral() {
@@ -384,52 +413,57 @@ function renderizarMedalleroGeneral() {
 function renderizarEstadisticasEquipos() {
   const container = document.getElementById("estadisticas-content");
   if (!container) return;
-  renderizarMedalleroGeneral(); // Comparte la tabla de rendimiento
+  renderizarMedalleroGeneral();
 }
 
 function renderizarCuadroHonor() {
   const container = document.getElementById("cuadro-honor-content");
   if (!container) return;
 
-  const goleadores = {};
+  const goleadoresFutsal = {};
+  let tarjetasPorEquipo = {};
+
   datosTorneo.incidencias.forEach(inc => {
     if (inc.tipo_evento === 'Gol') {
-      goleadores[inc.jugador_nombre] = (goleadores[inc.jugador_nombre] || 0) + 1;
+      goleadoresFutsal[inc.jugador_nombre] = (goleadoresFutsal[inc.jugador_nombre] || 0) + 1;
+    }
+    if (inc.tipo_evento && inc.tipo_evento.includes('Tarjeta')) {
+      tarjetasPorEquipo[inc.curso_equipo] = (tarjetasPorEquipo[inc.curso_equipo] || 0) + 1;
     }
   });
 
   let topGoleador = "Por definir";
   let maxGoles = 0;
-  Object.keys(goleadores).forEach(j => {
-    if (goleadores[j] > maxGoles) {
-      maxGoles = goleadores[j];
+  Object.keys(goleadoresFutsal).forEach(j => {
+    if (goleadoresFutsal[j] > maxGoles) {
+      maxGoles = goleadoresFutsal[j];
       topGoleador = `${j} (${maxGoles} goles)`;
     }
   });
 
-  let totalPartidosJugados = datosTorneo.partidos.filter(p => p.estado === 'Finalizado').length;
-  let totalGoles = 0;
-  datosTorneo.partidos.forEach(p => {
-    if (p.estado === 'Finalizado') {
-      totalGoles += (Number(p.golesA) + Number(p.golesB));
+  let equipoFairPlay = "Por definir";
+  let minTarjetas = 999;
+  CURSOS_EQUIPOS.forEach(eq => {
+    const cant = tarjetasPorEquipo[eq] || 0;
+    if (cant < minTarjetas) {
+      minTarjetas = cant;
+      equipoFairPlay = `${eq} (${cant} tarjetas)`;
     }
   });
-
-  const promedioGoles = totalPartidosJugados > 0 ? (totalGoles / totalPartidosJugados).toFixed(2) : "0.0";
 
   container.innerHTML = `
     <div class="grid-honor">
       <div class="card-honor">
-        <h3>⚽ Máximo Goleador</h3>
+        <h3>⚽ Máximo Goleador (Futsal)</h3>
         <p>${topGoleador}</p>
       </div>
       <div class="card-honor">
-        <h3>🔥 Promedio de Goles / Partido</h3>
-        <p>${promedioGoles} goles/partido</p>
+        <h3>🕊️ Premio Fair Play (Menos Tarjetas)</h3>
+        <p>${equipoFairPlay}</p>
       </div>
       <div class="card-honor">
-        <h3>✅ Partidos Finalizados</h3>
-        <p>${totalPartidosJugados} encuentros</p>
+        <h3>🏐 Vóley Mixto - Liderazgo</h3>
+        <p>En Competencia</p>
       </div>
     </div>
   `;
@@ -441,11 +475,19 @@ function renderizarComparativaCarreras() {
 
   let victoriasPsico = 0;
   let victoriasEdu = 0;
+  let golesPsico = 0;
+  let golesEdu = 0;
 
   datosTorneo.partidos.forEach(p => {
     if (p.estado === 'Finalizado') {
       const gA = Number(p.golesA);
       const gB = Number(p.golesB);
+
+      if (p.equipoA && p.equipoA.includes("Psico")) golesPsico += gA;
+      if (p.equipoA && p.equipoA.includes("Ciencias")) golesEdu += gA;
+      if (p.equipoB && p.equipoB.includes("Psico")) golesPsico += gB;
+      if (p.equipoB && p.equipoB.includes("Ciencias")) golesEdu += gB;
+
       if (gA !== gB) {
         const gan = gA > gB ? p.equipoA : p.equipoB;
         if (gan && gan.includes("Psico")) victoriasPsico++;
@@ -454,15 +496,21 @@ function renderizarComparativaCarreras() {
     }
   });
 
+  const totalPartidos = victoriasPsico + victoriasEdu;
+  const pctPsico = totalPartidos > 0 ? ((victoriasPsico / totalPartidos) * 100).toFixed(1) : 0;
+  const pctEdu = totalPartidos > 0 ? ((victoriasEdu / totalPartidos) * 100).toFixed(1) : 0;
+
   container.innerHTML = `
     <div class="grid-honor">
       <div class="card-honor">
         <h3>🧠 Psicología</h3>
-        <p style="color:#d4af37">${victoriasPsico} Victorias</p>
+        <p style="color:#d4af37">${victoriasPsico} Victorias (${pctPsico}%)</p>
+        <span style="font-size:12px; color:#aaa;">Goles Convertidos: ${golesPsico}</span>
       </div>
       <div class="card-honor">
         <h3>📚 Ciencias de la Educación</h3>
-        <p style="color:#d4af37">${victoriasEdu} Victorias</p>
+        <p style="color:#d4af37">${victoriasEdu} Victorias (${pctEdu}%)</p>
+        <span style="font-size:12px; color:#aaa;">Goles Convertidos: ${golesEdu}</span>
       </div>
     </div>
   `;
