@@ -70,18 +70,18 @@ function renderizarArbolGrafico(disciplina, containerId) {
 }
 
 function crearNodoHTML(p) {
-  const winA = p.estado === 'Finalizado' && Number(p.goles_a) > Number(p.goles_b) ? 'winner' : '';
-  const winB = p.estado === 'Finalizado' && Number(p.goles_b) > Number(p.goles_a) ? 'winner' : '';
+  const winA = p.estado === 'Finalizado' && Number(p.golesA) > Number(p.golesB) ? 'winner' : '';
+  const winB = p.estado === 'Finalizado' && Number(p.golesB) > Number(p.golesA) ? 'winner' : '';
 
   return `
     <div class="bracket-node" onclick="abrirModalAdmin('${p.id}')">
       <div class="team ${winA}">
-        <span>${p.equipo_a || 'Por definir'}</span>
-        <b>${p.estado === 'Finalizado' ? p.goles_a : '-'}</b>
+        <span>${p.equipoA || 'Por definir'}</span>
+        <b>${p.estado === 'Finalizado' ? p.golesA : '-'}</b>
       </div>
       <div class="team ${winB}">
-        <span>${p.equipo_b || 'Por definir'}</span>
-        <b>${p.estado === 'Finalizado' ? p.goles_b : '-'}</b>
+        <span>${p.equipoB || 'Por definir'}</span>
+        <b>${p.estado === 'Finalizado' ? p.golesB : '-'}</b>
       </div>
     </div>
   `;
@@ -133,9 +133,10 @@ async function cargarDatos() {
       }));
     }
 
-    renderizarPartidosDisciplina("Futsal Masculino", "futsal-content");
+    // En la función cargarDatos():
+    renderizarArbolGrafico("Futsal Masculino", "futsal-content");
+    renderizarArbolGrafico("Volley Mixto", "voley-content");
     renderizarPartidosDisciplina("Fútbol de Campo Masculino", "futbol-content");
-    renderizarPartidosDisciplina("Volley Mixto", "voley-content");
     renderizarPartidosDisciplina("Pikivoley Masculino", "pikivoley-content");
     renderizarMedalleroSimulado();
     renderizarEstadisticasEquipos();
@@ -187,8 +188,8 @@ function renderizarPartidosDisciplina(disciplina, contenedorId) {
 }
 
 function filtrarFutsalSexo(sexo) {
-  const disc = sexo === 'M' ? "Futsal Masculino" : "Futsal Femenino";
-  renderizarPartidosDisciplina(disc, "futsal-content");
+  const disciplina = sexo === 'M' ? "Futsal Masculino" : "Futsal Femenino";
+  renderizarArbolGrafico(disciplina, "futsal-content");
 }
 
 function filtrarFutbolSexo(sexo) {
