@@ -1,183 +1,307 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>InterFilo 2026 - Universidad Nacional de Asunción</title>
-  <link rel="stylesheet" href="styles.css">
-  <!-- SDK CDN de Supabase -->
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-</head>
-<body>
+body {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background-color: #121212;
+  color: #ffffff;
+  margin: 0;
+  padding: 15px;
+}
 
-  <!-- Cabecera Principal -->
-  <header class="header">
-    <div class="header-info">
-      <h1>Juegos InterFilo 2026</h1>
-      <p>Facultad de Filosofía - Filial San Estanislao</p>
-    </div>
-    <button class="btn-crear-partido" onclick="abrirModalCrearPartido()">➕ Agregar Partido</button>
-  </header>
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: #1f1f1f;
+  padding: 15px 20px;
+  border-radius: 10px;
+  margin-bottom: 15px;
+  border-bottom: 2px solid #3b82f6;
+}
 
-  <!-- Barra de Navegación por Pestañas -->
-  <nav class="tab-bar">
-    <button class="tab-link active" onclick="openTab(event, 'panel-medallero')">🏆 Medallero</button>
-    <button class="tab-link" onclick="openTab(event, 'panel-estadisticas')">📊 Estadísticas Equipos</button>
-    <button class="tab-link" onclick="openTab(event, 'panel-cuadro-honor')">🎖️ Cuadro de Honor</button>
-    <button class="tab-link" onclick="openTab(event, 'panel-comparativa')">⚖️ Psicología vs Educación</button>
-    <button class="tab-link" onclick="openTab(event, 'panel-futsal')">⚽ Futsal</button>
-    <button class="tab-link" onclick="openTab(event, 'panel-futbol')">⚽ Fútbol de Campo</button>
-    <button class="tab-link" onclick="openTab(event, 'panel-voley')">🏐 Vóley Mixto</button>
-    <button class="tab-link" onclick="openTab(event, 'panel-pikivoley')">🦶🏐 Pikivoley</button>
-  </nav>
+.header h1 {
+  margin: 0;
+  font-size: 22px;
+  color: #60a5fa;
+}
 
-  <!-- Paneles de Contenido -->
-  <main class="main-content">
-    
-    <div id="panel-medallero" class="tab-content" style="display:block">
-      <h2>🏆 Medallero General y Tabla de Campeones</h2>
-      <div id="medallero-content">Cargando medallero...</div>
-    </div>
+.header p {
+  margin: 5px 0 0 0;
+  font-size: 13px;
+  color: #aaa;
+}
 
-    <div id="panel-estadisticas" class="tab-content" style="display:none">
-      <h2>📊 Rendimiento Colectivo de Cursos</h2>
-      <div id="estadisticas-content">Cargando estadísticas...</div>
-    </div>
+.header-seccion {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+}
 
-    <div id="panel-cuadro-honor" class="tab-content" style="display:none">
-      <h2>🎖️ Cuadro de Honor y Récords del Torneo</h2>
-      <div id="cuadro-honor-content">Cargando récords...</div>
-    </div>
+.btn-crear-partido {
+  background-color: #10b981;
+  color: #ffffff;
+  border: none;
+  padding: 10px 14px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: bold;
+}
 
-    <div id="panel-comparativa" class="tab-content" style="display:none">
-      <h2>⚖️ Comparativa: Carrera de Psicología vs Ciencias de la Educación</h2>
-      <div id="comparativa-content">Cargando comparativa...</div>
-    </div>
+.tab-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 20px;
+}
 
-    <div id="panel-futsal" class="tab-content" style="display:none">
-      <div class="header-seccion">
-        <h2>⚽ Futsal</h2>
-        <button class="btn-crear-partido" onclick="abrirModalCrearPartido('Futsal Masculino')">➕ Agregar Partido de Futsal</button>
-      </div>
-      <div class="sub-tabs">
-        <button class="sub-link active" onclick="filtrarFutsalSexo('M')">Masculino</button>
-        <button class="sub-link" onclick="filtrarFutsalSexo('F')">Femenino</button>
-      </div>
-      <div id="futsal-content">Cargando partidos de futsal...</div>
-    </div>
+.tab-link, .sub-link {
+  background-color: #1f1f1f;
+  color: #cccccc;
+  border: 1px solid #333333;
+  padding: 10px 14px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: all 0.2s ease;
+}
 
-    <div id="panel-futbol" class="tab-content" style="display:none">
-      <div class="header-seccion">
-        <h2>⚽ Fútbol de Campo</h2>
-        <button class="btn-crear-partido" onclick="abrirModalCrearPartido('Fútbol de Campo Masculino')">➕ Agregar Partido de Fútbol</button>
-      </div>
-      <div class="sub-tabs">
-        <button class="sub-link active" onclick="filtrarFutbolSexo('M')">Masculino</button>
-        <button class="sub-link" onclick="filtrarFutbolSexo('F')">Femenino</button>
-      </div>
-      <div id="futbol-content">Cargando partidos de fútbol...</div>
-    </div>
+.tab-link.active, .sub-link.active {
+  background-color: #3b82f6;
+  color: #ffffff;
+  border-color: #60a5fa;
+  font-weight: bold;
+}
 
-    <div id="panel-voley" class="tab-content" style="display:none">
-      <div class="header-seccion">
-        <h2>🏐 Vóley Mixto</h2>
-        <button class="btn-crear-partido" onclick="abrirModalCrearPartido('Volley Mixto')">➕ Agregar Partido de Vóley</button>
-      </div>
-      <div id="voley-content">Cargando partidos de vóley...</div>
-    </div>
+.sub-tabs {
+  margin-bottom: 15px;
+  display: flex;
+  gap: 10px;
+}
 
-    <div id="panel-pikivoley" class="tab-content" style="display:none">
-      <div class="header-seccion">
-        <h2>🦶🏐 Pikivoley Masculino</h2>
-        <button class="btn-crear-partido" onclick="abrirModalCrearPartido('Pikivoley Masculino')">➕ Agregar Partido de Pikivoley</button>
-      </div>
-      <div id="pikivoley-content">Cargando partidos de pikivoley...</div>
-    </div>
+.main-content {
+  background-color: #181818;
+  padding: 20px;
+  border-radius: 10px;
+}
 
-  </main>
+/* Modales */
+.modal {
+  display: none;
+  position: fixed;
+  z-index: 1000;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0,0,0,0.85);
+}
 
-  <!-- Modal 1: Cargar Marcador e Incidencias -->
-  <div id="modal-admin" class="modal">
-    <div class="modal-content">
-      <span class="close" onclick="cerrarModalAdmin()">&times;</span>
-      <h3>Mesa de Control - Cargar Resultado</h3>
-      
-      <h4 id="modal-partido-titulo" style="color:#60a5fa; margin:10px 0;"></h4>
-      <input type="hidden" id="admin-id-partido">
+.modal-content {
+  background-color: #1f1f1f;
+  margin: 4% auto;
+  padding: 20px;
+  border-radius: 10px;
+  width: 90%;
+  max-width: 450px;
+  border: 1px solid #3b82f6;
+}
 
-      <div class="goles-input">
-        <div>
-          <label id="lbl-equipo-a">Equipo A</label>
-          <input type="number" id="goles-a" placeholder="Goles A" min="0">
-        </div>
-        <div>
-          <label id="lbl-equipo-b">Equipo B</label>
-          <input type="number" id="goles-b" placeholder="Goles B" min="0">
-        </div>
-      </div>
+.close {
+  float: right;
+  font-size: 24px;
+  cursor: pointer;
+  color: #aaa;
+}
 
-      <hr style="border-color:#333; margin:15px 0;">
-      <h4 style="margin:5px 0; color:#aaa;">Cargar Tarjetas e Incidencias:</h4>
-      <input type="text" id="inc-jugador" placeholder="Nombre del Jugador">
-      <select id="inc-equipo-select"></select>
-      <select id="inc-tipo">
-        <option value="Gol">⚽ Gol</option>
-        <option value="Tarjeta Amarilla">🟨 Tarjeta Amarilla</option>
-        <option value="Tarjeta Roja">🟥 Tarjeta Roja</option>
-        <option value="Tarjeta Azul">🟦 Tarjeta Azul</option>
-      </select>
-      <button type="button" class="btn-add-incidencia" onclick="agregarIncidenciaLista()">➕ Agregar Incidencia</button>
+.modal input, .modal select {
+  width: 100%;
+  padding: 8px;
+  margin: 6px 0;
+  background-color: #121212;
+  border: 1px solid #444;
+  color: #fff;
+  border-radius: 6px;
+  box-sizing: border-box;
+}
 
-      <ul id="lista-incidencias-temp" class="incidencias-list"></ul>
+.goles-input {
+  display: flex;
+  gap: 10px;
+}
 
-      <button class="btn-guardar" onclick="enviarResultado()">Guardar y Publicar</button>
-      <p id="admin-msj"></p>
-    </div>
-  </div>
+.btn-guardar {
+  width: 100%;
+  background-color: #10b981;
+  color: #fff;
+  border: none;
+  padding: 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: bold;
+  margin-top: 10px;
+}
 
-  <!-- Modal 2: Agregar Nuevo Partido -->
-  <div id="modal-crear-partido" class="modal">
-    <div class="modal-content">
-      <span class="close" onclick="cerrarModalCrearPartido()">&times;</span>
-      <h3>➕ Crear Nuevo Partido</h3>
-      
-      <label>Disciplina:</label>
-      <select id="crear-disciplina">
-        <option value="Futsal Masculino">Futsal Masculino</option>
-        <option value="Futsal Femenino">Futsal Femenino</option>
-        <option value="Fútbol de Campo Masculino">Fútbol de Campo Masculino</option>
-        <option value="Fútbol de Campo Femenino">Fútbol de Campo Femenino</option>
-        <option value="Volley Mixto">Volley Mixto</option>
-        <option value="Pikivoley Masculino">Pikivoley Masculino</option>
-      </select>
+/* Árbol de Brackets Grafico */
+.bracket-tree-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 40px;
+  overflow-x: auto;
+  padding: 30px 20px;
+  background-color: #121212;
+  border-radius: 12px;
+  border: 1px solid #222;
+}
 
-      <label>Número / Orden de Partido:</label>
-      <input type="number" id="crear-orden" placeholder="Ej. 1, 2, 3..." min="1">
+.bracket-col {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-around;
+  min-width: 200px;
+  gap: 25px;
+}
 
-      <label>Fase del Encuentro:</label>
-      <select id="crear-fase">
-        <option value="1ª Ronda Eliminatoria">1ª Ronda Eliminatoria</option>
-        <option value="Preliminar Interna">Preliminar Interna (Equipos A vs B)</option>
-        <option value="Ronda de Reingreso">Ronda de Reingreso / Repechaje</option>
-        <option value="Cuartos de Final">Cuartos de Final</option>
-        <option value="Semifinal">Semifinal</option>
-        <option value="Final">Final</option>
-      </select>
+.bracket-title {
+  text-align: center;
+  color: #3b82f6;
+  font-weight: bold;
+  font-size: 13px;
+  text-transform: uppercase;
+  margin-bottom: 10px;
+}
 
-      <label>Equipo A:</label>
-      <select id="crear-equipo-a"></select>
+.bracket-match-pair {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  position: relative;
+}
 
-      <label>Equipo B:</label>
-      <select id="crear-equipo-b"></select>
+.bracket-match-pair::after {
+  content: "";
+  position: absolute;
+  right: -20px;
+  top: 25%;
+  bottom: 25%;
+  width: 20px;
+  border: 2px solid #3b82f6;
+  border-left: none;
+  border-radius: 0 6px 6px 0;
+}
 
-      <label for="crear-fecha-hora">Fecha y Hora:</label>
-      <input type="datetime-local" id="crear-fecha-hora">
+.bracket-node {
+  background-color: #1a1a1a;
+  border: 1px solid #3b82f6;
+  border-radius: 8px;
+  padding: 10px;
+  position: relative;
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
 
-      <button class="btn-guardar" onclick="enviarNuevoPartido()">Crear y Publicar Partido</button>
-      <p id="crear-msj"></p>
-    </div>
-  </div>
+.bracket-node:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 0 10px rgba(59, 130, 246, 0.4);
+}
 
-  <script src="script.js"></script>
-</body>
-</html>
+.bracket-node .team {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 4px 0;
+  font-size: 13px;
+  color: #e5e7eb;
+}
+
+.bracket-node .team:first-child {
+  border-bottom: 1px solid #2d2d2d;
+}
+
+.bracket-node .team.winner {
+  color: #10b981;
+  font-weight: bold;
+}
+
+.bracket-node .team b {
+  background-color: #262626;
+  color: #60a5fa;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+}
+
+.bracket-col:not(:first-child) .bracket-node::before {
+  content: "";
+  position: absolute;
+  left: -20px;
+  top: 50%;
+  width: 20px;
+  height: 2px;
+  background-color: #3b82f6;
+}
+
+.champion-box {
+  background: linear-gradient(135deg, #1f2937, #111827);
+  border: 2px solid #f59e0b;
+  border-radius: 10px;
+  padding: 18px;
+  text-align: center;
+  color: #fbbf24;
+  font-weight: bold;
+  font-size: 15px;
+}
+
+/* Ocultar elementos de Logística por defecto */
+.solo-logistica {
+  display: none !important;
+}
+
+body.modo-logistica .solo-logistica {
+  display: inline-block !important;
+}
+
+/* Pie de Página y Botón Búho */
+.footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 30px;
+  padding: 15px 20px;
+  background-color: #1f1f1f;
+  border-radius: 10px;
+  border-top: 1px solid #333;
+}
+
+.footer-creditos {
+  color: #aaa;
+  font-size: 13px;
+}
+
+.footer-creditos a {
+  color: #60a5fa;
+  text-decoration: none;
+  font-weight: bold;
+}
+
+.footer-creditos a:hover {
+  text-decoration: underline;
+}
+
+.btn-buho {
+  background: transparent;
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+  opacity: 0.5;
+  transition: transform 0.2s, opacity 0.2s, filter 0.2s;
+}
+
+.btn-buho:hover {
+  opacity: 1;
+  transform: scale(1.2);
+}
+
+body.modo-logistica .btn-buho {
+  opacity: 1;
+  filter: drop-shadow(0 0 8px #10b981);
+}

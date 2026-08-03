@@ -83,90 +83,7 @@ body {
   border-radius: 10px;
 }
 
-.tabla-deportiva {
-  width: 100%;
-  border-collapse: collapse;
-  margin-top: 15px;
-  background-color: #1f1f1f;
-  border-radius: 8px;
-  overflow: hidden;
-}
-
-.tabla-deportiva th {
-  background-color: #2a2a2a;
-  color: #60a5fa;
-  padding: 12px;
-  text-align: left;
-}
-
-.tabla-deportiva td {
-  padding: 12px;
-  border-bottom: 1px solid #2d2d2d;
-}
-
-.grid-partidos {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 15px;
-}
-
-.card-partido {
-  background-color: #1f1f1f;
-  border: 1px solid #333;
-  border-radius: 8px;
-  padding: 15px;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-}
-
-.card-header-info {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.badge-orden {
-  background-color: #3b82f6;
-  color: #fff;
-  font-weight: bold;
-  padding: 2px 8px;
-  border-radius: 4px;
-  font-size: 12px;
-}
-
-.badge-fase {
-  font-size: 11px;
-  background-color: #333;
-  color: #f59e0b;
-  padding: 3px 6px;
-  border-radius: 4px;
-}
-
-.marcador-box {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin: 12px 0;
-}
-
-.marcador-box strong {
-  font-size: 20px;
-  color: #60a5fa;
-}
-
-.btn-cargar-card {
-  background-color: #2563eb;
-  color: #fff;
-  border: none;
-  padding: 8px;
-  border-radius: 6px;
-  cursor: pointer;
-  font-size: 12px;
-  margin-top: 10px;
-  font-weight: bold;
-}
-
+/* Modales */
 .modal {
   display: none;
   position: fixed;
@@ -211,25 +128,6 @@ body {
   gap: 10px;
 }
 
-.btn-add-incidencia {
-  background-color: #374151;
-  color: #fff;
-  border: none;
-  padding: 8px;
-  width: 100%;
-  border-radius: 6px;
-  cursor: pointer;
-  margin-top: 5px;
-}
-
-.incidencias-list {
-  list-style: none;
-  padding: 0;
-  margin: 10px 0;
-  font-size: 12px;
-  color: #fbbf24;
-}
-
 .btn-guardar {
   width: 100%;
   background-color: #10b981;
@@ -241,197 +139,169 @@ body {
   font-weight: bold;
   margin-top: 10px;
 }
-/* Contenedor principal del diagrama en árbol */
-.bracket-tree-container {
+
+/* Árbol de Brackets Grafico */
+.bracket-tree-wrapper {
   display: flex;
-  justify-content: flex-start;
   align-items: center;
-  gap: 30px;
+  justify-content: flex-start;
+  gap: 40px;
   overflow-x: auto;
-  padding: 20px 10px;
+  padding: 30px 20px;
+  background-color: #121212;
+  border-radius: 12px;
+  border: 1px solid #222;
 }
 
-/* Columna por cada fase (Cuartos, Semis, Final) */
-.bracket-round {
+.bracket-col {
   display: flex;
   flex-direction: column;
   justify-content: space-around;
-  gap: 20px;
-  min-width: 190px;
+  min-width: 200px;
+  gap: 25px;
 }
 
-.bracket-round-title {
+.bracket-title {
   text-align: center;
-  color: #60a5fa;
-  font-size: 14px;
+  color: #3b82f6;
   font-weight: bold;
-  margin-bottom: 10px;
+  font-size: 13px;
   text-transform: uppercase;
+  margin-bottom: 10px;
 }
 
-/* Tarjeta de partido individual */
-.bracket-card {
-  background-color: #1f1f1f;
+.bracket-match-pair {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  position: relative;
+}
+
+.bracket-match-pair::after {
+  content: "";
+  position: absolute;
+  right: -20px;
+  top: 25%;
+  bottom: 25%;
+  width: 20px;
+  border: 2px solid #3b82f6;
+  border-left: none;
+  border-radius: 0 6px 6px 0;
+}
+
+.bracket-node {
+  background-color: #1a1a1a;
   border: 1px solid #3b82f6;
   border-radius: 8px;
   padding: 10px;
   position: relative;
-  box-shadow: 0 4px 6px rgba(0,0,0,0.4);
   cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
 }
 
-.bracket-team-row {
+.bracket-node:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 0 10px rgba(59, 130, 246, 0.4);
+}
+
+.bracket-node .team {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 5px 0;
+  padding: 4px 0;
   font-size: 13px;
+  color: #e5e7eb;
 }
 
-.bracket-team-row:first-child {
+.bracket-node .team:first-child {
   border-bottom: 1px solid #2d2d2d;
 }
 
-.bracket-team-row.winner {
+.bracket-node .team.winner {
   color: #10b981;
   font-weight: bold;
 }
 
-.bracket-team-score {
-  background-color: #2a2a2a;
+.bracket-node .team b {
+  background-color: #262626;
   color: #60a5fa;
   padding: 2px 8px;
   border-radius: 4px;
-  font-weight: bold;
+  font-size: 12px;
 }
 
-/* Líneas de conexión horizontales entre fases */
-.bracket-round:not(:last-child) .bracket-card::after {
+.bracket-col:not(:first-child) .bracket-node::before {
   content: "";
   position: absolute;
-  right: -16px;
+  left: -20px;
   top: 50%;
-  width: 15px;
+  width: 20px;
   height: 2px;
   background-color: #3b82f6;
 }
-/* ============================================================
-   ÁRBOLES DE BRACKETS CONECTADOS (ESTILO TORNEO)
-   ============================================================ */
 
-   .bracket-tree-wrapper {
-    display: flex;
-    align-items: center;
-    justify-content: flex-start;
-    gap: 45px;
-    overflow-x: auto;
-    padding: 30px 20px;
-    background-color: #121212;
-    border-radius: 12px;
-    border: 1px solid #222;
-  }
-  
-  .bracket-col {
-    display: flex;
-    flex-direction: column;
-    justify-content: space-around;
-    min-width: 210px;
-    gap: 30px;
-  }
-  
-  .bracket-title {
-    text-align: center;
-    color: #3b82f6;
-    font-weight: bold;
-    font-size: 13px;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    margin-bottom: 10px;
-  }
-  
-  /* Parejas de partidos en primera ronda */
-  .bracket-match-pair {
-    display: flex;
-    flex-direction: column;
-    gap: 25px;
-    position: relative;
-  }
-  
-  /* Línea conector vertical (corchete ']') hacia la siguiente ronda */
-  .bracket-match-pair::after {
-    content: "";
-    position: absolute;
-    right: -22px;
-    top: 25%;
-    bottom: 25%;
-    width: 22px;
-    border: 2px solid #3b82f6;
-    border-left: none;
-    border-radius: 0 6px 6px 0;
-  }
-  
-  /* Nodo / Caja de partido */
-  .bracket-node {
-    background-color: #1a1a1a;
-    border: 1px solid #3b82f6;
-    border-radius: 8px;
-    padding: 10px;
-    position: relative;
-    cursor: pointer;
-    transition: transform 0.2s, box-shadow 0.2s;
-  }
-  
-  .bracket-node:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 0 10px rgba(59, 130, 246, 0.4);
-  }
-  
-  .bracket-node .team {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 5px 0;
-    font-size: 13px;
-    color: #e5e7eb;
-  }
-  
-  .bracket-node .team:first-child {
-    border-bottom: 1px solid #2a2a2a;
-  }
-  
-  .bracket-node .team.winner {
-    color: #10b981;
-    font-weight: bold;
-  }
-  
-  .bracket-node .team b {
-    background-color: #262626;
-    color: #60a5fa;
-    padding: 2px 8px;
-    border-radius: 4px;
-    font-size: 12px;
-  }
-  
-  /* Línea horizontal de entrada para las rondas avanzadas */
-  .bracket-col:not(:first-child) .bracket-node::before {
-    content: "";
-    position: absolute;
-    left: -22px;
-    top: 50%;
-    width: 22px;
-    height: 2px;
-    background-color: #3b82f6;
-  }
-  
-  /* Cuadro final del Campeón */
-  .champion-box {
-    background: linear-gradient(135deg, #1f2937, #111827);
-    border: 2px solid #f59e0b;
-    border-radius: 10px;
-    padding: 20px;
-    text-align: center;
-    color: #fbbf24;
-    font-weight: bold;
-    font-size: 15px;
-    box-shadow: 0 0 15px rgba(245, 158, 11, 0.25);
-  }
+.champion-box {
+  background: linear-gradient(135deg, #1f2937, #111827);
+  border: 2px solid #f59e0b;
+  border-radius: 10px;
+  padding: 18px;
+  text-align: center;
+  color: #fbbf24;
+  font-weight: bold;
+  font-size: 15px;
+}
+
+/* Ocultar elementos de Logística por defecto */
+.solo-logistica {
+  display: none !important;
+}
+
+body.modo-logistica .solo-logistica {
+  display: inline-block !important;
+}
+
+/* Pie de Página y Botón Búho */
+.footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 30px;
+  padding: 15px 20px;
+  background-color: #1f1f1f;
+  border-radius: 10px;
+  border-top: 1px solid #333;
+}
+
+.footer-creditos {
+  color: #aaa;
+  font-size: 13px;
+}
+
+.footer-creditos a {
+  color: #60a5fa;
+  text-decoration: none;
+  font-weight: bold;
+}
+
+.footer-creditos a:hover {
+  text-decoration: underline;
+}
+
+.btn-buho {
+  background: transparent;
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+  opacity: 0.5;
+  transition: transform 0.2s, opacity 0.2s, filter 0.2s;
+}
+
+.btn-buho:hover {
+  opacity: 1;
+  transform: scale(1.2);
+}
+
+body.modo-logistica .btn-buho {
+  opacity: 1;
+  filter: drop-shadow(0 0 8px #10b981);
+}
