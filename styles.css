@@ -55,11 +55,29 @@ body {
   box-shadow: 0 0 10px rgba(212, 175, 55, 0.4);
 }
 
+/* Barra de Pestañas Deslizable Horizontal (1 Fila en Celulares) */
 .tab-bar {
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap; /* Impide que los botones se salten hacia abajo */
+  overflow-x: auto;  /* Habilita el desplazamiento horizontal */
+  -webkit-overflow-scrolling: touch; /* Desplazamiento suave en iPhones */
   gap: 8px;
   margin-bottom: 20px;
+  padding-bottom: 8px;
+}
+
+/* Ocultar barra de scroll estéticamente */
+.tab-bar::-webkit-scrollbar {
+  height: 4px;
+}
+.tab-bar::-webkit-scrollbar-thumb {
+  background-color: #d4af37;
+  border-radius: 4px;
+}
+
+.tab-link {
+  white-space: nowrap; /* Evita que el texto del botón se rompa en 2 líneas */
+  flex-shrink: 0;      /* Mantiene el tamaño del botón constante */
 }
 
 .tab-link, .sub-link {

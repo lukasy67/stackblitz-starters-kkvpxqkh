@@ -807,3 +807,55 @@ function filtrarFutbolSexo(sexo) {
 window.onload = function() {  
   cargarDatos();  
 };
+// Funciones para el Modal de Ajuste Manual de Puntos (Super Admin)
+function abrirModalAjustarPuntos() {
+  const selCurso = document.getElementById("ajuste-curso-select");
+  selCurso.innerHTML = "";
+  
+  CURSOS_EQUIPOS.forEach(c => {
+    selCurso.innerHTML += `<option value="${c}">${renderizarNombreVisible(c)}</option>`;
+  });
+
+  document.getElementById("ajuste-puntos-input").value = "";
+  document.getElementById("ajuste-msj").innerText = "";
+  document.getElementById("modal-ajustar-puntos").style.display = "block";
+}
+
+function cerrarModalAjustarPuntos() {
+  document.getElementById("modal-ajustar-puntos").style.display = "none";
+}
+
+async function guardarPuntosManuales() {
+  const curso = document.getElementById("ajuste-curso-select").value;
+  const disciplinaKey = document.getElementById("ajuste-disciplina-select").value;
+  const puntos = document.getElementById("ajuste-puntos-input").value;
+
+  if (!puntos) {
+    document.getElementById("ajuste-msj").innerText = "Por favor ingrese una cantidad de puntos.";
+    return;
+  }
+
+  document.getElementById("ajuste-msj").innerText = "Guardando ajuste...";
+
+  try {
+    // Buscar si ya existe el registro del curso en Supabase
+    const { data, error } = await dbClient
+      .from('medallero')
+      .upsert([
+        {
+          curso_equipo: curso,
+          [disciplinaKey]: parseInt(puntos)
+        }
+      ], { onConflict: 'curso_equipo' });
+
+    if (error) {
+      document.getElementById("ajuste-msj").innerText = "Error: " + error.message;
+    } else {
+      document.getElementById("ajuste-msj").innerText = "¡Puntos ajustados correctamente!";
+      setTimeout(cerrarModalAjustarPuntos, 1200);
+      cargarDatos();
+    }
+  } catch (err) {
+    document.getElementById("ajuste-msj").innerText = "Error al actualizar puntos.";
+  }
+}

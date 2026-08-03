@@ -35,8 +35,12 @@
   <main class="main-content">
     
     <div id="panel-medallero" class="tab-content" style="display:block">
-      <h2>🏆 Tabla General de Puntuación por Modalidad (100 / 50 Puntos)</h2>
-      <div id="medallero-content">Cargando puntuaciones oficiales...</div>
+      <div class="header-seccion">
+        <h2>🏆 Medallero General y Tabla de Campeones</h2>
+        <!-- Botón visible únicamente en Modo Super Admin -->
+        <button class="btn-crear-partido solo-superadmin" onclick="abrirModalAjustarPuntos()">✏️ Ajustar Puntos Manuales</button>
+      </div>
+      <div id="medallero-content">Cargando medallero...</div>
     </div>
 
     <div id="panel-estadisticas" class="tab-content" style="display:none">
@@ -199,5 +203,35 @@
   </div>
 
   <script src="script.js"></script>
+  <!-- Modal 3: Ajuste Manual de Puntos por Modalidad (Super Admin) -->
+<div id="modal-ajustar-puntos" class="modal">
+  <div class="modal-content">
+    <span class="close" onclick="cerrarModalAjustarPuntos()">&times;</span>
+    <h3>✏️ Ajuste Manual de Puntos (Super Admin)</h3>
+    <p style="font-size:12px; color:#aaa;">Permite corregir o insertar puntajes manualmente en el Medallero.</p>
+
+    <label>Curso / Equipo:</label>
+    <select id="ajuste-curso-select"></select>
+
+    <label>Disciplina:</label>
+    <select id="ajuste-disciplina-select">
+      <option value="futsalM">Futsal Masculino</option>
+      <option value="futsalF">Futsal Femenino</option>
+      <option value="futbol">Fútbol de Campo</option>
+      <option value="voley">Vóley Mixto</option>
+      <option value="pikivoley">Pikivoley Masculino</option>
+      <option value="esports">E-Sports (Clash Royale)</option>
+      <option value="ajedrez">Ajedrez</option>
+      <option value="maraton">Maratón</option>
+      <option value="ciclismo">Ciclismo</option>
+    </select>
+
+    <label>Nuevos Puntos Acreditar (ej. 100 o 50):</label>
+    <input type="number" id="ajuste-puntos-input" placeholder="Ingresar Puntos (ej. 100)" min="0">
+
+    <button class="btn-guardar" onclick="guardarPuntosManuales()">Guardar Ajuste de Puntos</button>
+    <p id="ajuste-msj"></p>
+  </div>
+</div>
 </body>
 </html>
