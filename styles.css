@@ -420,6 +420,42 @@ body.modo-superadmin .btn-cargar-card {
   margin-top: 10px;
 }
 
+.btn-add-incidencia {
+  width: 100%;
+  background-color: #1f2937;
+  color: #60a5fa;
+  border: 1px solid #3b82f6;
+  padding: 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: bold;
+  margin-top: 8px;
+  transition: all 0.15s ease;
+}
+
+.btn-add-incidencia:hover {
+  background-color: #3b82f6;
+  color: #ffffff;
+}
+
+.btn-eliminar {
+  width: 100%;
+  background-color: rgba(239, 68, 68, 0.12);
+  color: #ef4444;
+  border: 1px solid #ef4444;
+  padding: 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: bold;
+  margin-top: 10px;
+  transition: all 0.15s ease;
+}
+
+.btn-eliminar:hover {
+  background-color: #ef4444;
+  color: #ffffff;
+}
+
 /* ============================================================ */
 /* MEJORA DE BOTONES: ESTADO DEL ENCUENTRO Y MARCADOR RÁPIDO     */
 /* ============================================================ */
@@ -711,6 +747,17 @@ body.modo-superadmin .btn-cargar-card {
   font-size: 14px;
   color: #eee;
   word-break: break-word;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 8px;
+}
+
+.comentario-hora {
+  flex-shrink: 0;
+  font-size: 10px;
+  color: #888;
+  white-space: nowrap;
 }
 
 /* ============================================================ */
@@ -747,3 +794,138 @@ body.modo-superadmin .btn-cargar-card {
 .badge-posicion-1 { color: #d4af37; font-weight: bold; }
 .badge-posicion-2 { color: #c0c0c0; font-weight: bold; }
 .badge-posicion-3 { color: #cd7f32; font-weight: bold; }
+
+.ranking-scroll {
+  max-height: 480px;
+  overflow-y: auto;
+  border-radius: 8px;
+  margin-top: 15px;
+  -webkit-overflow-scrolling: touch;
+}
+
+.ranking-scroll table {
+  margin-top: 0;
+}
+
+.ranking-scroll thead th {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+}
+
+/* ============================================================ */
+/* ARREGLO DE SCROLL EN MODALES (MÓVIL)                          */
+/* El modal ahora puede desplazarse internamente en vez de que   */
+/* el dedo mueva el fondo de la página.                          */
+/* ============================================================ */
+.modal-content {
+  max-height: 88vh;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* ============================================================ */
+/* INTERFAZ AMIGABLE PARA MÓVIL                                  */
+/* ============================================================ */
+@media (max-width: 640px) {
+  body {
+    padding: 10px;
+  }
+
+  .header {
+    flex-wrap: wrap;
+    gap: 12px;
+    padding: 14px 16px;
+  }
+
+  .header h1 {
+    font-size: 18px;
+  }
+
+  /* Botones más grandes y fáciles de tocar */
+  .tab-link, .sub-link {
+    padding: 13px 18px;
+    font-size: 15px;
+  }
+
+  .btn-crear-partido,
+  .btn-guardar,
+  .btn-estado,
+  .btn-score-quick,
+  .btn-apoyo,
+  .btn-enviar-comentario,
+  .btn-reaccion {
+    padding-top: 14px;
+    padding-bottom: 14px;
+    font-size: 15px;
+  }
+
+  .btn-score-quick {
+    padding: 18px 8px;
+  }
+
+  .score-num-big {
+    font-size: 24px;
+  }
+
+  .close {
+    font-size: 32px;
+    padding: 6px 10px;
+  }
+
+  /* Modales más cómodos: ocupan casi toda la pantalla, texto más grande */
+  .modal-content {
+    width: 94%;
+    max-width: none;
+    max-height: 92vh;
+    padding: 18px 16px 24px 16px;
+    margin: 3% auto;
+  }
+
+  .modal input, .modal select {
+    padding: 12px;
+    font-size: 15px;
+  }
+
+  .quiniela-form-box {
+    max-width: none;
+    padding: 16px;
+  }
+
+  /* Brackets: en vez de scroll horizontal, se apilan en columna */
+  .bracket-tree-wrapper {
+    flex-direction: column;
+    align-items: stretch;
+    overflow-x: visible;
+    gap: 18px;
+    padding: 10px 0;
+  }
+
+  .bracket-col {
+    min-width: 0;
+    width: 100%;
+  }
+
+  .bracket-match-pair {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .grid-partidos {
+    grid-template-columns: 1fr;
+  }
+
+  .muro-comentarios-form {
+    flex-direction: column;
+  }
+
+  .btn-enviar-comentario {
+    padding: 12px;
+  }
+
+  .estado-btn-group,
+  .quick-score-box {
+    grid-template-columns: 1fr 1fr;
+  }
+}

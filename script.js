@@ -17,6 +17,7 @@ let incidenciasTemp = [];
 let comentariosCache = [];
 let apoyosCache = [];
 let prediccionesCache = [];
+let medalleroCache = [];
 
 function escaparHTML(texto) {
   if (texto === null || texto === undefined) return "";
@@ -44,6 +45,29 @@ const CURSOS_EQUIPOS = [
 function normalizarTexto(txt) {
   if (!txt) return "";
   return txt.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
+}
+
+// Formatea la fecha/hora para mostrar. Soporta el nuevo formato datetime-local
+// (ej. "2026-07-20T15:30") y también el texto libre viejo (ej. "20/07 15:30 HS")
+function formatearFechaHora(valor) {
+  if (!valor) return "Fecha a confirmar";
+  if (valor.includes("T")) {
+    const f = new Date(valor);
+    if (!isNaN(f.getTime())) {
+      const dias = ["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"];
+      return `${dias[f.getDay()]} ${String(f.getDate()).padStart(2, '0')}/${String(f.getMonth() + 1).padStart(2, '0')} · ${String(f.getHours()).padStart(2, '0')}:${String(f.getMinutes()).padStart(2, '0')} hs`;
+    }
+  }
+  return valor; // Formato de texto libre anterior: se muestra tal cual
+}
+
+// Bloquear/liberar el scroll del fondo mientras un modal está abierto (arregla
+// el bug de "no puedo bajar en el modal en el celular")
+function bloquearScrollFondo() {
+  document.body.style.overflow = "hidden";
+}
+function liberarScrollFondo() {
+  document.body.style.overflow = "";
 }
 
 // Alternar Modo Logística (contraseña configurable) / Super Admin (alucas) / Espectador
@@ -253,7 +277,7 @@ function renderizarPortadaEnVivo() {
             <strong style="color:#aaa; font-size:18px;">VS</strong>
             <span>${renderizarNombreVisible(proximo.equipoB)}</span>
           </div>
-          <small style="color:#aaa;">📅 ${proximo.fechaHora} | Orden #${proximo.orden}</small>
+          <small style="color:#aaa;">📅 ${formatearFechaHora(proximo.fechaHora)} | Orden #${proximo.orden}</small>
           <button class="btn-ir-bracket" onclick="event.stopPropagation(); openTab(event, '${panelTarget}')">🏆 Ir a Pestaña de ${proximo.disciplina}</button>
           ${generarBarraApoyoHTML(proximo.id, proximo.equipoA, proximo.equipoB)}
         </div>
@@ -430,7 +454,7 @@ function renderizarPartidosDisciplina(disciplina, contenedorId) {
             <strong>${p.golesA !== "" ? p.golesA : "-"} : ${p.golesB !== "" ? p.golesB : "-"}</strong>
             <span>${renderizarNombreVisible(p.equipoB)}</span>
           </div>
-          <small style="color:#aaa;">📅 ${p.fechaHora} | Estado: <b>${p.estado}</b></small>
+          <small style="color:#aaa;">📅 ${formatearFechaHora(p.fechaHora)} | Estado: <b>${p.estado}</b></small>
           ${generarBarraApoyoHTML(p.id, p.equipoA, p.equipoB)}
         </div>
         <button class="btn-cargar-card solo-logistica" onclick="event.stopPropagation(); abrirModalAdmin('${p.id}', '${p.disciplina}', '${p.fase}', '${p.equipoA}', '${p.equipoB}')">✏️ Cargar Resultado / Tarjetas</button>
@@ -512,16 +536,40 @@ async function abrirModalDetalles(idPartido, disciplina = "", fase = "", eqA = "
   }
 
   document.getElementById("modal-detalles-partido").style.display = "block";
+  bloquearScrollFondo();
 }
 
 function cerrarModalDetalles() {
   document.getElementById("modal-detalles-partido").style.display = "none";
+  liberarScrollFondo();
 }
 
 async function cambiarEstadoPartido(nuevoEstado) {
   const idPartido = document.getElementById("admin-id-partido").value;
   await dbClient.from('partidos').update({ estado: nuevoEstado }).eq('id', idPartido);
   cargarDatos();
+}
+
+async function actualizarFechaHoraPartido() {
+  const idPartido = document.getElementById("admin-id-partido").value;
+  const nuevaFecha = document.getElementById("admin-fecha-hora").value;
+
+  if (!nuevaFecha) {
+    alert("Elegí una fecha y hora primero.");
+    return;
+  }
+  if (!idPartido || idPartido.startsWith("VIRTUAL-")) {
+    alert("Este cruce todavía no tiene un partido real cargado (cargá primero un resultado o marcador).");
+    return;
+  }
+
+  const { error } = await dbClient.from('partidos').update({ fecha_hora: nuevaFecha }).eq('id', idPartido);
+  if (error) {
+    alert("Error al actualizar la fecha: " + error.message);
+  } else {
+    alert("¡Fecha y hora actualizada!");
+    cargarDatos();
+  }
 }
 
 async function abrirModalAdmin(idPartido, disciplina = "", fase = "", eqA = "", eqB = "") {
@@ -541,6 +589,11 @@ async function abrirModalAdmin(idPartido, disciplina = "", fase = "", eqA = "", 
 
   document.getElementById("goles-a").value = partido && partido.golesA !== undefined ? partido.golesA : "";
   document.getElementById("goles-b").value = partido && partido.golesB !== undefined ? partido.golesB : "";
+
+  const campoFecha = document.getElementById("admin-fecha-hora");
+  if (campoFecha) {
+    campoFecha.value = (partido && partido.fechaHora && partido.fechaHora.includes("T")) ? partido.fechaHora : "";
+  }
 
   const selEquipo = document.getElementById("incidencia-equipo");
   selEquipo.innerHTML = "";
@@ -562,10 +615,12 @@ async function abrirModalAdmin(idPartido, disciplina = "", fase = "", eqA = "", 
 
   await cargarIncidenciasModal(idPartido);
   document.getElementById("modal-admin").style.display = "block";
+  bloquearScrollFondo();
 }
 
 function cerrarModalAdmin() {
   document.getElementById("modal-admin").style.display = "none";
+  liberarScrollFondo();
 }
 
 async function sumarPuntoRapido(equipo, cambio) {
@@ -752,10 +807,12 @@ function abrirModalCrearPartido(disciplinaPrevia = "") {
 
   document.getElementById("crear-orden").value = (datosTorneo.partidos.length + 1);
   document.getElementById("modal-crear-partido").style.display = "block";
+  bloquearScrollFondo();
 }
 
 function cerrarModalCrearPartido() {
   document.getElementById("modal-crear-partido").style.display = "none";
+  liberarScrollFondo();
 }
 
 async function enviarNuevoPartido() {
@@ -764,15 +821,7 @@ async function enviarNuevoPartido() {
   const fase = document.getElementById("crear-fase").value;
   const equipoA = document.getElementById("crear-equipo-a").value;
   const equipoB = document.getElementById("crear-equipo-b").value;
-  const fechaHoraRaw = document.getElementById("crear-fecha-hora").value;
-
-  let fechaHoraFormateada = fechaHoraRaw;
-  if (fechaHoraRaw && !fechaHoraRaw.includes("/")) {
-    const f = new Date(fechaHoraRaw);
-    if (!isNaN(f.getTime())) {
-      fechaHoraFormateada = `${String(f.getDate()).padStart(2,'0')}/${String(f.getMonth()+1).padStart(2,'0')} ${String(f.getHours()).padStart(2,'0')}:${String(f.getMinutes()).padStart(2,'0')} HS`;
-    }
-  }
+  const fechaHoraRaw = document.getElementById("crear-fecha-hora").value; // "2026-07-20T15:30"
 
   const idNuevo = "PAR-" + new Date().getTime();
 
@@ -784,7 +833,7 @@ async function enviarNuevoPartido() {
       fase: fase,
       equipo_a: equipoA,
       equipo_b: equipoB,
-      fecha_hora: fechaHoraFormateada,
+      fecha_hora: fechaHoraRaw,
       orden: parseInt(orden),
       estado: 'Pendiente'
     }]);
@@ -810,10 +859,12 @@ function abrirModalAjustarPuntos() {
   document.getElementById("ajuste-puntos-input").value = "";
   document.getElementById("ajuste-msj").innerText = "";
   document.getElementById("modal-ajustar-puntos").style.display = "block";
+  bloquearScrollFondo();
 }
 
 function cerrarModalAjustarPuntos() {
   document.getElementById("modal-ajustar-puntos").style.display = "none";
+  liberarScrollFondo();
 }
 
 async function guardarPuntosManuales() {
@@ -868,6 +919,8 @@ async function renderizarMedalleroReal() {
       const totB = (b.futsalM||0)+(b.futsalF||0)+(b.futbol||0)+(b.voley||0)+(b.pikivoley||0)+(b.esports||0)+(b.ajedrez||0)+(b.maraton||0)+(b.ciclismo||0);
       return totB - totA;
     });
+
+    medalleroCache = medallero;
 
     let html = `<div style="overflow-x:auto;"><table class="tabla-deportiva"><thead><tr><th>Pos.</th><th>Curso / Equipo</th><th>Futsal M</th><th>Futsal F</th><th>Fútbol</th><th>Vóley</th><th>Pikivoley</th><th>E-Sports</th><th>Ajedrez</th><th>Maratón</th><th>Ciclismo</th><th>TOTAL PTS</th></tr></thead><tbody>`;
 
@@ -1096,7 +1149,7 @@ function renderizarFixtureGeneral() {
         <td>${p.fase}</td>
         <td>${renderizarNombreVisible(p.equipoA)} vs ${renderizarNombreVisible(p.equipoB)}</td>
         <td>${resultado}</td>
-        <td>${p.fechaHora || '-'}</td>
+        <td>${formatearFechaHora(p.fechaHora)}</td>
         <td>${badgeEstado(p.estado)}</td>
       </tr>
     `;
@@ -1245,44 +1298,55 @@ function lanzarEmojiFlotante(emoji) {
 }
 
 // ============================================================
-// MURO DE COMENTARIOS ANÓNIMOS (COLA FIFO, MÁX. 10)
+// MURO DE COMENTARIOS ANÓNIMOS (COLA FIFO, MÁX. 10, EXPIRAN A LOS 10 MIN)
 // ============================================================
-async function enviarComentario() {
-  const input = document.getElementById('comentario-input');
-  if (!input) return;
-  const texto = input.value.trim();
+const COMENTARIO_VIDA_MS = 10 * 60 * 1000; // 10 minutos
 
-  if (!texto) return;
-  if (texto.length > 200) {
-    alert('El comentario no puede superar los 200 caracteres.');
+async function enviarComentario() {
+  const input = document.getElementById("comentario-input");
+  const mensaje = input.value.trim();
+
+  if (!mensaje) return;
+  if (mensaje.length > 200) {
+    alert("El comentario no puede superar los 200 caracteres.");
     return;
   }
 
-  const idNuevo = 'COM-' + new Date().getTime();
-  const { error } = await dbClient.from('comentarios').insert([{ id: idNuevo, mensaje: texto }]);
+  const idGenerado = "COM-" + Date.now();
+
+  const { error } = await dbClient
+    .from('comentarios')
+    .insert([{ id: idGenerado, mensaje: mensaje }]);
 
   if (error) {
-    alert('Error al enviar el comentario: ' + error.message);
+    alert("Error al enviar el comentario: " + error.message);
     return;
   }
 
-  input.value = '';
-  await limpiarComentariosExcedentes();
+  input.value = "";
+  await limpiarComentariosViejos();
   cargarDatos();
 }
 
-// Mantiene la cola FIFO: si hay más de 10 comentarios, borra los más antiguos
-async function limpiarComentariosExcedentes() {
+// Mantiene la cola FIFO (máx. 10) Y borra cualquier comentario con más de 10 minutos
+async function limpiarComentariosViejos() {
   const { data: todos } = await dbClient
     .from('comentarios')
     .select('*')
     .order('created_at', { ascending: true });
 
-  if (todos && todos.length > 10) {
-    const sobrantes = todos.slice(0, todos.length - 10);
-    for (const c of sobrantes) {
-      await dbClient.from('comentarios').delete().eq('id', c.id);
-    }
+  if (!todos) return;
+
+  const ahora = Date.now();
+  const vencidos = todos.filter(c => (ahora - new Date(c.created_at).getTime()) > COMENTARIO_VIDA_MS);
+  const vigentes = todos.filter(c => (ahora - new Date(c.created_at).getTime()) <= COMENTARIO_VIDA_MS);
+
+  // Cola FIFO: si aun estando vigentes son más de 10, borrar los más antiguos
+  const excedentesPorCantidad = vigentes.length > 10 ? vigentes.slice(0, vigentes.length - 10) : [];
+
+  const aBorrar = [...vencidos, ...excedentesPorCantidad];
+  for (const c of aBorrar) {
+    await dbClient.from('comentarios').delete().eq('id', c.id);
   }
 }
 
@@ -1290,21 +1354,25 @@ function renderizarMuroComentarios() {
   const lista = document.getElementById('muro-comentarios-lista');
   if (!lista) return;
 
-  if (!comentariosCache || comentariosCache.length === 0) {
+  const ahora = Date.now();
+  const vigentes = (comentariosCache || []).filter(c => (ahora - new Date(c.created_at).getTime()) <= COMENTARIO_VIDA_MS);
+
+  if (vigentes.length === 0) {
     lista.innerHTML = `<li style="color:#aaa;">Sé el primero en comentar 👀</li>`;
     return;
   }
 
-  // Mostrar el más reciente arriba
-  const html = [...comentariosCache].reverse().map(c =>
-    `<li class="comentario-item">💬 ${escaparHTML(c.mensaje)}</li>`
-  ).join('');
+  // Mostrar el más reciente arriba, con la hora de envío
+  const html = [...vigentes].reverse().map(c => {
+    const hora = new Date(c.created_at).toLocaleTimeString('es-PY', { hour: '2-digit', minute: '2-digit' });
+    return `<li class="comentario-item">💬 ${escaparHTML(c.mensaje)}<span class="comentario-hora">🕐 ${hora}</span></li>`;
+  }).join('');
 
   lista.innerHTML = html;
 }
 
 // ============================================================
-// QUINIELA / PREDICCIONES
+// PREDICCIONES (QUINIELA)
 // ============================================================
 function renderizarFormularioQuiniela() {
   const selCurso = document.getElementById('quiniela-curso');
@@ -1312,8 +1380,9 @@ function renderizarFormularioQuiniela() {
   const selFutbol = document.getElementById('quiniela-pred-futbol');
   const selVoley = document.getElementById('quiniela-pred-voley');
   const selPiki = document.getElementById('quiniela-pred-pikivoley');
+  const selGeneral = document.getElementById('quiniela-pred-general');
 
-  if (!selCurso || !selFutsal || !selFutbol || !selVoley || !selPiki) return;
+  if (!selCurso || !selFutsal || !selFutbol || !selVoley || !selPiki || !selGeneral) return;
 
   // Evitar re-poblar si el alumno ya está eligiendo algo (para no resetear el form en cada recarga)
   if (selCurso.dataset.cargado === 'true') return;
@@ -1324,6 +1393,7 @@ function renderizarFormularioQuiniela() {
   selFutbol.innerHTML = opciones;
   selVoley.innerHTML = opciones;
   selPiki.innerHTML = opciones;
+  selGeneral.innerHTML = opciones;
 
   selCurso.dataset.cargado = 'true';
 
@@ -1333,44 +1403,47 @@ function renderizarFormularioQuiniela() {
 }
 
 async function enviarPrediccion() {
-  const nombre = document.getElementById('quiniela-nombre').value.trim();
-  const curso = document.getElementById('quiniela-curso').value;
-  const predFutsal = document.getElementById('quiniela-pred-futsal').value;
-  const predFutbol = document.getElementById('quiniela-pred-futbol').value;
-  const predVoley = document.getElementById('quiniela-pred-voley').value;
-  const predPiki = document.getElementById('quiniela-pred-pikivoley').value;
-  const msj = document.getElementById('quiniela-msj');
+  const nombre = document.getElementById("quiniela-nombre").value.trim();
+  const curso = document.getElementById("quiniela-curso").value;
+  const predFutsal = document.getElementById("quiniela-pred-futsal").value;
+  const predFutbol = document.getElementById("quiniela-pred-futbol").value;
+  const predVoley = document.getElementById("quiniela-pred-voley").value;
+  const predPiki = document.getElementById("quiniela-pred-pikivoley").value;
+  const predGeneral = document.getElementById("quiniela-pred-general").value;
+  const msj = document.getElementById("quiniela-msj");
 
   if (!nombre) {
-    msj.innerText = 'Por favor ingresá tu nombre.';
+    msj.innerText = "Por favor ingresá tu nombre.";
     return;
   }
-
   if (localStorage.getItem('ya_predije')) {
-    msj.innerText = 'Ya enviaste tu predicción desde este dispositivo.';
+    msj.innerText = "Ya enviaste tu predicción desde este dispositivo.";
     return;
   }
 
-  const idNuevo = 'PRED-' + new Date().getTime();
-  msj.innerText = 'Enviando predicción...';
+  const idGenerado = "PRED-" + Date.now();
+  msj.innerText = "Enviando predicción...";
 
-  const { error } = await dbClient.from('predicciones').insert([{
-    id: idNuevo,
-    nombre: nombre,
-    curso: curso,
-    pred_futsal: predFutsal,
-    pred_futbol: predFutbol,
-    pred_voley: predVoley,
-    pred_pikivoley: predPiki
-  }]);
+  const { error } = await dbClient
+    .from('predicciones')
+    .insert([{
+      id: idGenerado,
+      nombre: nombre,
+      curso: curso,
+      pred_futsal: predFutsal,
+      pred_futbol: predFutbol,
+      pred_voley: predVoley,
+      pred_pikivoley: predPiki,
+      pred_general: predGeneral
+    }]);
 
   if (error) {
-    msj.innerText = 'Error: ' + error.message;
+    msj.innerText = "Error: " + error.message;
     return;
   }
 
   localStorage.setItem('ya_predije', 'true');
-  msj.innerText = '¡Predicción registrada! Buena suerte 🎯';
+  msj.innerText = "¡Predicción registrada! Buena suerte 🎯";
   cargarDatos();
 }
 
@@ -1397,6 +1470,7 @@ function renderizarQuinielaRanking() {
   const campFutbol = obtenerCampeonDisciplina('Fútbol de Campo Masculino');
   const campVoley = obtenerCampeonDisciplina('Volley Mixto');
   const campPiki = obtenerCampeonDisciplina('Pikivoley Masculino');
+  const campGeneral = medalleroCache && medalleroCache.length > 0 ? medalleroCache[0].curso_equipo : null;
 
   const ranking = prediccionesCache.map(p => {
     let aciertos = 0;
@@ -1404,6 +1478,7 @@ function renderizarQuinielaRanking() {
     if (campFutbol && p.pred_futbol === campFutbol) aciertos++;
     if (campVoley && p.pred_voley === campVoley) aciertos++;
     if (campPiki && p.pred_pikivoley === campPiki) aciertos++;
+    if (campGeneral && p.pred_general === campGeneral) aciertos++;
 
     const fecha = p.created_at ? new Date(p.created_at).toLocaleString('es-PY', {
       day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit'
@@ -1412,20 +1487,23 @@ function renderizarQuinielaRanking() {
     return { nombre: p.nombre, curso: p.curso, aciertos, fecha };
   }).sort((a, b) => b.aciertos - a.aciertos);
 
-  let html = `<div style="overflow-x:auto;"><table class="tabla-deportiva"><thead><tr><th>Pos.</th><th>Alumno</th><th>Curso</th><th>Aciertos</th><th>Fecha de Predicción</th></tr></thead><tbody>`;
+  let html = `<div class="ranking-scroll"><table class="tabla-deportiva"><thead><tr><th>Pos.</th><th>Alumno</th><th>Curso</th><th>Aciertos</th><th>Fecha de Predicción</th></tr></thead><tbody>`;
 
   ranking.forEach((r, index) => {
     const claseBadge = index === 0 ? 'badge-posicion-1' : index === 1 ? 'badge-posicion-2' : index === 2 ? 'badge-posicion-3' : '';
-    html += `<tr><td><b class="${claseBadge}">#${index + 1}</b></td><td>${escaparHTML(r.nombre)}</td><td>${renderizarNombreVisible(r.curso)}</td><td><b style="color:#d4af37;">${r.aciertos} / 4</b></td><td style="color:#aaa; font-size:12px;">${r.fecha}</td></tr>`;
+    html += `<tr><td><b class="${claseBadge}">#${index + 1}</b></td><td>${escaparHTML(r.nombre)}</td><td>${renderizarNombreVisible(r.curso)}</td><td><b style="color:#d4af37;">${r.aciertos} / 5</b></td><td style="color:#aaa; font-size:12px;">${r.fecha}</td></tr>`;
   });
 
   html += `</tbody></table></div>
-  <p style="color:#888; font-size:11px; margin-top:8px;">Los aciertos se actualizan automáticamente a medida que se juegan las finales de cada disciplina.</p>`;
+  <p style="color:#888; font-size:11px; margin-top:8px;">${ranking.length} predicción${ranking.length === 1 ? '' : 'es'} recibida${ranking.length === 1 ? '' : 's'}. Los aciertos se actualizan solos a medida que se juegan las finales y se actualiza la Tabla General.</p>`;
   container.innerHTML = html;
 }
 
 window.onload = function() {
   cargarDatos();
+  // Vuelve a dibujar el muro de comentarios cada 30s para que los mensajes
+  // desaparezcan solos al cumplir 10 minutos, sin esperar otra acción.
+  setInterval(renderizarMuroComentarios, 30000);
 };
 
 // ============================================================
@@ -1439,10 +1517,12 @@ function abrirModalCambiarClave() {
   document.getElementById("nueva-clave-logistica").value = "";
   document.getElementById("clave-msj").innerText = "";
   document.getElementById("modal-cambiar-clave").style.display = "block";
+  bloquearScrollFondo();
 }
 
 function cerrarModalCambiarClave() {
   document.getElementById("modal-cambiar-clave").style.display = "none";
+  liberarScrollFondo();
 }
 
 async function guardarNuevaClaveLogistica() {

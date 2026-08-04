@@ -158,7 +158,7 @@
 
     <div id="panel-quiniela" class="tab-content" style="display:none">
       <h2>🎯 Predicciones del Torneo</h2>
-      <p style="color:#aaa; font-size:13px;">Pronosticá quién se corona campeón en Futsal Masculino, Fútbol de Campo Masculino, Vóley Mixto y Pikivoley. Los aciertos se calculan automáticamente cuando se juega la Final de cada disciplina.</p>
+      <p style="color:#aaa; font-size:13px;">Pronosticá quién se corona campeón en Futsal Masculino, Fútbol de Campo Masculino, Vóley Mixto, Pikivoley y quién será el Campeón General del torneo. Los aciertos se calculan automáticamente cuando se juega la Final de cada disciplina (o se actualiza la Tabla General, en el caso del Campeón General).</p>
 
       <div class="quiniela-form-box">
         <label>Tu Nombre:</label>
@@ -178,6 +178,9 @@
 
         <label>Campeón de Pikivoley Masculino:</label>
         <select id="quiniela-pred-pikivoley"></select>
+
+        <label>🏆 Campeón GENERAL del Torneo (Tabla General):</label>
+        <select id="quiniela-pred-general"></select>
 
         <button type="button" class="btn-guardar" onclick="enviarPrediccion()">🎯 Enviar Mi Predicción</button>
         <p id="quiniela-msj"></p>
@@ -212,6 +215,13 @@
           <button type="button" class="btn-estado btn-est-finalizado" onclick="cambiarEstadoPartido('Finalizado')">🟢 FINALIZADO</button>
           <button type="button" class="btn-estado btn-est-pendiente" onclick="cambiarEstadoPartido('Pendiente')">🟡 PRÓXIMAMENTE</button>
         </div>
+      </div>
+
+      <!-- Editar Fecha y Hora del Partido -->
+      <div class="estado-selector-box">
+        <label style="font-size:12px; color:#aaa;">📅 Fecha y Hora del Encuentro:</label>
+        <input type="datetime-local" id="admin-fecha-hora" style="margin-top:6px;">
+        <button type="button" class="btn-guardar" style="margin-top:8px;" onclick="actualizarFechaHoraPartido()">Guardar Fecha y Hora</button>
       </div>
 
       <!-- Marcador Rápido Punto a Punto -->
@@ -292,7 +302,7 @@
       <select id="crear-equipo-b"></select>
 
       <label>Fecha y Hora:</label>
-      <input type="text" id="crear-fecha-hora" placeholder="Ej. 20/07 15:30 HS">
+      <input type="datetime-local" id="crear-fecha-hora">
 
       <button type="button" class="btn-guardar" onclick="enviarNuevoPartido()">Crear y Publicar Partido</button>
       <p id="crear-msj"></p>
