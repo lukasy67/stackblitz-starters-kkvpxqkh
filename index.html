@@ -119,26 +119,37 @@
       <div id="pikivoley-content">Cargando partidos de pikivoley...</div>
     </div>
 
-    <!-- Panel Clash Royale (E-Sports) -->
-    <div id="panel-clashroyale" class="tab-content" style="display:none">
-      <div class="header-seccion">
-        <h2>🎮 Clash Royale (E-Sports)</h2>
-        <button class="btn-crear-partido solo-logistica" onclick="abrirModalCrearPartido('Clash Royale')">➕ Agregar Partida Clash Royale</button>
-      </div>
+<!-- Reemplazar en index.html -->
+<div id="panel-clashroyale" class="tab-content" style="display:none">
+  <div class="header-seccion">
+    <h2>🎮 Clash Royale (E-Sports)</h2>
+    <button class="btn-crear-partido solo-logistica" onclick="abrirModalCrearPartido('Clash Royale')">➕ Agregar Partida Clash Royale</button>
+  </div>
 
-      <!-- Selector de Formato de Bracket -->
-      <div style="background:#161616; padding:12px; border-radius:8px; border:1px solid #333; margin-bottom:15px; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px;">
-        <div>
-          <strong style="color:#d4af37;">Formato de Llave:</strong>
-          <span style="font-size:12px; color:#aaa; margin-left:6px;">Selecciona el modo de competición</span>
-        </div>
-        <div class="sub-tabs" style="margin:0;">
-          <button class="sub-link active" id="btn-cr-single" onclick="cambiarFormatoClashRoyale('single', event)">Eliminación Directa</button>
-          <button class="sub-link" id="btn-cr-double" onclick="cambiarFormatoClashRoyale('double', event)">Doble Eliminación (Losers Bracket)</button>
-        </div>
-      </div>
+  <!-- Selector de Formato EXCLUSIVO SuperAdmin Alucas (Oculto a Espectadores) -->
+  <div class="solo-superadmin-flex" style="background:#161616; padding:12px; border-radius:8px; border:1px solid #d4af37; margin-bottom:15px; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
+    <div>
+      <strong style="color:#d4af37;">👑 Formato de Competición (SuperAdmin Alucas):</strong>
+      <span style="font-size:12px; color:#aaa; margin-left:6px;">Define si se activa la ronda de perdedores</span>
+    </div>
+    <div class="sub-tabs" style="margin:0;">
+      <button class="sub-link active" id="btn-cr-single" onclick="cambiarFormatoClashRoyale('single', event)">Eliminación Directa</button>
+      <button class="sub-link" id="btn-cr-double" onclick="cambiarFormatoClashRoyale('double', event)">Doble Eliminación (Con Losers Bracket)</button>
+    </div>
+  </div>
 
-      <div id="clashroyale-bracket">Cargando llave de Clash Royale...</div>
+  <div id="clashroyale-bracket">Cargando llaves de Clash Royale...</div>
+
+  <!-- Tabla Exclusiva de Estadísticas (VISIBLE PARA TODOS) -->
+  <div style="margin-top:30px; background:#161616; padding:18px; border-radius:12px; border:1px solid #d4af37;">
+    <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:12px;">
+      <h3 style="color:#d4af37; margin:0;">🏆 Clasificación & Participantes eSports (Clash Royale)</h3>
+      <button class="btn-crear-partido solo-superadmin" style="padding:6px 12px; font-size:12px;" onclick="abrirModalJugadorClashRoyale()">➕ Registrar Jugador Clash Royale (SuperAdmin)</button>
+    </div>
+    <p style="color:#aaa; font-size:12px; margin-top:0;">Plantilla oficial de competidores de eSports representando a sus respectivos cursos.</p>
+    <div id="clashroyale-stats-content">Cargando participantes...</div>
+  </div>
+</div>
 
       <!-- Tabla Exclusiva de Estadísticas y Jugadores Clash Royale -->
       <div style="margin-top:30px; background:#161616; padding:18px; border-radius:12px; border:1px solid #d4af37;">
@@ -265,15 +276,14 @@
 
   </main>
 
-  <!-- Carrusel / Banner de Auspiciantes / Sponsors -->
+<!-- Reemplazar el bloque <section id="sponsor-carousel"> en index.html -->
   <section id="sponsor-carousel" class="sponsor-carousel" style="display:none;">
     <div class="sponsor-title">✨ PATROCINADORES OFICIALES INTERFILO 2026 ✨</div>
-    <div class="sponsor-track">
+    <div class="sponsor-track" id="sponsor-track-content">
       <div class="sponsor-card">🏪 <b>Bodega Central</b><span>Auspiciador Oficial</span></div>
-      <div class="sponsor-card">🖨️ <b>Copiprint San Estanislao</b><span>Impresiones & Diseño</span></div>
+      <div class="sponsor-card">🖨️ <b>Copiprint Santaní</b><span>Impresiones & Diseño</span></div>
       <div class="sponsor-card">🏋️ <b>Gym Filo Fitness</b><span>Entrenamiento Deportivo</span></div>
       <div class="sponsor-card">🍔 <b>Burger House Santaní</b><span>Gastronomía Local</span></div>
-      <div class="sponsor-card">📻 <b>Radio Tapiracuai</b><span>Prensa & Transmisión</span></div>
     </div>
   </section>
 

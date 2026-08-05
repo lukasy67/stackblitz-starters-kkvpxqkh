@@ -1219,3 +1219,12 @@ body.modo-superadmin .solo-superadmin-celda {
     grid-template-columns: 1fr;
   }
 }
+
+/* Agregar en styles.css */
+.solo-superadmin-flex {
+  display: none !important;
+}
+
+body.modo-superadmin .solo-superadmin-flex {
+  display: flex !important;
+}

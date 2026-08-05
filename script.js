@@ -5,6 +5,7 @@ let esModoLogistica = false;
 let esModoSuperAdmin = false;
 let esModoEditor = false;
 let sancionesManualesCache = [];
+let sponsorsCache = [];
 let formatoClashRoyale = 'single'; // 'single' o 'double'
 
 const SUPABASE_URL = "https://zkklifirmzvlwapivbrc.supabase.co";
@@ -272,9 +273,29 @@ try {
     .on('postgres_changes', { event: '*', schema: 'public', table: 'jugadores' }, () => cargarDatos())
     .on('postgres_changes', { event: '*', schema: 'public', table: 'config_accesos' }, () => cargarDatos())
     .on('postgres_changes', { event: '*', schema: 'public', table: 'sanciones_manuales' }, () => cargarDatos())
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'comentarios' }, () => cargarDatos())
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'apoyos' }, () => cargarDatos())
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'predicciones' }, () => cargarDatos())
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'sponsors' }, () => cargarDatos())
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'votos_mvp' }, () => cargarDatos())
     .subscribe();
 } catch (e) {
   console.log("Realtime error:", e);
+}
+
+// Reacciones: no recarga toda la página, solo dispara la animación flotante
+// al instante para todos los usuarios conectados en ese momento.
+try {
+  dbClient
+    .channel('reacciones-en-vivo')
+    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'reacciones' }, (payload) => {
+      if (payload && payload.new && payload.new.emoji) {
+        lanzarEmojiFlotante(payload.new.emoji);
+      }
+    })
+    .subscribe();
+} catch (e) {
+  console.log("Realtime error (reacciones):", e);
 }
 
 // ============================================================
@@ -317,6 +338,16 @@ async function cargarDatos() {
       .from('config_accesos')
       .select('*');
 
+    const confClash = (config || []).find(c => c.clave_id === 'clash_formato');
+    formatoClashRoyale = confClash ? confClash.valor : 'single';
+
+    const btnSingle = document.getElementById("btn-cr-single");
+    const btnDouble = document.getElementById("btn-cr-double");
+    if (btnSingle && btnDouble) {
+      btnSingle.classList.toggle("active", formatoClashRoyale === 'single');
+      btnDouble.classList.toggle("active", formatoClashRoyale === 'double');
+    }
+
     comentariosCache = comentarios || [];
     apoyosCache = apoyos || [];
     prediccionesCache = predicciones || [];
@@ -354,6 +385,7 @@ async function cargarDatos() {
     renderizarPartidosDisciplina("Pikivoley Masculino", "pikivoley-content");
 
     renderizarGridEquipos();
+    renderizarClashRoyaleTab();
     renderizarMedalleroReal();
     renderizarEstadisticasEquipos();
     renderizarGoleadoresTop();
@@ -419,18 +451,6 @@ function dispararCelebracionGol(equipoAnotador, disciplina, gA, gB) {
     overlay.appendChild(el);
     setTimeout(() => el.remove(), 4000);
   }
-}
-
-if (!document.getElementById("keyframes-gol")) {
-  const style = document.createElement('style');
-  style.id = "keyframes-gol";
-  style.innerHTML = `
-    @keyframes caerGol {
-      0% { transform: translateY(0) rotate(0deg); opacity: 1; }
-      100% { transform: translateY(105vh) rotate(360deg); opacity: 0; }
-    }
-  `;
-  document.head.appendChild(style);
 }
 
 // ============================================================
@@ -648,26 +668,6 @@ async function guardarJugador() {
       abrirModalEquipo(equipo);
     }
   }
-}
-
-function eliminarJugador(idJugador, nombreJugador) {
-  if (!esModoEditor && !esModoSuperAdmin) {
-    mostrarToast("Acceso denegado.", "error");
-    return;
-  }
-
-  mostrarConfirmacion(`¿Estás seguro de eliminar a "${nombreJugador}" de la base de datos?`, async () => {
-    const equipoActual = document.getElementById("modal-equipo").dataset.equipoActual;
-    const { error } = await dbClient.from('jugadores').delete().eq('id', idJugador);
-
-    if (error) {
-      mostrarToast("Error al eliminar jugador: " + error.message, "error");
-    } else {
-      mostrarToast("Jugador eliminado.", "info");
-      await cargarDatos();
-      abrirModalEquipo(equipoActual);
-    }
-  });
 }
 
 // ============================================================
@@ -1205,12 +1205,8 @@ function renderizarCuadroHonor() {
 // ============================================================
 // SPONSORS Y TOGGLE DE SUPERADMIN
 // ============================================================
-function renderizarCarruselSponsors() {
-  const el = document.getElementById("sponsor-carousel");
-  if (!el) return;
-  el.style.display = sponsorsVisibles ? "block" : "none";
-}
 
+// Mostrar/ocultar el carrusel de sponsors para todos (Super Admin)
 async function toggleSponsorsVisibles() {
   if (!esModoSuperAdmin) {
     mostrarToast("Acceso exclusivo para SuperAdmin.", "error");
@@ -1218,6 +1214,9 @@ async function toggleSponsorsVisibles() {
   }
 
   const nuevoEstado = !sponsorsVisibles;
+  sponsorsVisibles = nuevoEstado;
+  renderizarCarruselSponsors();
+
   const { error } = await dbClient
     .from('config_accesos')
     .upsert({ clave_id: 'sponsors_visible', valor: String(nuevoEstado), updated_at: new Date().toISOString() }, { onConflict: 'clave_id' });
@@ -1225,8 +1224,6 @@ async function toggleSponsorsVisibles() {
   if (error) {
     mostrarToast("Error al guardar preferencia de sponsors: " + error.message, "error");
   } else {
-    sponsorsVisibles = nuevoEstado;
-    renderizarCarruselSponsors();
     mostrarToast(`Carrusel de Auspiciantes ${nuevoEstado ? 'activado' : 'ocultado'} para todos.`, "success");
   }
 }
@@ -2417,7 +2414,10 @@ async function guardarJugadoresMasivo() {
 
 // Confirmación previa al eliminar un jugador
 function eliminarJugador(idJugador, nombreJugador) {
-  if (!esModoEditor && !esModoSuperAdmin) return;
+  if (!esModoEditor && !esModoSuperAdmin) {
+    mostrarToast("Acceso denegado.", "error");
+    return;
+  }
 
   mostrarConfirmacion(`¿Estás seguro de eliminar a "${nombreJugador}" de la base de datos?`, async () => {
     const equipoActual = document.getElementById("modal-equipo").dataset.equipoActual;
@@ -2433,7 +2433,13 @@ function eliminarJugador(idJugador, nombreJugador) {
   });
 }
 
-function cambiarFormatoClashRoyale(formato, evt) {
+// Cambia el formato de llave de Clash Royale (Eliminación Directa / Doble Eliminación)
+async function cambiarFormatoClashRoyale(formato, evt) {
+  if (!esModoSuperAdmin) {
+    mostrarToast("Solo el SuperAdmin puede cambiar el formato de la llave.", "error");
+    return;
+  }
+
   formatoClashRoyale = formato;
   const btnSingle = document.getElementById("btn-cr-single");
   const btnDouble = document.getElementById("btn-cr-double");
@@ -2443,7 +2449,16 @@ function cambiarFormatoClashRoyale(formato, evt) {
     btnDouble.classList.toggle("active", formato === 'double');
   }
 
-  renderizarClashRoyaleTab();
+  const { error } = await dbClient
+    .from('config_accesos')
+    .upsert({ clave_id: 'clash_formato', valor: formato, updated_at: new Date().toISOString() }, { onConflict: 'clave_id' });
+
+  if (error) {
+    mostrarToast("Error al guardar formato: " + error.message, "error");
+  } else {
+    mostrarToast(`Formato cambiado a: ${formato === 'single' ? 'Eliminación Directa' : 'Doble Eliminación'}`, "success");
+    renderizarClashRoyaleTab();
+  }
 }
 
 function renderizarClashRoyaleTab() {
@@ -2536,6 +2551,7 @@ function renderizarArbolClashRoyale(disciplina, containerId, modoFormat) {
   container.innerHTML = html;
 }
 
+// Tabla exclusiva de estadísticas y jugadores de Clash Royale
 function renderizarEstadisticasClashRoyale() {
   const container = document.getElementById("clashroyale-stats-content");
   if (!container) return;
@@ -2547,13 +2563,35 @@ function renderizarEstadisticasClashRoyale() {
     return;
   }
 
-  let html = `<div style="overflow-x:auto;"><table class="tabla-deportiva"><thead><tr><th>Participante</th><th>Curso / Equipo</th><th class="solo-superadmin-celda">Acciones (SuperAdmin)</th></tr></thead><tbody>`;
+  let html = `
+    <div style="overflow-x:auto;">
+      <table class="tabla-deportiva">
+        <thead>
+          <tr>
+            <th>Pos.</th>
+            <th>Participante</th>
+            <th>Curso / Equipo</th>
+            <th>Coronas / Pts</th>
+            <th class="solo-superadmin-celda">Acciones (SuperAdmin)</th>
+          </tr>
+        </thead>
+        <tbody>
+  `;
 
-  jugadoresCR.forEach(j => {
+  jugadoresCR.forEach((j, index) => {
+    let coronas = 0;
+    datosTorneo.incidencias.forEach(inc => {
+      if (inc.jugador_nombre === j.nombre && (inc.tipo_evento === 'Gol' || inc.tipo_evento === 'Corona')) {
+        coronas++;
+      }
+    });
+
     html += `
       <tr>
+        <td><b>#${index + 1}</b></td>
         <td><b class="jugador-nombre-click" onclick="abrirFifaCard('${escaparHTML(j.nombre)}', '${j.equipo}')">🎮 ${escaparHTML(j.nombre)}</b></td>
         <td>${renderizarLogoHTML(j.equipo, 20)} ${renderizarNombreVisible(j.equipo)}</td>
+        <td><b style="color:#d4af37;">${coronas} 👑</b></td>
         <td class="solo-superadmin-celda">
           <button style="background:none; border:none; cursor:pointer; font-size:14px;" onclick="abrirModalJugadorClashRoyale(${JSON.stringify(j).replace(/"/g, '&quot;')})" title="Editar">✏️</button>
           <button style="background:none; border:none; cursor:pointer; font-size:14px;" onclick="eliminarJugador('${j.id}', '${escaparHTML(j.nombre)}')" title="Eliminar">🗑️</button>
@@ -2596,6 +2634,144 @@ function abrirModalJugadorClashRoyale(jugadorObj = null) {
 function cerrarModalJugadorClashRoyale() {
   document.getElementById("modal-clash-jugador").style.display = "none";
   liberarScrollFondo();
+}
+
+function abrirModalGestionarSponsors() {
+  if (!esModoSuperAdmin) {
+    mostrarToast("Acceso exclusivo para el SuperAdmin.", "error");
+    return;
+  }
+
+  document.getElementById("sponsor-edit-id").value = "";
+  document.getElementById("sponsor-nombre-input").value = "";
+  document.getElementById("sponsor-subtitulo-input").value = "";
+  document.getElementById("sponsor-icono-input").value = "🏪";
+  document.getElementById("titulo-form-sponsor").innerText = "➕ Agregar Nuevo Sponsor";
+
+  renderizarListaSponsorsGestion();
+  document.getElementById("modal-gestionar-sponsors").style.display = "block";
+  bloquearScrollFondo();
+}
+
+function cerrarModalGestionarSponsors() {
+  document.getElementById("modal-gestionar-sponsors").style.display = "none";
+  liberarScrollFondo();
+}
+
+function renderizarListaSponsorsGestion() {
+  const container = document.getElementById("lista-sponsors-gestion");
+  if (!container) return;
+
+  if (!sponsorsCache || sponsorsCache.length === 0) {
+    container.innerHTML = `<p style="color:#aaa; font-size:12px;">No hay auspiciadores cargados aún.</p>`;
+    return;
+  }
+
+  let html = "";
+  sponsorsCache.forEach(sp => {
+    html += `
+      <div style="display:flex; justify-content:space-between; align-items:center; background:#111; padding:8px 12px; border-radius:6px; margin-bottom:6px; border:1px solid #222;">
+        <div>
+          <b>${sp.icono || '🏪'} ${escaparHTML(sp.nombre)}</b>
+          <span style="font-size:11px; color:#aaa; display:block;">${escaparHTML(sp.subtitulo || '')}</span>
+        </div>
+        <div style="display:flex; gap:6px;">
+          <button style="background:none; border:none; cursor:pointer; font-size:14px;" onclick="cargarSponsorParaEditar('${sp.id}')" title="Editar">✏️</button>
+          <button style="background:none; border:none; cursor:pointer; font-size:14px;" onclick="eliminarSponsorDinamico('${sp.id}')" title="Eliminar">🗑️</button>
+        </div>
+      </div>
+    `;
+  });
+  container.innerHTML = html;
+}
+
+function cargarSponsorParaEditar(idSponsor) {
+  const sp = sponsorsCache.find(s => s.id === idSponsor);
+  if (!sp) return;
+
+  document.getElementById("sponsor-edit-id").value = sp.id;
+  document.getElementById("sponsor-nombre-input").value = sp.nombre;
+  document.getElementById("sponsor-subtitulo-input").value = sp.subtitulo || '';
+  document.getElementById("sponsor-icono-input").value = sp.icono || '🏪';
+  document.getElementById("titulo-form-sponsor").innerText = "✏️ Editar Sponsor";
+}
+
+async function guardarSponsorDinamico() {
+  if (!esModoSuperAdmin) return;
+
+  const id = document.getElementById("sponsor-edit-id").value;
+  const nombre = document.getElementById("sponsor-nombre-input").value.trim();
+  const subtitulo = document.getElementById("sponsor-subtitulo-input").value.trim();
+  const icono = document.getElementById("sponsor-icono-input").value.trim() || "🏪";
+
+  if (!nombre) {
+    mostrarToast("Ingrese el nombre del sponsor.", "warning");
+    return;
+  }
+
+  if (id) {
+    const { error } = await dbClient.from('sponsors').update({ nombre, subtitulo, icono }).eq('id', id);
+    if (error) mostrarToast("Error: " + error.message, "error");
+    else mostrarToast("Sponsor actualizado.", "success");
+  } else {
+    const idNuevo = "SPON-" + Date.now();
+    const { error } = await dbClient.from('sponsors').insert([{ id: idNuevo, nombre, subtitulo, icono }]);
+    if (error) mostrarToast("Error: " + error.message, "error");
+    else mostrarToast("Sponsor registrado correctamente.", "success");
+  }
+
+  document.getElementById("sponsor-edit-id").value = "";
+  document.getElementById("sponsor-nombre-input").value = "";
+  document.getElementById("sponsor-subtitulo-input").value = "";
+  document.getElementById("titulo-form-sponsor").innerText = "➕ Agregar Nuevo Sponsor";
+
+  await cargarDatos();
+  renderizarListaSponsorsGestion();
+}
+
+function eliminarSponsorDinamico(idSponsor) {
+  if (!esModoSuperAdmin) return;
+
+  mostrarConfirmacion("¿Desea eliminar este auspiciador de la lista?", async () => {
+    const { error } = await dbClient.from('sponsors').delete().eq('id', idSponsor);
+    if (error) mostrarToast("Error: " + error.message, "error");
+    else {
+      mostrarToast("Sponsor eliminado.", "info");
+      await cargarDatos();
+      renderizarListaSponsorsGestion();
+    }
+  });
+}
+
+// Pinta el carrusel de sponsors (o el respaldo estático si no hay ninguno cargado)
+function renderizarCarruselSponsors() {
+  const el = document.getElementById("sponsor-carousel");
+  const track = document.getElementById("sponsor-track-content") || document.querySelector(".sponsor-track");
+  if (!el || !track) return;
+
+  // Cambiar visibilidad inmediatamente
+  el.style.display = sponsorsVisibles ? "block" : "none";
+
+  if (sponsorsCache && sponsorsCache.length > 0) {
+    let html = "";
+    sponsorsCache.forEach(sp => {
+      html += `
+        <div class="sponsor-card">
+          <b>${sp.icono || '🏪'} ${escaparHTML(sp.nombre)}</b>
+          <span>${escaparHTML(sp.subtitulo || 'Auspiciador Oficial')}</span>
+        </div>
+      `;
+    });
+    track.innerHTML = html;
+  } else {
+    // Respaldo estático por defecto
+    track.innerHTML = `
+      <div class="sponsor-card">🏪 <b>Bodega Central</b><span>Auspiciador Oficial</span></div>
+      <div class="sponsor-card">🖨️ <b>Copiprint Santaní</b><span>Impresiones & Diseño</span></div>
+      <div class="sponsor-card">🏋️ <b>Gym Filo Fitness</b><span>Entrenamiento Deportivo</span></div>
+      <div class="sponsor-card">🍔 <b>Burger House Santaní</b><span>Gastronomía Local</span></div>
+    `;
+  }
 }
 
 async function guardarJugadorClashRoyale() {
