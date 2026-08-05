@@ -1,11 +1,60 @@
 /* PALETA DE COLORES: NEGRO / BLANCO / DORADO / ACCESOS DEPORTIVOS */
+
+/* 1. ACTUALIZAR BODY Y AGREGAR EL NUEVO CONTENEDOR */
 body {
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  background-color: #0d0d0d;
+  background-color: #050505; /* Fondo exterior muy oscuro para PC */
   color: #ffffff;
   margin: 0;
-  padding: 15px;
+  padding: 0; /* Quitamos el padding del body */
   -webkit-tap-highlight-color: transparent;
+  display: flex;
+  justify-content: center; /* Centra la app horizontalmente en PC */
+}
+
+.app-container {
+  width: 100%;
+  max-width: 480px; /* Restringe el ancho al tamaño de un móvil grande */
+  min-height: 100vh;
+  background-color: #0d0d0d; /* El fondo original de tu app */
+  padding: 15px;
+  box-sizing: border-box;
+  position: relative;
+  /* Sombra oscura profunda y un borde sutil dorado para despegarlo del fondo */
+  box-shadow: 0 0 40px rgba(0, 0, 0, 0.9), 0 0 0 1px rgba(212, 175, 55, 0.05); 
+  overflow-x: hidden;
+}
+
+/* 2. REEMPLAZAR LA POSICIÓN DE LOS TOASTS */
+.toast-container {
+  position: fixed;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  max-width: 480px;
+  z-index: 10000;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end; /* Alinea los toasts a la derecha pero DENTRO de los 480px */
+  padding: 0 20px;
+  box-sizing: border-box;
+  pointer-events: none;
+}
+
+/* 3. REEMPLAZAR LA POSICIÓN DE LAS ANIMACIONES */
+.celebracion-overlay,
+.reacciones-overlay {
+  position: fixed;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  max-width: 480px;
+  height: 100%;
+  pointer-events: none;
+  z-index: 9999;
+  overflow: hidden;
 }
 
 .header {
@@ -639,17 +688,6 @@ body.modo-superadmin .solo-superadmin-celda {
 }
 
 /* TOAST NOTIFICATIONS */
-.toast-container {
-  position: fixed;
-  top: 20px;
-  right: 20px;
-  z-index: 10000;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  pointer-events: none;
-}
-
 .toast {
   pointer-events: auto;
   background-color: #161616;
@@ -679,17 +717,6 @@ body.modo-superadmin .solo-superadmin-celda {
 }
 
 /* CELEBRACIÓN DE GOLES */
-.celebracion-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  pointer-events: none;
-  z-index: 9999;
-  overflow: hidden;
-}
-
 /* Búho Flotante */
 .btn-modo-acceso {
   background: transparent !important;
@@ -1014,17 +1041,6 @@ body.modo-superadmin .solo-superadmin-celda {
 }
 
 /* Reacciones */
-.reacciones-overlay {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  pointer-events: none;
-  z-index: 5000;
-  overflow: hidden;
-}
-
 .emoji-flotante {
   position: absolute;
   bottom: 70px;
@@ -1178,10 +1194,6 @@ body.modo-superadmin .solo-superadmin-celda {
 
 /* Adaptación Mobile-First */
 @media (max-width: 640px) {
-  body {
-    padding: 10px;
-  }
-
   .header {
     flex-wrap: wrap;
     gap: 12px;
