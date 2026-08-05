@@ -1,10 +1,11 @@
-/* PALETA DE COLORES: NEGRO / BLANCO / DORADO */
+/* PALETA DE COLORES: NEGRO / BLANCO / DORADO / ACCESOS DEPORTIVOS */
 body {
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   background-color: #0d0d0d;
   color: #ffffff;
   margin: 0;
   padding: 15px;
+  -webkit-tap-highlight-color: transparent;
 }
 
 .header {
@@ -145,6 +146,7 @@ body.modo-superadmin .solo-superadmin-celda {
   border-radius: 8px;
   cursor: pointer;
   font-size: 14px;
+  transition: all 0.15s ease;
 }
 
 .tab-link.active, .sub-link.active {
@@ -158,6 +160,7 @@ body.modo-superadmin .solo-superadmin-celda {
   margin-bottom: 15px;
   display: flex;
   gap: 10px;
+  flex-wrap: wrap;
 }
 
 .main-content {
@@ -226,6 +229,15 @@ body.modo-superadmin .solo-superadmin-celda {
   padding: 2px 6px;
   border-radius: 4px;
   margin-left: 4px;
+}
+
+.badge-esports {
+  background-color: #06b6d4;
+  color: #ffffff;
+  font-size: 10px;
+  font-weight: bold;
+  padding: 2px 6px;
+  border-radius: 4px;
 }
 
 .marcador-box {
@@ -344,11 +356,11 @@ body.modo-superadmin .solo-superadmin-celda {
   animation: pulse 2s infinite;
 }
 
-/* Brackets */
+/* Brackets Visuales & Losers Bracket */
 .bracket-tree-wrapper {
   display: flex;
   justify-content: space-around;
-  align-items: center;
+  align-items: flex-start;
   gap: 25px;
   overflow-x: auto;
   padding: 20px 10px;
@@ -358,7 +370,7 @@ body.modo-superadmin .solo-superadmin-celda {
   display: flex;
   flex-direction: column;
   justify-content: space-around;
-  gap: 25px;
+  gap: 20px;
   min-width: 210px;
 }
 
@@ -366,6 +378,15 @@ body.modo-superadmin .solo-superadmin-celda {
   font-size: 13px;
   font-weight: bold;
   color: #d4af37;
+  text-transform: uppercase;
+  text-align: center;
+  margin-bottom: 10px;
+}
+
+.bracket-losers-title {
+  font-size: 13px;
+  font-weight: bold;
+  color: #ef4444;
   text-transform: uppercase;
   text-align: center;
   margin-bottom: 10px;
@@ -382,6 +403,14 @@ body.modo-superadmin .solo-superadmin-celda {
 
 .bracket-node:hover {
   border-color: #d4af37;
+}
+
+.bracket-node.losers-node {
+  border-color: #7f1d1d;
+}
+
+.bracket-node.losers-node:hover {
+  border-color: #ef4444;
 }
 
 .bracket-node .team {
@@ -409,7 +438,7 @@ body.modo-superadmin .solo-superadmin-celda {
   font-size: 16px;
 }
 
-/* NUEVA PESTAÑA: EQUIPOS */
+/* PESTAÑA EQUIPOS */
 .grid-equipos {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
@@ -712,7 +741,7 @@ body.modo-superadmin .solo-superadmin-celda {
   border-bottom: 1px solid #262626;
 }
 
-/* Modales */
+/* Modales y Desplazamiento Móvil (Mobile-First Polish) */
 .modal {
   display: none;
   position: fixed;
@@ -737,6 +766,7 @@ body.modo-superadmin .solo-superadmin-celda {
   max-height: 88vh;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
+  box-sizing: border-box;
 }
 
 .close {
@@ -751,7 +781,7 @@ body.modo-superadmin .solo-superadmin-celda {
   color: #d4af37;
 }
 
-.modal input, .modal select {
+.modal input, .modal select, .modal textarea {
   width: 100%;
   padding: 10px;
   margin: 6px 0;
@@ -1146,7 +1176,7 @@ body.modo-superadmin .solo-superadmin-celda {
   text-decoration: underline;
 }
 
-/* Adaptación a Móviles */
+/* Adaptación Mobile-First */
 @media (max-width: 640px) {
   body {
     padding: 10px;
@@ -1168,10 +1198,10 @@ body.modo-superadmin .solo-superadmin-celda {
   }
 
   .modal-content {
-    width: 94%;
+    width: 95%;
     max-height: 92vh;
-    padding: 18px 16px;
-    margin: 3% auto;
+    padding: 18px 14px;
+    margin: 2% auto;
   }
 
   .bracket-tree-wrapper {

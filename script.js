@@ -4,6 +4,8 @@
 let esModoLogistica = false;
 let esModoSuperAdmin = false;
 let esModoEditor = false;
+let sancionesManualesCache = [];
+let formatoClashRoyale = 'single'; // 'single' o 'double'
 
 const SUPABASE_URL = "https://zkklifirmzvlwapivbrc.supabase.co";
 const SUPABASE_KEY = "sb_publishable_Od54CMAGf_6wyGbeU-vvCw_FWzvrvbd";
@@ -269,6 +271,7 @@ try {
     .on('postgres_changes', { event: '*', schema: 'public', table: 'incidencias' }, () => cargarDatos())
     .on('postgres_changes', { event: '*', schema: 'public', table: 'jugadores' }, () => cargarDatos())
     .on('postgres_changes', { event: '*', schema: 'public', table: 'config_accesos' }, () => cargarDatos())
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'sanciones_manuales' }, () => cargarDatos())
     .subscribe();
 } catch (e) {
   console.log("Realtime error:", e);
@@ -1916,46 +1919,124 @@ function renderizarFixtureGeneral() {
   container.innerHTML = html;
 }
 
+function abrirModalSancionManual() {
+  if (!esModoSuperAdmin) {
+    mostrarToast("Función exclusiva del SuperAdmin.", "error");
+    return;
+  }
+
+  const selEquipo = document.getElementById("sancion-jugador-equipo");
+  selEquipo.innerHTML = "";
+  CURSOS_EQUIPOS.forEach(c => {
+    selEquipo.innerHTML += `<option value="${c}">${renderizarNombreVisible(c)}</option>`;
+  });
+
+  document.getElementById("sancion-jugador-nombre").value = "";
+  document.getElementById("modal-sancion-manual").style.display = "block";
+  bloquearScrollFondo();
+}
+
+function cerrarModalSancionManual() {
+  document.getElementById("modal-sancion-manual").style.display = "none";
+  liberarScrollFondo();
+}
+
+async function guardarSancionManual() {
+  if (!esModoSuperAdmin) return;
+
+  const nombre = document.getElementById("sancion-jugador-nombre").value.trim();
+  const equipo = document.getElementById("sancion-jugador-equipo").value;
+  const motivo = document.getElementById("sancion-motivo").value;
+
+  if (!nombre) {
+    mostrarToast("Ingrese el nombre del jugador.", "warning");
+    return;
+  }
+
+  const idNuevo = "SAN-" + Date.now();
+  const { error } = await dbClient.from('sanciones_manuales').insert([{
+    id: idNuevo,
+    jugador_nombre: nombre,
+    curso_equipo: equipo,
+    motivo: motivo
+  }]);
+
+  if (error) {
+    mostrarToast("Error al registrar sanción: " + error.message, "error");
+  } else {
+    mostrarToast("Sanción disciplinaria registrada.", "success");
+    cerrarModalSancionManual();
+    cargarDatos();
+  }
+}
+
 function renderizarSuspendidos() {
   const container = document.getElementById("suspendidos-content");
   if (!container) return;
 
   const conteo = {};
 
+  // 1. Tarjetas rojas directas automáticas desde las incidencias
   datosTorneo.incidencias.forEach(inc => {
-    if (inc.tipo_evento && inc.tipo_evento.includes('Tarjeta')) {
+    if (inc.tipo_evento === 'Tarjeta Roja') {
       const clave = `${inc.jugador_nombre}|${inc.curso_equipo || ''}`;
       if (!conteo[clave]) {
         conteo[clave] = {
           jugador: inc.jugador_nombre,
           equipo: inc.curso_equipo || '',
-          amarillas: 0,
-          rojas: 0,
-          azules: 0
+          motivo: "Tarjeta Roja Directa en Encuentro"
         };
       }
-      if (inc.tipo_evento === 'Tarjeta Amarilla') conteo[clave].amarillas++;
-      if (inc.tipo_evento === 'Tarjeta Roja') conteo[clave].rojas++;
-      if (inc.tipo_evento === 'Tarjeta Azul') conteo[clave].azules++;
     }
   });
 
-  const suspendidos = Object.values(conteo).filter(j => j.rojas >= 1 || j.amarillas >= 2);
+  // 2. Sanciones manuales registradas por SuperAdmin
+  sancionesManualesCache.forEach(s => {
+    const clave = `${s.jugador_nombre}|${s.curso_equipo || ''}`;
+    conteo[clave] = {
+      jugador: s.jugador_nombre,
+      equipo: s.curso_equipo || '',
+      motivo: s.motivo || "Sanción Disciplinaria Manual",
+      idSancion: s.id
+    };
+  });
+
+  const suspendidos = Object.values(conteo);
 
   if (suspendidos.length === 0) {
-    container.innerHTML = `<p style="color:#aaa;">No hay jugadores suspendidos por el momento.</p>`;
+    container.innerHTML = `<p style="color:#aaa;">No hay jugadores suspendidos registrados por el momento.</p>`;
     return;
   }
 
-  let html = `<div style="overflow-x:auto;"><table class="tabla-deportiva"><thead><tr><th>Jugador</th><th>Curso / Equipo</th><th>🟨</th><th>🟥</th><th>🟦</th><th>Motivo</th></tr></thead><tbody>`;
+  let html = `<div style="overflow-x:auto;"><table class="tabla-deportiva"><thead><tr><th>Jugador</th><th>Curso / Equipo</th><th>Motivo de la Suspensión</th><th class="solo-superadmin-celda"></th></tr></thead><tbody>`;
 
   suspendidos.forEach(j => {
-    const motivo = j.rojas >= 1 ? "Tarjeta Roja Directa" : "Acumulación de Amarillas (2)";
-    html += `<tr><td><b class="jugador-nombre-click" onclick="abrirFifaCard('${escaparHTML(j.jugador)}', '${j.equipo}')">${escaparHTML(j.jugador)}</b></td><td>${renderizarLogoHTML(j.equipo, 20)} ${renderizarNombreVisible(j.equipo)}</td><td>${j.amarillas}</td><td>${j.rojas}</td><td>${j.azules}</td><td style="color:#ef4444; font-weight:bold;">${motivo}</td></tr>`;
+    html += `
+      <tr>
+        <td><b class="jugador-nombre-click" onclick="abrirFifaCard('${escaparHTML(j.jugador)}', '${j.equipo}')">${escaparHTML(j.jugador)}</b></td>
+        <td>${renderizarLogoHTML(j.equipo, 20)} ${renderizarNombreVisible(j.equipo)}</td>
+        <td style="color:#ef4444; font-weight:bold;">${escaparHTML(j.motivo)}</td>
+        <td class="solo-superadmin-celda">
+          ${j.idSancion ? `<button class="btn-eliminar-fila" onclick="eliminarSancionManual('${j.idSancion}')" title="Levantar Sanción">🗑️</button>` : ''}
+        </td>
+      </tr>
+    `;
   });
 
   html += `</tbody></table></div>`;
   container.innerHTML = html;
+}
+
+async function eliminarSancionManual(idSancion) {
+  if (!esModoSuperAdmin) return;
+  mostrarConfirmacion("¿Desea levantar esta sanción disciplinaria manual?", async () => {
+    const { error } = await dbClient.from('sanciones_manuales').delete().eq('id', idSancion);
+    if (error) mostrarToast("Error: " + error.message, "error");
+    else {
+      mostrarToast("Sanción levantada.", "info");
+      cargarDatos();
+    }
+  });
 }
 
 // Barra de Apoyo e Interactividad
@@ -2235,6 +2316,314 @@ function eliminarPrediccion(id) {
   });
 }
 
+// Filtrar plantilla por disciplina en el modal de equipo
+function filtrarPlantillaModalEquipo() {
+  const nombreEquipo = document.getElementById("modal-equipo").dataset.equipoActual;
+  const filtroDisc = document.getElementById("modal-equipo-filtro-disciplina").value;
+
+  const jugadoresEquipo = jugadoresCache.filter(j => j.equipo === nombreEquipo);
+  const disciplinasList = ["Futsal Masculino", "Futsal Femenino", "Fútbol de Campo Masculino", "Fútbol de Campo Femenino", "Volley Mixto", "Pikivoley Masculino", "Clash Royale"];
+  
+  let htmlJugadores = "";
+
+  disciplinasList.forEach(disc => {
+    if (filtroDisc !== "TODAS" && filtroDisc !== disc) return;
+
+    const jugDisc = jugadoresEquipo.filter(j => j.disciplinas && j.disciplinas.includes(disc));
+    let icono = "⚽";
+    if (disc.includes("Volley") || disc.includes("Vóley")) icono = "🏐";
+    if (disc.includes("Pikivoley")) icono = "🦶🏐";
+    if (disc.includes("Clash")) icono = "🎮";
+
+    htmlJugadores += `<h5 style="color:#d4af37; margin:15px 0 6px 0;">${icono} ${disc} (${jugDisc.length})</h5>`;
+
+    if (jugDisc.length === 0) {
+      htmlJugadores += `<p style="font-size:12px; color:#666; margin:0 0 10px 0;">Sin jugadores inscritos en esta disciplina.</p>`;
+    } else {
+      jugDisc.forEach(j => {
+        htmlJugadores += `
+          <div class="jugador-item-row">
+            <span class="jugador-nombre-click" onclick="abrirFifaCard('${escaparHTML(j.nombre)}', '${nombreEquipo}')">👤 ${escaparHTML(j.nombre)}</span>
+            <div class="solo-editor" style="display:none; gap:6px;">
+              <button style="background:none; border:none; cursor:pointer; font-size:14px;" onclick="abrirModalEditarJugador(${JSON.stringify(j).replace(/"/g, '&quot;')})" title="Editar Jugador">✏️</button>
+              <button style="background:none; border:none; cursor:pointer; font-size:14px;" onclick="eliminarJugador('${j.id}', '${escaparHTML(j.nombre)}')" title="Eliminar Jugador">🗑️</button>
+            </div>
+          </div>
+        `;
+      });
+    }
+  });
+
+  document.getElementById("modal-equipo-jugadores").innerHTML = htmlJugadores;
+}
+
+// Carga Masiva por Lotes
+function abrirModalCargaMasiva() {
+  if (!esModoEditor && !esModoSuperAdmin) {
+    mostrarToast("No tienes permisos para agregar jugadores.", "error");
+    return;
+  }
+
+  const equipoActual = document.getElementById("modal-equipo").dataset.equipoActual;
+  const selEquipo = document.getElementById("masiva-equipo-select");
+  selEquipo.innerHTML = `<option value="${equipoActual}">${renderizarNombreVisible(equipoActual)}</option>`;
+  selEquipo.value = equipoActual;
+
+  const filtroActual = document.getElementById("modal-equipo-filtro-disciplina").value;
+  if (filtroActual !== "TODAS") {
+    document.getElementById("masiva-disciplina-select").value = filtroActual;
+  }
+
+  document.getElementById("masiva-nombres-input").value = "";
+  document.getElementById("modal-carga-masiva").style.display = "block";
+}
+
+function cerrarModalCargaMasiva() {
+  document.getElementById("modal-carga-masiva").style.display = "none";
+}
+
+async function guardarJugadoresMasivo() {
+  if (!esModoEditor && !esModoSuperAdmin) return;
+
+  const equipo = document.getElementById("modal-equipo").dataset.equipoActual;
+  const disciplina = document.getElementById("masiva-disciplina-select").value;
+  const textoBruto = document.getElementById("masiva-nombres-input").value;
+
+  const lineas = textoBruto.split("\n").map(l => l.trim()).filter(l => l.length > 0);
+
+  if (lineas.length === 0) {
+    mostrarToast("Ingresa al menos un nombre para cargar.", "warning");
+    return;
+  }
+
+  const nuevosRegistros = lineas.map((nombre, idx) => ({
+    id: "JUG-" + Date.now() + "-" + idx,
+    nombre: nombre,
+    equipo: equipo,
+    disciplinas: disciplina
+  }));
+
+  const { error } = await dbClient.from('jugadores').insert(nuevosRegistros);
+
+  if (error) {
+    mostrarToast("Error al cargar masivamente: " + error.message, "error");
+  } else {
+    mostrarToast(`¡Se registraron ${nuevosRegistros.length} jugadores en ${disciplina}!`, "success");
+    cerrarModalCargaMasiva();
+    await cargarDatos();
+    abrirModalEquipo(equipo);
+  }
+}
+
+// Confirmación previa al eliminar un jugador
+function eliminarJugador(idJugador, nombreJugador) {
+  if (!esModoEditor && !esModoSuperAdmin) return;
+
+  mostrarConfirmacion(`¿Estás seguro de eliminar a "${nombreJugador}" de la base de datos?`, async () => {
+    const equipoActual = document.getElementById("modal-equipo").dataset.equipoActual;
+    const { error } = await dbClient.from('jugadores').delete().eq('id', idJugador);
+
+    if (error) {
+      mostrarToast("Error al eliminar jugador: " + error.message, "error");
+    } else {
+      mostrarToast("Jugador eliminado.", "info");
+      await cargarDatos();
+      abrirModalEquipo(equipoActual);
+    }
+  });
+}
+
+function cambiarFormatoClashRoyale(formato, evt) {
+  formatoClashRoyale = formato;
+  const btnSingle = document.getElementById("btn-cr-single");
+  const btnDouble = document.getElementById("btn-cr-double");
+
+  if (btnSingle && btnDouble) {
+    btnSingle.classList.toggle("active", formato === 'single');
+    btnDouble.classList.toggle("active", formato === 'double');
+  }
+
+  renderizarClashRoyaleTab();
+}
+
+function renderizarClashRoyaleTab() {
+  const bracketContainer = document.getElementById("clashroyale-bracket");
+  if (bracketContainer) {
+    renderizarArbolClashRoyale("Clash Royale", "clashroyale-bracket", formatoClashRoyale);
+  }
+  renderizarEstadisticasClashRoyale();
+}
+
+function renderizarArbolClashRoyale(disciplina, containerId, modoFormat) {
+  const container = document.getElementById(containerId);
+  if (!container) return;
+
+  const partidos = datosTorneo.partidos.filter(p => normalizarTexto(p.disciplina) === normalizarTexto(disciplina));
+
+  const r1 = partidos.filter(p => {
+    const f = normalizarTexto(p.fase);
+    return (f.includes("ronda") || f.includes("cuartos") || f.includes("eliminatoria")) && !f.includes("losers") && !f.includes("perdedores");
+  }).sort((a,b) => a.orden - b.orden);
+
+  const semisBD = partidos.filter(p => normalizarTexto(p.fase).includes("semi") && !normalizarTexto(p.fase).includes("losers")).sort((a,b) => a.orden - b.orden);
+  const finalBD = partidos.find(p => normalizarTexto(p.fase).includes("final") && !normalizarTexto(p.fase).includes("semi") && !normalizarTexto(p.fase).includes("losers"));
+
+  const ganR1_0 = obtenerGanador(r1[0]);
+  const ganR1_1 = obtenerGanador(r1);
+
+  const semi1 = {
+    id: semisBD[0] ? semisBD[0].id : `VIRTUAL-CR-SEMI-1`,
+    fase: "Semifinales",
+    disciplina: disciplina,
+    equipoA: ganR1_0 || (semisBD[0] ? semisBD[0].equipoA : 'Por definir'),
+    equipoB: ganR1_1 || (semisBD[0] ? semisBD[0].equipoB : 'Por definir'),
+    golesA: semisBD[0] ? semisBD[0].golesA : '',
+    golesB: semisBD[0] ? semisBD[0].golesB : '',
+    estado: semisBD[0] ? semisBD[0].estado : 'Pendiente'
+  };
+
+  const ganSemi1 = obtenerGanador(semi1);
+
+  const finalMatch = {
+    id: finalBD ? finalBD.id : `VIRTUAL-CR-FINAL`,
+    fase: "Final",
+    disciplina: disciplina,
+    equipoA: ganSemi1 || (finalBD ? finalBD.equipoA : 'Por definir'),
+    equipoB: finalBD ? finalBD.equipoB : 'Por definir',
+    golesA: finalBD ? finalBD.golesA : '',
+    golesB: finalBD ? finalBD.golesB : '',
+    estado: finalBD ? finalBD.estado : 'Pendiente'
+  };
+
+  const ganFinal = obtenerGanador(finalMatch);
+  const campeonTexto = ganFinal ? `${renderizarLogoHTML(ganFinal, 28)} ${renderizarNombreVisible(ganFinal)}` : "Por Definir";
+
+  let html = `<div class="bracket-tree-wrapper">`;
+
+  html += `<div class="bracket-col"><div class="bracket-title">Cuadro Principal (Winners)</div>`;
+  if (r1[0]) html += crearNodoHTML(r1[0]);
+  html += `<div>${crearNodoHTML(semi1)}</div>`;
+  html += `<div>${crearNodoHTML(finalMatch)}</div>`;
+  html += `</div>`;
+
+  if (modoFormat === 'double') {
+    const losersBD = partidos.filter(p => normalizarTexto(p.fase).includes("losers") || normalizarTexto(p.fase).includes("perdedores")).sort((a,b) => a.orden - b.orden);
+
+    const matchLosers1 = {
+      id: losersBD[0] ? losersBD[0].id : `VIRTUAL-CR-LOSERS-1`,
+      fase: "Ronda de Perdedores",
+      disciplina: disciplina,
+      equipoA: losersBD[0] ? losersBD[0].equipoA : 'Por definir',
+      equipoB: losersBD[0] ? losersBD[0].equipoB : 'Por definir',
+      golesA: losersBD[0] ? losersBD[0].golesA : '',
+      golesB: losersBD[0] ? losersBD[0].golesB : '',
+      estado: losersBD[0] ? losersBD[0].estado : 'Pendiente'
+    };
+
+    html += `<div class="bracket-col"><div class="bracket-losers-title">🔻 Cuadro de Perdedores (Losers)</div>`;
+    html += `<div>${crearNodoHTML(matchLosers1)}</div>`;
+    html += `</div>`;
+  }
+
+  html += `
+    <div class="bracket-col">
+      <div class="bracket-title">👑 Campeón eSports</div>
+      <div class="champion-box">${campeonTexto}</div>
+    </div>
+  `;
+
+  html += `</div>`;
+  container.innerHTML = html;
+}
+
+function renderizarEstadisticasClashRoyale() {
+  const container = document.getElementById("clashroyale-stats-content");
+  if (!container) return;
+
+  const jugadoresCR = jugadoresCache.filter(j => j.disciplinas && j.disciplinas.includes("Clash Royale"));
+
+  if (jugadoresCR.length === 0) {
+    container.innerHTML = `<p style="color:#aaa;">No hay participantes registrados para Clash Royale aún.</p>`;
+    return;
+  }
+
+  let html = `<div style="overflow-x:auto;"><table class="tabla-deportiva"><thead><tr><th>Participante</th><th>Curso / Equipo</th><th class="solo-superadmin-celda">Acciones (SuperAdmin)</th></tr></thead><tbody>`;
+
+  jugadoresCR.forEach(j => {
+    html += `
+      <tr>
+        <td><b class="jugador-nombre-click" onclick="abrirFifaCard('${escaparHTML(j.nombre)}', '${j.equipo}')">🎮 ${escaparHTML(j.nombre)}</b></td>
+        <td>${renderizarLogoHTML(j.equipo, 20)} ${renderizarNombreVisible(j.equipo)}</td>
+        <td class="solo-superadmin-celda">
+          <button style="background:none; border:none; cursor:pointer; font-size:14px;" onclick="abrirModalJugadorClashRoyale(${JSON.stringify(j).replace(/"/g, '&quot;')})" title="Editar">✏️</button>
+          <button style="background:none; border:none; cursor:pointer; font-size:14px;" onclick="eliminarJugador('${j.id}', '${escaparHTML(j.nombre)}')" title="Eliminar">🗑️</button>
+        </td>
+      </tr>
+    `;
+  });
+
+  html += `</tbody></table></div>`;
+  container.innerHTML = html;
+}
+
+function abrirModalJugadorClashRoyale(jugadorObj = null) {
+  if (!esModoSuperAdmin) {
+    mostrarToast("Función exclusiva del SuperAdmin.", "error");
+    return;
+  }
+
+  const selEquipo = document.getElementById("clash-jugador-equipo");
+  selEquipo.innerHTML = "";
+  CURSOS_EQUIPOS.forEach(c => {
+    selEquipo.innerHTML += `<option value="${c}">${renderizarNombreVisible(c)}</option>`;
+  });
+
+  if (jugadorObj) {
+    document.getElementById("titulo-modal-clash-jugador").innerText = "✏️ Editar Jugador de Clash Royale";
+    document.getElementById("clash-jugador-id").value = jugadorObj.id;
+    document.getElementById("clash-jugador-nombre").value = jugadorObj.nombre;
+    selEquipo.value = jugadorObj.equipo;
+  } else {
+    document.getElementById("titulo-modal-clash-jugador").innerText = "🎮 Registrar Jugador de Clash Royale";
+    document.getElementById("clash-jugador-id").value = "";
+    document.getElementById("clash-jugador-nombre").value = "";
+  }
+
+  document.getElementById("modal-clash-jugador").style.display = "block";
+  bloquearScrollFondo();
+}
+
+function cerrarModalJugadorClashRoyale() {
+  document.getElementById("modal-clash-jugador").style.display = "none";
+  liberarScrollFondo();
+}
+
+async function guardarJugadorClashRoyale() {
+  if (!esModoSuperAdmin) return;
+
+  const id = document.getElementById("clash-jugador-id").value;
+  const nombre = document.getElementById("clash-jugador-nombre").value.trim();
+  const equipo = document.getElementById("clash-jugador-equipo").value;
+
+  if (!nombre) {
+    mostrarToast("Ingrese el nombre del jugador.", "warning");
+    return;
+  }
+
+  if (id) {
+    const { error } = await dbClient.from('jugadores').update({ nombre, equipo, disciplinas: "Clash Royale" }).eq('id', id);
+    if (error) mostrarToast("Error: " + error.message, "error");
+    else mostrarToast("Jugador eSports actualizado.", "success");
+  } else {
+    const idNuevo = "CR-" + Date.now();
+    const { error } = await dbClient.from('jugadores').insert([{ id: idNuevo, nombre, equipo, disciplinas: "Clash Royale" }]);
+    if (error) mostrarToast("Error: " + error.message, "error");
+    else mostrarToast("Jugador eSports registrado.", "success");
+  }
+
+  cerrarModalJugadorClashRoyale();
+  cargarDatos();
+}
 // Inicialización
 window.onload = function() {
   cargarDatos();

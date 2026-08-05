@@ -36,6 +36,7 @@
     <button class="tab-link" onclick="openTab(event, 'panel-futbol')">⚽ Fútbol de Campo</button>
     <button class="tab-link" onclick="openTab(event, 'panel-voley')">🏐 Vóley Mixto</button>
     <button class="tab-link" onclick="openTab(event, 'panel-pikivoley')">🦶🏐 Pikivoley</button>
+    <button class="tab-link" onclick="openTab(event, 'panel-clashroyale')">🎮 Clash Royale</button>
     <button class="tab-link" onclick="openTab(event, 'panel-equipos')">🛡️ Equipos</button>
     <button class="tab-link" onclick="openTab(event, 'panel-medallero')">🏆 Tabla General</button>
     <button class="tab-link" onclick="openTab(event, 'panel-quiniela')">🎯 Predicciones</button>
@@ -81,8 +82,8 @@
         <button class="btn-crear-partido solo-logistica" onclick="abrirModalCrearPartido('Futsal Masculino')">➕ Agregar Partido de Futsal</button>
       </div>
       <div class="sub-tabs">
-        <button class="sub-link active" onclick="filtrarFutsalSexo('M', event)">Masculino</button>
-        <button class="sub-link" onclick="filtrarFutsalSexo('F', event)">Femenino</button>
+        <button class="sub-link active" onclick="filtrarFutsalSexo('M', event)">Futsal Masculino</button>
+        <button class="sub-link" onclick="filtrarFutsalSexo('F', event)">Futsal Femenino</button>
       </div>
       <div id="futsal-content">Cargando partidos de futsal...</div>
     </div>
@@ -94,8 +95,8 @@
         <button class="btn-crear-partido solo-logistica" onclick="abrirModalCrearPartido('Fútbol de Campo Masculino')">➕ Agregar Partido de Fútbol</button>
       </div>
       <div class="sub-tabs">
-        <button class="sub-link active" onclick="filtrarFutbolSexo('M', event)">Masculino</button>
-        <button class="sub-link" onclick="filtrarFutbolSexo('F', event)">Femenino</button>
+        <button class="sub-link active" onclick="filtrarFutbolSexo('M', event)">Fútbol Masculino</button>
+        <button class="sub-link" onclick="filtrarFutbolSexo('F', event)">Fútbol Femenino</button>
       </div>
       <div id="futbol-content">Cargando partidos de fútbol...</div>
     </div>
@@ -116,6 +117,38 @@
         <button class="btn-crear-partido solo-logistica" onclick="abrirModalCrearPartido('Pikivoley Masculino')">➕ Agregar Partido de Pikivoley</button>
       </div>
       <div id="pikivoley-content">Cargando partidos de pikivoley...</div>
+    </div>
+
+    <!-- Panel Clash Royale (E-Sports) -->
+    <div id="panel-clashroyale" class="tab-content" style="display:none">
+      <div class="header-seccion">
+        <h2>🎮 Clash Royale (E-Sports)</h2>
+        <button class="btn-crear-partido solo-logistica" onclick="abrirModalCrearPartido('Clash Royale')">➕ Agregar Partida Clash Royale</button>
+      </div>
+
+      <!-- Selector de Formato de Bracket -->
+      <div style="background:#161616; padding:12px; border-radius:8px; border:1px solid #333; margin-bottom:15px; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px;">
+        <div>
+          <strong style="color:#d4af37;">Formato de Llave:</strong>
+          <span style="font-size:12px; color:#aaa; margin-left:6px;">Selecciona el modo de competición</span>
+        </div>
+        <div class="sub-tabs" style="margin:0;">
+          <button class="sub-link active" id="btn-cr-single" onclick="cambiarFormatoClashRoyale('single', event)">Eliminación Directa</button>
+          <button class="sub-link" id="btn-cr-double" onclick="cambiarFormatoClashRoyale('double', event)">Doble Eliminación (Losers Bracket)</button>
+        </div>
+      </div>
+
+      <div id="clashroyale-bracket">Cargando llave de Clash Royale...</div>
+
+      <!-- Tabla Exclusiva de Estadísticas y Jugadores Clash Royale -->
+      <div style="margin-top:30px; background:#161616; padding:18px; border-radius:12px; border:1px solid #d4af37;">
+        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:12px;">
+          <h3 style="color:#d4af37; margin:0;">🏆 Tabla de Clasificación & Jugadores eSports (Clash Royale)</h3>
+          <button class="btn-crear-partido solo-superadmin" style="padding:6px 12px; font-size:12px;" onclick="abrirModalJugadorClashRoyale()">➕ Registrar Jugador Clash Royale (SuperAdmin)</button>
+        </div>
+        <p style="color:#aaa; font-size:12px; margin-top:0;">Estadísticas individuales de participantes vinculados a sus respectivos cursos.</p>
+        <div id="clashroyale-stats-content">Cargando estadísticas...</div>
+      </div>
     </div>
 
     <!-- Panel Equipos -->
@@ -170,7 +203,12 @@
     <div id="panel-reglamento" class="tab-content" style="display:none">
       <h2>📜 Reglamento Oficial & Control de Suspendidos</h2>
       
-      <h3 style="color:#ef4444;">🚫 Reporte de Jugadores Suspendidos / Inhabilitados</h3>
+      <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
+        <h3 style="color:#ef4444; margin:0;">🚫 Reporte de Jugadores Suspendidos / Inhabilitados</h3>
+        <button class="btn-crear-partido solo-superadmin" style="padding:6px 12px; font-size:12px; background:#ef4444; color:#fff;" onclick="abrirModalSancionManual()">➕ Sanción Manual (SuperAdmin)</button>
+      </div>
+      <p style="color:#aaa; font-size:12px; margin-top:4px;">Las tarjetas rojas directas se computan automáticamente. Las suspensiones por acumulación de amarillas o sanciones disciplinarias las gestiona manualmente el SuperAdmin.</p>
+      
       <div id="suspendidos-content">Analizando sanciones...</div>
 
       <h3 style="color:#d4af37; margin-top:25px;">📘 Extractos del Reglamento InterFilo 2026</h3>
@@ -291,6 +329,16 @@
         </div>
       </div>
 
+      <!-- Formato de Serie (BO1, BO3, BO5) para Clash Royale / eSports -->
+      <div class="estado-selector-box" id="box-formato-serie" style="display:none;">
+        <label style="font-size:12px; color:#aaa;">🎮 Formato de la Serie (Puntos/Sets requeridos):</label>
+        <select id="admin-formato-serie" style="margin-top:6px;">
+          <option value="BO1">Best of 1 (BO1 - 1 victoria)</option>
+          <option value="BO3">Best of 3 (BO3 - Al mejor de 3)</option>
+          <option value="BO5">Best of 5 (BO5 - Al mejor de 5)</option>
+        </select>
+      </div>
+
       <!-- Fecha y Hora -->
       <div class="estado-selector-box">
         <label style="font-size:12px; color:#aaa;">📅 Fecha y Hora del Encuentro:</label>
@@ -340,7 +388,7 @@
       <select id="incidencia-tipo">
         <option value="Gol">⚽ Gol</option>
         <option value="Tarjeta Amarilla">🟨 Tarjeta Amarilla</option>
-        <option value="Tarjeta Roja">🟥 Tarjeta Roja</option>
+        <option value="Tarjeta Roja">🟥 Tarjeta Roja Directa</option>
         <option value="Tarjeta Azul">🟦 Tarjeta Azul</option>
       </select>
       
@@ -367,6 +415,7 @@
         <option value="Fútbol de Campo Femenino">Fútbol de Campo Femenino</option>
         <option value="Volley Mixto">Volley Mixto</option>
         <option value="Pikivoley Masculino">Pikivoley Masculino</option>
+        <option value="Clash Royale">Clash Royale (E-Sports)</option>
       </select>
 
       <label>Número de Orden de Partido:</label>
@@ -375,6 +424,7 @@
       <label>Fase del Encuentro:</label>
       <select id="crear-fase">
         <option value="1ª Ronda Eliminatoria">1ª Ronda Eliminatoria</option>
+        <option value="Ronda de Perdedores (Losers)">Ronda de Perdedores (Losers Bracket)</option>
         <option value="Preliminar Interna">Preliminar Interna (Equipos A vs B)</option>
         <option value="Ronda de Reingreso">Ronda de Reingreso / Repechaje</option>
         <option value="Cuartos de Final">Cuartos de Final</option>
@@ -409,7 +459,8 @@
       <select id="ajuste-disciplina-select">
         <option value="futsalM">Futsal Masculino</option>
         <option value="futsalF">Futsal Femenino</option>
-        <option value="futbol">Fútbol de Campo</option>
+        <option value="futbolM">Fútbol de Campo Masculino</option>
+        <option value="futbolF">Fútbol de Campo Femenino</option>
         <option value="voley">Vóley Mixto</option>
         <option value="pikivoley">Pikivoley Masculino</option>
         <option value="esports">E-Sports (Clash Royale)</option>
@@ -464,26 +515,72 @@
 
   <!-- MODAL 6: Modal de Equipo y Gestión de Jugadores -->
   <div id="modal-equipo" class="modal">
-    <div class="modal-content" style="max-width:550px;">
+    <div class="modal-content" style="max-width:560px;">
       <span class="close" onclick="cerrarModalEquipo()">&times;</span>
       <div id="modal-equipo-header" style="text-align:center; padding-bottom:15px; border-bottom:1px solid #333;"></div>
       
       <div id="modal-equipo-stats" style="margin:15px 0;"></div>
 
-      <div style="display:flex; justify-content:space-between; align-items:center; margin-top:20px;">
-        <h4 style="color:#d4af37; margin:0;">📋 Plantilla de Jugadores por Disciplina:</h4>
-        <button class="btn-crear-partido solo-editor" style="padding:6px 12px; font-size:12px;" onclick="abrirModalEditarJugador(null)">➕ Añadir Jugador</button>
+      <!-- Selector Previo de Disciplina para Filtro y Carga Masiva -->
+      <div style="background:#0d0d0d; border:1px solid #333; padding:12px; border-radius:8px; margin-top:15px;">
+        <label style="font-size:12px; color:#d4af37; font-weight:bold;">Filtrar Plantilla por Disciplina:</label>
+        <select id="modal-equipo-filtro-disciplina" onchange="filtrarPlantillaModalEquipo()" style="margin-top:6px;">
+          <option value="TODAS">🌟 Todas las Disciplinas</option>
+          <option value="Futsal Masculino">⚽ Futsal Masculino</option>
+          <option value="Futsal Femenino">⚽ Futsal Femenino</option>
+          <option value="Fútbol de Campo Masculino">⚽ Fútbol de Campo Masculino</option>
+          <option value="Fútbol de Campo Femenino">⚽ Fútbol de Campo Femenino</option>
+          <option value="Volley Mixto">🏐 Vóley Mixto</option>
+          <option value="Pikivoley Masculino">🦶🏐 Pikivoley Masculino</option>
+          <option value="Clash Royale">🎮 Clash Royale (E-Sports)</option>
+        </select>
+      </div>
+
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-top:20px; flex-wrap:wrap; gap:8px;">
+        <h4 style="color:#d4af37; margin:0;">📋 Plantilla de Jugadores Oficiales:</h4>
+        <div class="solo-editor" style="display:none; gap:6px;">
+          <button class="btn-crear-partido" style="padding:6px 12px; font-size:12px; background:#2563eb; color:#fff;" onclick="abrirModalCargaMasiva()">📋 Carga Masiva</button>
+          <button class="btn-crear-partido" style="padding:6px 12px; font-size:12px;" onclick="abrirModalEditarJugador(null)">➕ Individual</button>
+        </div>
       </div>
 
       <div id="modal-equipo-jugadores" style="margin-top:15px;"></div>
     </div>
   </div>
 
-  <!-- MODAL 7: Crear/Editar Jugador -->
+  <!-- MODAL 7: Carga Masiva de Jugadores -->
+  <div id="modal-carga-masiva" class="modal">
+    <div class="modal-content" style="max-width:480px;">
+      <span class="close" onclick="cerrarModalCargaMasiva()">&times;</span>
+      <h3 style="color:#d4af37; margin-top:0;">📋 Carga Masiva de Jugadores (Por Lotes)</h3>
+      <p style="font-size:12px; color:#aaa;">Pega una lista completa de nombres (un nombre por línea). Se vincularán automáticamente al equipo actual y a la disciplina seleccionada.</p>
+
+      <label>Curso / Equipo:</label>
+      <select id="masiva-equipo-select" disabled></select>
+
+      <label style="margin-top:10px;">Disciplina a Vincular:</label>
+      <select id="masiva-disciplina-select">
+        <option value="Futsal Masculino">⚽ Futsal Masculino</option>
+        <option value="Futsal Femenino">⚽ Futsal Femenino</option>
+        <option value="Fútbol de Campo Masculino">⚽ Fútbol de Campo Masculino</option>
+        <option value="Fútbol de Campo Femenino">⚽ Fútbol de Campo Femenino</option>
+        <option value="Volley Mixto">🏐 Vóley Mixto</option>
+        <option value="Pikivoley Masculino">🦶🏐 Pikivoley Masculino</option>
+        <option value="Clash Royale">🎮 Clash Royale (E-Sports)</option>
+      </select>
+
+      <label style="margin-top:10px;">Nombres de los Jugadores (Un nombre por línea):</label>
+      <textarea id="masiva-nombres-input" rows="8" placeholder="Juan Pérez&#10;Lucas López&#10;Carlos Benítez..." style="width:100%; padding:10px; background:#0d0d0d; border:1px solid #444; color:#fff; border-radius:6px; font-family:inherit; box-sizing:border-box; margin-top:6px;"></textarea>
+
+      <button type="button" class="btn-guardar" onclick="guardarJugadoresMasivo()">💾 Cargar Nombres Masivamente</button>
+    </div>
+  </div>
+
+  <!-- MODAL 8: Crear/Editar Jugador Individual -->
   <div id="modal-editar-jugador" class="modal">
     <div class="modal-content" style="max-width:420px;">
       <span class="close" onclick="cerrarModalEditarJugador()">&times;</span>
-      <h3 id="titulo-modal-jugador" style="color:#d4af37;">➕ Añadir Jugador</h3>
+      <h3 id="titulo-modal-jugador" style="color:#d4af37;">➕ Añadir Jugador Individual</h3>
       <input type="hidden" id="edit-jugador-id">
       
       <label>Nombre Completo del Jugador:</label>
@@ -494,17 +591,37 @@
 
       <label style="margin-top:10px;">Disciplinas en las que compite:</label>
       <div style="display:flex; flex-direction:column; gap:8px; margin:8px 0; background:#0d0d0d; padding:10px; border-radius:6px; border:1px solid #333;">
-        <label style="cursor:pointer; font-size:13px; color:#fff;"><input type="checkbox" id="check-disc-futsal" value="Futsal"> ⚽ Futsal</label>
-        <label style="cursor:pointer; font-size:13px; color:#fff;"><input type="checkbox" id="check-disc-futbol" value="Fútbol de Campo"> ⚽ Fútbol de Campo</label>
-        <label style="cursor:pointer; font-size:13px; color:#fff;"><input type="checkbox" id="check-disc-voley" value="Vóley Mixto"> 🏐 Vóley Mixto</label>
-        <label style="cursor:pointer; font-size:13px; color:#fff;"><input type="checkbox" id="check-disc-pikivoley" value="Pikivoley"> 🦶🏐 Pikivoley</label>
+        <label style="cursor:pointer; font-size:13px; color:#fff;"><input type="checkbox" id="check-disc-futsal-m" value="Futsal Masculino"> ⚽ Futsal Masculino</label>
+        <label style="cursor:pointer; font-size:13px; color:#fff;"><input type="checkbox" id="check-disc-futsal-f" value="Futsal Femenino"> ⚽ Futsal Femenino</label>
+        <label style="cursor:pointer; font-size:13px; color:#fff;"><input type="checkbox" id="check-disc-futbol-m" value="Fútbol de Campo Masculino"> ⚽ Fútbol de Campo Masculino</label>
+        <label style="cursor:pointer; font-size:13px; color:#fff;"><input type="checkbox" id="check-disc-futbol-f" value="Fútbol de Campo Femenino"> ⚽ Fútbol de Campo Femenino</label>
+        <label style="cursor:pointer; font-size:13px; color:#fff;"><input type="checkbox" id="check-disc-voley" value="Volley Mixto"> 🏐 Vóley Mixto</label>
+        <label style="cursor:pointer; font-size:13px; color:#fff;"><input type="checkbox" id="check-disc-pikivoley" value="Pikivoley Masculino"> 🦶🏐 Pikivoley Masculino</label>
+        <label style="cursor:pointer; font-size:13px; color:#fff;"><input type="checkbox" id="check-disc-clash" value="Clash Royale"> 🎮 Clash Royale (E-Sports)</label>
       </div>
 
       <button type="button" class="btn-guardar" onclick="guardarJugador()">Guardar Jugador</button>
     </div>
   </div>
 
-  <!-- MODAL 8: Tarjeta FIFA del Jugador -->
+  <!-- MODAL 9: Gestión Exclusiva de Jugador Clash Royale (SuperAdmin) -->
+  <div id="modal-clash-jugador" class="modal">
+    <div class="modal-content" style="max-width:420px;">
+      <span class="close" onclick="cerrarModalJugadorClashRoyale()">&times;</span>
+      <h3 id="titulo-modal-clash-jugador" style="color:#d4af37;">🎮 Jugador de Clash Royale (SuperAdmin)</h3>
+      <input type="hidden" id="clash-jugador-id">
+      
+      <label>Nombre Completo / Nickname del Jugador:</label>
+      <input type="text" id="clash-jugador-nombre" placeholder="Ej. Lucas King #123">
+
+      <label>Curso / Equipo al que representa:</label>
+      <select id="clash-jugador-equipo"></select>
+
+      <button type="button" class="btn-guardar" onclick="guardarJugadorClashRoyale()">Guardar Jugador eSports</button>
+    </div>
+  </div>
+
+  <!-- MODAL 10: Tarjeta FIFA del Jugador -->
   <div id="modal-fifa-card" class="modal">
     <div class="modal-content" style="background:transparent; border:none; box-shadow:none; max-width:320px; padding:0;">
       <span class="close" onclick="cerrarFifaCard()" style="position:relative; z-index:10; font-size:28px; color:#d4af37;">&times;</span>
@@ -512,7 +629,7 @@
     </div>
   </div>
 
-  <!-- MODAL 9: Votación de MVP -->
+  <!-- MODAL 11: Votación de MVP -->
   <div id="modal-votar-mvp" class="modal">
     <div class="modal-content" style="max-width:440px;">
       <span class="close" onclick="cerrarModalVotarMvp()">&times;</span>
@@ -522,6 +639,30 @@
       <div id="votar-mvp-opciones" style="margin-top:15px; max-height:300px; overflow-y:auto;"></div>
       
       <button type="button" class="btn-guardar" style="margin-top:15px;" onclick="enviarVotoMvp()">⭐ Registrar Voto MVP</button>
+    </div>
+  </div>
+
+  <!-- MODAL 12: Sanción Manual (SuperAdmin) -->
+  <div id="modal-sancion-manual" class="modal">
+    <div class="modal-content" style="max-width:420px;">
+      <span class="close" onclick="cerrarModalSancionManual()">&times;</span>
+      <h3 style="color:#ef4444;">🚫 Registrar Sanción Manual (SuperAdmin)</h3>
+      
+      <label>Nombre del Jugador Sancionado:</label>
+      <input type="text" id="sancion-jugador-nombre" placeholder="Ej. Carlos Pérez">
+
+      <label>Curso / Equipo:</label>
+      <select id="sancion-jugador-equipo"></select>
+
+      <label>Motivo de la Sanción:</label>
+      <select id="sancion-motivo">
+        <option value="Acumulación de Amarillas (2)">Acumulación de Amarillas (2)</option>
+        <option value="Conducta Antideportiva">Conducta Antideportiva</option>
+        <option value="Inhabilitación Administrativa">Inhabilitación Administrativa</option>
+        <option value="Sanción Disciplinaria del Comité">Sanción Disciplinaria del Comité</option>
+      </select>
+
+      <button type="button" class="btn-guardar" style="background:#ef4444; color:#fff;" onclick="guardarSancionManual()">Registrar Sanción Manual</button>
     </div>
   </div>
 
