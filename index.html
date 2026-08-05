@@ -25,7 +25,8 @@
     <div class="header-acciones">
       <span id="badge-modo-rol" class="badge-rol" style="display:none;"></span>
       <button class="btn-crear-partido solo-logistica" onclick="abrirModalCrearPartido()">➕ Agregar Partido</button>
-      <button class="btn-crear-partido solo-superadmin" onclick="toggleSponsorsVisibles()" style="background:#8b5cf6; color:#fff;" title="Encender/Apagar Carrusel de Auspiciantes">📢 Sponsors</button>
+      <button class="btn-crear-partido solo-superadmin" onclick="abrirModalGestionarSponsors()" style="background:#059669; color:#fff;" title="Administrar Marcas y Auspiciantes">🎨 Gestionar Sponsors</button>
+      <button class="btn-crear-partido solo-superadmin" onclick="toggleSponsorsVisibles()" style="background:#8b5cf6; color:#fff;" title="Encender/Apagar Carrusel de Auspiciantes">📢 Toggle Sponsors</button>
     </div>
   </header>
 
@@ -51,29 +52,30 @@
   <main class="main-content">
     
     <!-- Panel En Vivo / Próximo -->
-    <div id="panel-envivo" class="tab-content" style="display:block">
-      <h2>🔴 Cobertura en Vivo / Próximo Encuentro</h2>
-      <div id="envivo-content">Buscando encuentros en vivo...</div>
+<!-- Reemplazar el bloque de panel-envivo en index.html -->
+<div id="panel-envivo" class="tab-content" style="display:block">
+  <h2>🔴 Cobertura en Vivo / Próximo Encuentro</h2>
+  <div id="envivo-content">Buscando encuentros en vivo...</div>
 
-      <div class="reacciones-botonera">
-        <button class="btn-reaccion" onclick="enviarReaccion('🔥')" title="Fuego">🔥</button>
-        <button class="btn-reaccion" onclick="enviarReaccion('😱')" title="Sorpresa">😱</button>
-        <button class="btn-reaccion" onclick="enviarReaccion('😂')" title="Risa">😂</button>
-        <button class="btn-reaccion" onclick="enviarReaccion('⚽')" title="Balón">⚽</button>
-        <button class="btn-reaccion" onclick="enviarReaccion('🎉')" title="Fiesta">🎉</button>
-      </div>
+  <div class="reacciones-botonera">
+    <button class="btn-reaccion" onclick="enviarReaccion('🔥')" title="Fuego">🔥</button>
+    <button class="btn-reaccion" onclick="enviarReaccion('😱')" title="Sorpresa">😱</button>
+    <button class="btn-reaccion" onclick="enviarReaccion('😂')" title="Risa">😂</button>
+    <button class="btn-reaccion" onclick="enviarReaccion('⚽')" title="Balón">⚽</button>
+    <button class="btn-reaccion" onclick="enviarReaccion('🎉')" title="Fiesta">🎉</button>
+  </div>
 
-      <div class="muro-comentarios-box">
-        <h3 style="margin:0 0 12px 0; color:#d4af37;">💬 Muro de Comentarios (Anónimo)</h3>
-        <div class="muro-comentarios-form">
-          <input type="text" id="comentario-input" maxlength="200" placeholder="Escribe algo para la hinchada..." onkeydown="if(event.key==='Enter') enviarComentario();">
-          <button class="btn-enviar-comentario" onclick="enviarComentario()">Enviar</button>
-        </div>
-        <ul id="muro-comentarios-lista" class="muro-comentarios-lista">
-          <li style="color:#aaa;">Cargando comentarios...</li>
-        </ul>
-      </div>
+  <div class="muro-comentarios-box">
+    <h3 style="margin:0 0 12px 0; color:#d4af37;">💬 Muro de Comentarios (Anónimo)</h3>
+    <div class="muro-comentarios-form">
+      <input type="text" id="comentario-input" maxlength="200" placeholder="Escribe algo para la hinchada..." onkeydown="if(event.key==='Enter') enviarComentario();">
+      <button class="btn-enviar-comentario" onclick="enviarComentario()">Enviar</button>
     </div>
+    <ul id="muro-comentarios-lista" class="muro-comentarios-lista">
+      <li style="color:#aaa;">Cargando comentarios...</li>
+    </ul>
+  </div>
+</div>
 
     <!-- Panel Futsal -->
     <div id="panel-futsal" class="tab-content" style="display:none">
@@ -119,7 +121,7 @@
       <div id="pikivoley-content">Cargando partidos de pikivoley...</div>
     </div>
 
-<!-- Reemplazar en index.html -->
+<!-- Reemplazar todo el bloque del panel-clashroyale en index.html -->
 <div id="panel-clashroyale" class="tab-content" style="display:none">
   <div class="header-seccion">
     <h2>🎮 Clash Royale (E-Sports)</h2>
@@ -140,7 +142,7 @@
 
   <div id="clashroyale-bracket">Cargando llaves de Clash Royale...</div>
 
-  <!-- Tabla Exclusiva de Estadísticas (VISIBLE PARA TODOS) -->
+  <!-- Tabla Exclusiva de Estadísticas y Jugadores Clash Royale (ÚNICO BLOQUE DENTRO DEL PANEL) -->
   <div style="margin-top:30px; background:#161616; padding:18px; border-radius:12px; border:1px solid #d4af37;">
     <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:12px;">
       <h3 style="color:#d4af37; margin:0;">🏆 Clasificación & Participantes eSports (Clash Royale)</h3>
@@ -150,17 +152,6 @@
     <div id="clashroyale-stats-content">Cargando participantes...</div>
   </div>
 </div>
-
-      <!-- Tabla Exclusiva de Estadísticas y Jugadores Clash Royale -->
-      <div style="margin-top:30px; background:#161616; padding:18px; border-radius:12px; border:1px solid #d4af37;">
-        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:12px;">
-          <h3 style="color:#d4af37; margin:0;">🏆 Tabla de Clasificación & Jugadores eSports (Clash Royale)</h3>
-          <button class="btn-crear-partido solo-superadmin" style="padding:6px 12px; font-size:12px;" onclick="abrirModalJugadorClashRoyale()">➕ Registrar Jugador Clash Royale (SuperAdmin)</button>
-        </div>
-        <p style="color:#aaa; font-size:12px; margin-top:0;">Estadísticas individuales de participantes vinculados a sus respectivos cursos.</p>
-        <div id="clashroyale-stats-content">Cargando estadísticas...</div>
-      </div>
-    </div>
 
     <!-- Panel Equipos -->
     <div id="panel-equipos" class="tab-content" style="display:none">
@@ -675,6 +666,34 @@
       <button type="button" class="btn-guardar" style="background:#ef4444; color:#fff;" onclick="guardarSancionManual()">Registrar Sanción Manual</button>
     </div>
   </div>
+
+  <!-- MODAL: Gestión Dinámica de Sponsors (SuperAdmin) -->
+<div id="modal-gestionar-sponsors" class="modal">
+  <div class="modal-content" style="max-width:520px;">
+    <span class="close" onclick="cerrarModalGestionarSponsors()">&times;</span>
+    <h3 style="color:#059669; margin-top:0;">🎨 Gestión de Auspiciantes / Sponsors</h3>
+    <p style="font-size:12px; color:#aaa;">Agrega, edita o elimina patrocinadores locales. Se actualizarán automáticamente en la barra del pie de página para todo el público.</p>
+
+    <div style="background:#0d0d0d; border:1px solid #333; padding:12px; border-radius:8px; margin-bottom:15px;">
+      <h4 id="titulo-form-sponsor" style="color:#d4af37; margin:0 0 10px 0;">➕ Agregar Nuevo Sponsor</h4>
+      <input type="hidden" id="sponsor-edit-id">
+
+      <label>Nombre del Negocio / Auspiciador:</label>
+      <input type="text" id="sponsor-nombre-input" placeholder="Ej. Copiprint Santaní">
+
+      <label>Subtítulo / Rubro:</label>
+      <input type="text" id="sponsor-subtitulo-input" placeholder="Ej. Impresiones & Diseño">
+
+      <label>Emoji o Icono Representativo:</label>
+      <input type="text" id="sponsor-icono-input" placeholder="Ej. 🖨️ o 🏪" maxlength="4">
+
+      <button type="button" class="btn-guardar" style="background:#059669; color:#fff;" onclick="guardarSponsorDinamico()">💾 Guardar Sponsor</button>
+    </div>
+
+    <h4 style="color:#d4af37; margin-bottom:8px;">Lista de Auspiciadores Registrados:</h4>
+    <div id="lista-sponsors-gestion" style="max-height:220px; overflow-y:auto;">Cargando sponsors...</div>
+  </div>
+</div>
 
   <script src="script.js"></script>
 </body>
