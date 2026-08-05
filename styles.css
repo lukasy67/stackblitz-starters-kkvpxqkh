@@ -57,6 +57,16 @@ body.modo-superadmin .btn-cargar-card {
   display: inline-block !important;
 }
 
+/* Igual que .solo-superadmin, pero para <th>/<td> dentro de tablas
+   (inline-block rompería el alineado de las columnas) */
+.solo-superadmin-celda {
+  display: none !important;
+}
+
+body.modo-superadmin .solo-superadmin-celda {
+  display: table-cell !important;
+}
+
 .btn-crear-partido {
   background-color: #d4af37;
   color: #000000;
@@ -794,6 +804,76 @@ body.modo-superadmin .btn-cargar-card {
 .badge-posicion-1 { color: #d4af37; font-weight: bold; }
 .badge-posicion-2 { color: #c0c0c0; font-weight: bold; }
 .badge-posicion-3 { color: #cd7f32; font-weight: bold; }
+
+.fila-prediccion {
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+.fila-prediccion:hover {
+  background-color: #1c1c1c;
+}
+
+.celda-desplegar {
+  color: #d4af37;
+  text-align: center;
+  width: 24px;
+}
+
+.fila-detalle-prediccion td {
+  padding: 0;
+  border-bottom: 1px solid #262626;
+}
+
+.detalle-prediccion-box {
+  background-color: #0d0d0d;
+  padding: 12px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.detalle-prediccion-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  font-size: 13px;
+  padding: 6px 10px;
+  border-radius: 6px;
+  background-color: #161616;
+}
+
+.detalle-prediccion-item.acierto {
+  border-left: 3px solid #10b981;
+}
+
+.detalle-prediccion-item.fallo {
+  border-left: 3px solid #ef4444;
+  opacity: 0.85;
+}
+
+.detalle-prediccion-real {
+  color: #aaa;
+  font-size: 11px;
+  white-space: nowrap;
+}
+
+.btn-eliminar-fila {
+  background-color: rgba(239, 68, 68, 0.12);
+  color: #ef4444;
+  border: 1px solid #ef4444;
+  border-radius: 6px;
+  padding: 6px 10px;
+  cursor: pointer;
+  font-size: 13px;
+}
+
+.btn-eliminar-fila:hover {
+  background-color: #ef4444;
+  color: #ffffff;
+}
 
 .ranking-scroll {
   max-height: 480px;

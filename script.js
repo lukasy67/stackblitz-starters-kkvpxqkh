@@ -1421,6 +1421,20 @@ async function enviarPrediccion() {
     return;
   }
 
+  msj.innerText = "Verificando...";
+
+  // Un nombre = una predicción (evita que la misma persona vote varias veces
+  // desde otro dispositivo o navegador de incógnito)
+  const { data: existentes } = await dbClient
+    .from('predicciones')
+    .select('id')
+    .ilike('nombre', nombre);
+
+  if (existentes && existentes.length > 0) {
+    msj.innerText = "Ya existe una predicción registrada con ese nombre.";
+    return;
+  }
+
   const idGenerado = "PRED-" + Date.now();
   msj.innerText = "Enviando predicción...";
 
@@ -1472,31 +1486,80 @@ function renderizarQuinielaRanking() {
   const campPiki = obtenerCampeonDisciplina('Pikivoley Masculino');
   const campGeneral = medalleroCache && medalleroCache.length > 0 ? medalleroCache[0].curso_equipo : null;
 
+  const categorias = [
+    { label: 'Futsal Masculino', campo: 'pred_futsal', actual: campFutsal },
+    { label: 'Fútbol de Campo M.', campo: 'pred_futbol', actual: campFutbol },
+    { label: 'Vóley Mixto', campo: 'pred_voley', actual: campVoley },
+    { label: 'Pikivoley M.', campo: 'pred_pikivoley', actual: campPiki },
+    { label: '🏆 Campeón General', campo: 'pred_general', actual: campGeneral }
+  ];
+
   const ranking = prediccionesCache.map(p => {
     let aciertos = 0;
-    if (campFutsal && p.pred_futsal === campFutsal) aciertos++;
-    if (campFutbol && p.pred_futbol === campFutbol) aciertos++;
-    if (campVoley && p.pred_voley === campVoley) aciertos++;
-    if (campPiki && p.pred_pikivoley === campPiki) aciertos++;
-    if (campGeneral && p.pred_general === campGeneral) aciertos++;
+    categorias.forEach(c => { if (c.actual && p[c.campo] === c.actual) aciertos++; });
 
     const fecha = p.created_at ? new Date(p.created_at).toLocaleString('es-PY', {
       day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit'
     }) : '-';
 
-    return { nombre: p.nombre, curso: p.curso, aciertos, fecha };
+    return { id: p.id, nombre: p.nombre, curso: p.curso, aciertos, fecha, prediccion: p };
   }).sort((a, b) => b.aciertos - a.aciertos);
 
-  let html = `<div class="ranking-scroll"><table class="tabla-deportiva"><thead><tr><th>Pos.</th><th>Alumno</th><th>Curso</th><th>Aciertos</th><th>Fecha de Predicción</th></tr></thead><tbody>`;
+  let html = `<div class="ranking-scroll"><table class="tabla-deportiva"><thead><tr><th></th><th>Pos.</th><th>Alumno</th><th>Curso</th><th>Aciertos</th><th>Fecha</th><th class="solo-superadmin-celda"></th></tr></thead><tbody>`;
 
   ranking.forEach((r, index) => {
     const claseBadge = index === 0 ? 'badge-posicion-1' : index === 1 ? 'badge-posicion-2' : index === 2 ? 'badge-posicion-3' : '';
-    html += `<tr><td><b class="${claseBadge}">#${index + 1}</b></td><td>${escaparHTML(r.nombre)}</td><td>${renderizarNombreVisible(r.curso)}</td><td><b style="color:#d4af37;">${r.aciertos} / 5</b></td><td style="color:#aaa; font-size:12px;">${r.fecha}</td></tr>`;
+    const filaId = `detalle-pred-${r.id}`;
+
+    html += `<tr class="fila-prediccion" onclick="toggleDetallePrediccion('${filaId}')">
+      <td class="celda-desplegar">▾</td>
+      <td><b class="${claseBadge}">#${index + 1}</b></td>
+      <td>${escaparHTML(r.nombre)}</td>
+      <td>${renderizarNombreVisible(r.curso)}</td>
+      <td><b style="color:#d4af37;">${r.aciertos} / 5</b></td>
+      <td style="color:#aaa; font-size:12px;">${r.fecha}</td>
+      <td class="solo-superadmin-celda"><button class="btn-eliminar-fila" onclick="event.stopPropagation(); eliminarPrediccion('${r.id}')" title="Eliminar predicción (Super Admin)">🗑️</button></td>
+    </tr>`;
+
+    html += `<tr id="${filaId}" class="fila-detalle-prediccion" style="display:none;"><td colspan="7">`;
+    html += `<div class="detalle-prediccion-box">`;
+    categorias.forEach(c => {
+      const predVal = r.prediccion[c.campo];
+      const definido = !!c.actual;
+      const acerto = definido && predVal === c.actual;
+      const icono = !definido ? '⏳' : (acerto ? '✅' : '❌');
+      html += `<div class="detalle-prediccion-item ${definido ? (acerto ? 'acierto' : 'fallo') : ''}">
+        <span>${icono} <b>${c.label}:</b> pronosticó ${renderizarNombreVisible(predVal || '-')}</span>
+        <span class="detalle-prediccion-real">${definido ? 'Real: ' + renderizarNombreVisible(c.actual) : 'Aún sin definir'}</span>
+      </div>`;
+    });
+    html += `</div></td></tr>`;
   });
 
   html += `</tbody></table></div>
-  <p style="color:#888; font-size:11px; margin-top:8px;">${ranking.length} predicción${ranking.length === 1 ? '' : 'es'} recibida${ranking.length === 1 ? '' : 's'}. Los aciertos se actualizan solos a medida que se juegan las finales y se actualiza la Tabla General.</p>`;
+  <p style="color:#888; font-size:11px; margin-top:8px;">${ranking.length} predicción${ranking.length === 1 ? '' : 'es'} recibida${ranking.length === 1 ? '' : 's'}. Tocá una fila para ver el detalle de aciertos. Se actualizan solos a medida que se juegan las finales y se actualiza la Tabla General.</p>`;
   container.innerHTML = html;
+}
+
+function toggleDetallePrediccion(filaId) {
+  const fila = document.getElementById(filaId);
+  if (!fila) return;
+  fila.style.display = fila.style.display === 'none' ? 'table-row' : 'none';
+}
+
+async function eliminarPrediccion(id) {
+  if (!esModoSuperAdmin) {
+    alert('Esta función es exclusiva del Super Administrador (Alucas).');
+    return;
+  }
+  if (!confirm('¿Eliminar esta predicción? Esta acción no se puede deshacer.')) return;
+
+  const { error } = await dbClient.from('predicciones').delete().eq('id', id);
+  if (error) {
+    alert('Error al eliminar la predicción: ' + error.message);
+  } else {
+    cargarDatos();
+  }
 }
 
 window.onload = function() {
