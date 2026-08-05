@@ -175,6 +175,33 @@ async function cargarDatos() {
 }
 
 // ============================================================
+// OBSERVADOR DE GOLES EN VIVO Y CELEBRACIÓN
+// ============================================================
+function verificarGolesEnVivo(nuevosPartidos) {
+    nuevosPartidos.forEach(p => {
+      if (p.estado === 'En Vivo') {
+        const key = p.id;
+        const prev = previousScores[key];
+  
+        if (prev) {
+          const gA_nuevo = parseInt(p.golesA || 0);
+          const gB_nuevo = parseInt(p.golesB || 0);
+  
+          if (gA_nuevo > prev.golesA || gB_nuevo > prev.golesB) {
+            const equipoAnotador = gA_nuevo > prev.golesA ? p.equipoA : p.equipoB;
+            dispararCelebracionGol(equipoAnotador, p.disciplina, gA_nuevo, gB_nuevo);
+          }
+        }
+  
+        previousScores[key] = {
+          golesA: parseInt(p.golesA || 0),
+          golesB: parseInt(p.golesB || 0)
+        };
+      }
+    });
+  }
+
+// ============================================================
 // INICIALIZADOR DE LA APLICACIÓN
 // ============================================================
 window.onload = function() {
