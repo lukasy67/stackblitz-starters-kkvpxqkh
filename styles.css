@@ -32,6 +32,23 @@ body {
   color: #cccccc;
 }
 
+.header-acciones {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.badge-rol {
+  background: #1f2937;
+  color: #d4af37;
+  border: 1px solid #d4af37;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: bold;
+}
+
 .header-seccion {
   display: flex;
   justify-content: space-between;
@@ -42,6 +59,7 @@ body {
 /* Control de Visibilidad por Roles */
 .solo-logistica, 
 .solo-superadmin, 
+.solo-editor,
 .btn-cargar-card {
   display: none !important;
 }
@@ -53,12 +71,16 @@ body.modo-logistica .btn-cargar-card {
 
 body.modo-superadmin .solo-superadmin,
 body.modo-superadmin .solo-logistica,
+body.modo-superadmin .solo-editor,
 body.modo-superadmin .btn-cargar-card {
   display: inline-block !important;
 }
 
-/* Igual que .solo-superadmin, pero para <th>/<td> dentro de tablas
-   (inline-block rompería el alineado de las columnas) */
+body.modo-editor .solo-editor {
+  display: inline-block !important;
+}
+
+/* Celdas de tabla */
 .solo-superadmin-celda {
   display: none !important;
 }
@@ -71,6 +93,22 @@ body.modo-superadmin .solo-superadmin-celda {
   background-color: #d4af37;
   color: #000000;
   border: none;
+  padding: 10px 16px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: bold;
+  transition: all 0.2s ease;
+}
+
+.btn-crear-partido:hover {
+  filter: brightness(1.15);
+  transform: translateY(-1px);
+}
+
+.btn-cancelar {
+  background-color: #262626;
+  color: #ffffff;
+  border: 1px solid #444;
   padding: 10px 16px;
   border-radius: 6px;
   cursor: pointer;
@@ -129,11 +167,7 @@ body.modo-superadmin .solo-superadmin-celda {
   border: 1px solid #222222;
 }
 
-/* ============================================================ */
-/* DISEÑO DE TARJETAS Y COBERTURA EN VIVO                       */
-/* ============================================================ */
-
-/* Cuadrícula de Partidos */
+/* Grid de Partidos */
 .grid-partidos {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
@@ -141,7 +175,6 @@ body.modo-superadmin .solo-superadmin-celda {
   margin-top: 15px;
 }
 
-/* Tarjeta Individual de Partido */
 .card-partido {
   background-color: #161616;
   border: 1px solid #333333;
@@ -185,6 +218,16 @@ body.modo-superadmin .solo-superadmin-celda {
   border: 1px solid #333333;
 }
 
+.badge-penales {
+  background-color: #8b5cf6;
+  color: #ffffff;
+  font-size: 10px;
+  font-weight: bold;
+  padding: 2px 6px;
+  border-radius: 4px;
+  margin-left: 4px;
+}
+
 .marcador-box {
   display: flex;
   justify-content: space-between;
@@ -199,6 +242,8 @@ body.modo-superadmin .solo-superadmin-celda {
   font-size: 14px;
   font-weight: 600;
   color: #ffffff;
+  display: flex;
+  align-items: center;
 }
 
 .marcador-box strong {
@@ -207,7 +252,7 @@ body.modo-superadmin .solo-superadmin-celda {
   letter-spacing: 2px;
 }
 
-/* Tarjeta "EN VIVO AHORA" */
+/* Tarjeta EN VIVO */
 .live-match-card {
   background: linear-gradient(135deg, #181818, #111111);
   border: 2px solid #ef4444;
@@ -235,7 +280,6 @@ body.modo-superadmin .solo-superadmin-celda {
   100% { opacity: 1; }
 }
 
-/* Botón Ver Posiciones / Bracket */
 .btn-ir-bracket {
   background-color: #1f1f1f;
   color: #d4af37;
@@ -268,7 +312,39 @@ body.modo-superadmin .solo-superadmin-celda {
   font-weight: bold;
 }
 
-/* Árbol de Brackets Visuales */
+.btn-compartir {
+  background-color: #059669;
+  color: #ffffff;
+  border: none;
+  padding: 8px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: bold;
+  margin-top: 8px;
+  width: 100%;
+  transition: all 0.2s ease;
+}
+
+.btn-compartir:hover {
+  background-color: #10b981;
+}
+
+.btn-votar-mvp {
+  background-color: #f59e0b;
+  color: #000000;
+  border: none;
+  padding: 8px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: bold;
+  margin-top: 8px;
+  width: 100%;
+  animation: pulse 2s infinite;
+}
+
+/* Brackets */
 .bracket-tree-wrapper {
   display: flex;
   justify-content: space-around;
@@ -283,7 +359,7 @@ body.modo-superadmin .solo-superadmin-celda {
   flex-direction: column;
   justify-content: space-around;
   gap: 25px;
-  min-width: 200px;
+  min-width: 210px;
 }
 
 .bracket-title {
@@ -301,11 +377,17 @@ body.modo-superadmin .solo-superadmin-celda {
   border-radius: 8px;
   overflow: hidden;
   cursor: pointer;
+  transition: border-color 0.2s ease;
+}
+
+.bracket-node:hover {
+  border-color: #d4af37;
 }
 
 .bracket-node .team {
   display: flex;
   justify-content: space-between;
+  align-items: center;
   padding: 10px 12px;
   font-size: 13px;
   border-bottom: 1px solid #222222;
@@ -325,6 +407,258 @@ body.modo-superadmin .solo-superadmin-celda {
   color: #d4af37;
   font-weight: bold;
   font-size: 16px;
+}
+
+/* NUEVA PESTAÑA: EQUIPOS */
+.grid-equipos {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 16px;
+  margin-top: 15px;
+}
+
+.card-equipo {
+  background-color: #161616;
+  border: 1px solid #333333;
+  border-radius: 12px;
+  padding: 20px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+}
+
+.card-equipo:hover {
+  border-color: #d4af37;
+  transform: translateY(-3px);
+  box-shadow: 0 6px 15px rgba(212, 175, 55, 0.2);
+}
+
+.card-equipo-info h3 {
+  margin: 0 0 4px 0;
+  font-size: 16px;
+  color: #ffffff;
+}
+
+.card-equipo-info p {
+  margin: 0;
+  font-size: 12px;
+  color: #aaaaaa;
+}
+
+.card-equipo-stats {
+  display: flex;
+  gap: 12px;
+  margin-top: 8px;
+  font-size: 11px;
+  color: #d4af37;
+}
+
+/* CARTA FIFA */
+.fifa-card {
+  background: linear-gradient(135deg, #2b2308 0%, #161616 50%, #0d0d0d 100%);
+  border: 2px solid #d4af37;
+  border-radius: 18px;
+  padding: 20px;
+  color: #ffffff;
+  box-shadow: 0 0 25px rgba(212, 175, 55, 0.3);
+  position: relative;
+  overflow: hidden;
+  text-align: center;
+  font-family: 'Segoe UI', Tahoma, sans-serif;
+}
+
+.fifa-card::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: linear-gradient(45deg, transparent, rgba(212,175,55,0.1), transparent);
+  transform: rotate(30deg);
+  pointer-events: none;
+}
+
+.fifa-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.fifa-ovr {
+  font-size: 28px;
+  font-weight: 900;
+  color: #d4af37;
+  line-height: 1;
+}
+
+.fifa-card-name {
+  font-size: 20px;
+  font-weight: bold;
+  color: #ffffff;
+  margin: 8px 0 4px 0;
+  letter-spacing: 0.5px;
+}
+
+.fifa-card-team {
+  font-size: 13px;
+  color: #d4af37;
+  font-weight: 600;
+  margin-bottom: 15px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.fifa-disciplinas {
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-bottom: 18px;
+}
+
+.badge-disciplina {
+  background: rgba(212, 175, 55, 0.15);
+  border: 1px solid #d4af37;
+  color: #d4af37;
+  font-size: 11px;
+  padding: 3px 8px;
+  border-radius: 12px;
+  font-weight: 600;
+}
+
+.fifa-stats-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  background: rgba(0,0,0,0.4);
+  padding: 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(212, 175, 55, 0.2);
+}
+
+.fifa-stat-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.fifa-stat-value {
+  font-size: 18px;
+  font-weight: bold;
+  color: #ffffff;
+}
+
+.fifa-stat-label {
+  font-size: 10px;
+  color: #aaa;
+  text-transform: uppercase;
+  margin-top: 2px;
+}
+
+/* CARRUSEL DE SPONSORS */
+.sponsor-carousel {
+  background-color: #111111;
+  border-top: 1px solid #d4af37;
+  border-bottom: 1px solid #d4af37;
+  padding: 15px 0;
+  margin-top: 30px;
+  overflow: hidden;
+}
+
+.sponsor-title {
+  text-align: center;
+  font-size: 11px;
+  color: #d4af37;
+  font-weight: bold;
+  letter-spacing: 2px;
+  margin-bottom: 12px;
+}
+
+.sponsor-track {
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.sponsor-card {
+  background: #181818;
+  border: 1px solid #333;
+  border-radius: 8px;
+  padding: 10px 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 140px;
+}
+
+.sponsor-card b {
+  font-size: 13px;
+  color: #fff;
+}
+
+.sponsor-card span {
+  font-size: 10px;
+  color: #aaa;
+}
+
+/* TOAST NOTIFICATIONS */
+.toast-container {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 10000;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  pointer-events: none;
+}
+
+.toast {
+  pointer-events: auto;
+  background-color: #161616;
+  color: #ffffff;
+  border: 1px solid #d4af37;
+  border-left: 5px solid #d4af37;
+  padding: 12px 18px;
+  border-radius: 8px;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.6);
+  font-size: 14px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  animation: slideToastIn 0.3s forwards;
+  max-width: 320px;
+}
+
+.toast.success { border-left-color: #10b981; }
+.toast.error { border-left-color: #ef4444; }
+.toast.info { border-left-color: #3b82f6; }
+.toast.warning { border-left-color: #f59e0b; }
+
+@keyframes slideToastIn {
+  from { transform: translateX(100%); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+
+/* CELEBRACIÓN DE GOLES */
+.celebracion-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 9999;
+  overflow: hidden;
 }
 
 /* Búho Flotante */
@@ -388,16 +722,21 @@ body.modo-superadmin .solo-superadmin-celda {
   width: 100%;
   height: 100%;
   background-color: rgba(0,0,0,0.85);
+  overflow-y: auto;
 }
 
 .modal-content {
   background-color: #161616;
   margin: 4% auto;
   padding: 20px;
-  border-radius: 10px;
+  border-radius: 12px;
   width: 90%;
-  max-width: 460px;
+  max-width: 480px;
   border: 1px solid #d4af37;
+  box-shadow: 0 8px 25px rgba(0,0,0,0.5);
+  max-height: 88vh;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 .close {
@@ -405,11 +744,16 @@ body.modo-superadmin .solo-superadmin-celda {
   font-size: 24px;
   cursor: pointer;
   color: #aaa;
+  transition: color 0.15s ease;
+}
+
+.close:hover {
+  color: #d4af37;
 }
 
 .modal input, .modal select {
   width: 100%;
-  padding: 8px;
+  padding: 10px;
   margin: 6px 0;
   background-color: #0d0d0d;
   border: 1px solid #444;
@@ -428,6 +772,11 @@ body.modo-superadmin .solo-superadmin-celda {
   cursor: pointer;
   font-weight: bold;
   margin-top: 10px;
+  transition: filter 0.15s ease;
+}
+
+.btn-guardar:hover {
+  filter: brightness(1.15);
 }
 
 .btn-add-incidencia {
@@ -466,10 +815,7 @@ body.modo-superadmin .solo-superadmin-celda {
   color: #ffffff;
 }
 
-/* ============================================================ */
-/* MEJORA DE BOTONES: ESTADO DEL ENCUENTRO Y MARCADOR RÁPIDO     */
-/* ============================================================ */
-
+/* Estado Selector & Quick Score */
 .estado-selector-box {
   background-color: #0d0d0d;
   border: 1px solid #262626;
@@ -551,7 +897,6 @@ body.modo-superadmin .solo-superadmin-celda {
   font-weight: bold;
   color: #dddddd;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
 }
 
 .score-num-big {
@@ -560,18 +905,10 @@ body.modo-superadmin .solo-superadmin-celda {
   color: #d4af37;
 }
 
-.btn-score-quick.equipo-a {
-  border-left: 3px solid #3b82f6;
-}
+.btn-score-quick.equipo-a { border-left: 3px solid #3b82f6; }
+.btn-score-quick.equipo-b { border-left: 3px solid #d4af37; }
 
-.btn-score-quick.equipo-b {
-  border-left: 3px solid #d4af37;
-}
-
-/* ============================================================ */
-/* BARRA DE APOYO / HINCHADA                                     */
-/* ============================================================ */
-
+/* Barra de Apoyo */
 .apoyo-box {
   background-color: #0d0d0d;
   border: 1px solid #262626;
@@ -585,7 +922,6 @@ body.modo-superadmin .solo-superadmin-celda {
   color: #d4af37;
   font-weight: bold;
   margin-bottom: 6px;
-  letter-spacing: 0.5px;
 }
 
 .apoyo-barra {
@@ -628,7 +964,6 @@ body.modo-superadmin .solo-superadmin-celda {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 4px;
 }
 
 .btn-apoyo:hover:not(:disabled) {
@@ -648,10 +983,7 @@ body.modo-superadmin .solo-superadmin-celda {
   text-align: center;
 }
 
-/* ============================================================ */
-/* REACCIONES RÁPIDAS FLOTANTES                                  */
-/* ============================================================ */
-
+/* Reacciones */
 .reacciones-overlay {
   position: fixed;
   bottom: 0;
@@ -700,10 +1032,7 @@ body.modo-superadmin .solo-superadmin-celda {
   background-color: #1f1f1f;
 }
 
-/* ============================================================ */
-/* MURO DE COMENTARIOS ANÓNIMOS                                  */
-/* ============================================================ */
-
+/* Muro de Comentarios */
 .muro-comentarios-box {
   background-color: #141414;
   border: 1px solid #262626;
@@ -735,7 +1064,6 @@ body.modo-superadmin .solo-superadmin-celda {
   border-radius: 6px;
   cursor: pointer;
   font-weight: bold;
-  white-space: nowrap;
 }
 
 .muro-comentarios-lista {
@@ -756,7 +1084,6 @@ body.modo-superadmin .solo-superadmin-celda {
   padding: 10px 12px;
   font-size: 14px;
   color: #eee;
-  word-break: break-word;
   display: flex;
   justify-content: space-between;
   align-items: flex-end;
@@ -764,16 +1091,11 @@ body.modo-superadmin .solo-superadmin-celda {
 }
 
 .comentario-hora {
-  flex-shrink: 0;
   font-size: 10px;
   color: #888;
-  white-space: nowrap;
 }
 
-/* ============================================================ */
-/* QUINIELA / PREDICCIONES                                       */
-/* ============================================================ */
-
+/* Quiniela */
 .quiniela-form-box {
   background-color: #161616;
   border: 1px solid #333333;
@@ -801,112 +1123,30 @@ body.modo-superadmin .solo-superadmin-celda {
   box-sizing: border-box;
 }
 
-.badge-posicion-1 { color: #d4af37; font-weight: bold; }
-.badge-posicion-2 { color: #c0c0c0; font-weight: bold; }
-.badge-posicion-3 { color: #cd7f32; font-weight: bold; }
-
-.fila-prediccion {
-  cursor: pointer;
-  transition: background-color 0.15s ease;
-}
-
-.fila-prediccion:hover {
-  background-color: #1c1c1c;
-}
-
-.celda-desplegar {
-  color: #d4af37;
-  text-align: center;
-  width: 24px;
-}
-
-.fila-detalle-prediccion td {
-  padding: 0;
-  border-bottom: 1px solid #262626;
-}
-
-.detalle-prediccion-box {
-  background-color: #0d0d0d;
-  padding: 12px 16px;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.detalle-prediccion-item {
+.jugador-item-row {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 10px;
-  flex-wrap: wrap;
-  font-size: 13px;
-  padding: 6px 10px;
+  padding: 8px 12px;
+  background: #111;
+  border-bottom: 1px solid #222;
   border-radius: 6px;
-  background-color: #161616;
+  margin-bottom: 4px;
 }
 
-.detalle-prediccion-item.acierto {
-  border-left: 3px solid #10b981;
-}
-
-.detalle-prediccion-item.fallo {
-  border-left: 3px solid #ef4444;
-  opacity: 0.85;
-}
-
-.detalle-prediccion-real {
-  color: #aaa;
-  font-size: 11px;
-  white-space: nowrap;
-}
-
-.btn-eliminar-fila {
-  background-color: rgba(239, 68, 68, 0.12);
-  color: #ef4444;
-  border: 1px solid #ef4444;
-  border-radius: 6px;
-  padding: 6px 10px;
+.jugador-nombre-click {
   cursor: pointer;
-  font-size: 13px;
+  color: #60a5fa;
+  font-weight: 600;
+  transition: color 0.15s ease;
 }
 
-.btn-eliminar-fila:hover {
-  background-color: #ef4444;
-  color: #ffffff;
+.jugador-nombre-click:hover {
+  color: #d4af37;
+  text-decoration: underline;
 }
 
-.ranking-scroll {
-  max-height: 480px;
-  overflow-y: auto;
-  border-radius: 8px;
-  margin-top: 15px;
-  -webkit-overflow-scrolling: touch;
-}
-
-.ranking-scroll table {
-  margin-top: 0;
-}
-
-.ranking-scroll thead th {
-  position: sticky;
-  top: 0;
-  z-index: 2;
-}
-
-/* ============================================================ */
-/* ARREGLO DE SCROLL EN MODALES (MÓVIL)                          */
-/* El modal ahora puede desplazarse internamente en vez de que   */
-/* el dedo mueva el fondo de la página.                          */
-/* ============================================================ */
-.modal-content {
-  max-height: 88vh;
-  overflow-y: auto;
-  -webkit-overflow-scrolling: touch;
-}
-
-/* ============================================================ */
-/* INTERFAZ AMIGABLE PARA MÓVIL                                  */
-/* ============================================================ */
+/* Adaptación a Móviles */
 @media (max-width: 640px) {
   body {
     padding: 10px;
@@ -922,63 +1162,22 @@ body.modo-superadmin .solo-superadmin-celda {
     font-size: 18px;
   }
 
-  /* Botones más grandes y fáciles de tocar */
   .tab-link, .sub-link {
-    padding: 13px 18px;
-    font-size: 15px;
+    padding: 12px 14px;
+    font-size: 13px;
   }
 
-  .btn-crear-partido,
-  .btn-guardar,
-  .btn-estado,
-  .btn-score-quick,
-  .btn-apoyo,
-  .btn-enviar-comentario,
-  .btn-reaccion {
-    padding-top: 14px;
-    padding-bottom: 14px;
-    font-size: 15px;
-  }
-
-  .btn-score-quick {
-    padding: 18px 8px;
-  }
-
-  .score-num-big {
-    font-size: 24px;
-  }
-
-  .close {
-    font-size: 32px;
-    padding: 6px 10px;
-  }
-
-  /* Modales más cómodos: ocupan casi toda la pantalla, texto más grande */
   .modal-content {
     width: 94%;
-    max-width: none;
     max-height: 92vh;
-    padding: 18px 16px 24px 16px;
+    padding: 18px 16px;
     margin: 3% auto;
   }
 
-  .modal input, .modal select {
-    padding: 12px;
-    font-size: 15px;
-  }
-
-  .quiniela-form-box {
-    max-width: none;
-    padding: 16px;
-  }
-
-  /* Brackets: en vez de scroll horizontal, se apilan en columna */
   .bracket-tree-wrapper {
     flex-direction: column;
     align-items: stretch;
-    overflow-x: visible;
     gap: 18px;
-    padding: 10px 0;
   }
 
   .bracket-col {
@@ -986,26 +1185,7 @@ body.modo-superadmin .solo-superadmin-celda {
     width: 100%;
   }
 
-  .bracket-match-pair {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-  }
-
-  .grid-partidos {
+  .grid-partidos, .grid-equipos {
     grid-template-columns: 1fr;
-  }
-
-  .muro-comentarios-form {
-    flex-direction: column;
-  }
-
-  .btn-enviar-comentario {
-    padding: 12px;
-  }
-
-  .estado-btn-group,
-  .quick-score-box {
-    grid-template-columns: 1fr 1fr;
   }
 }

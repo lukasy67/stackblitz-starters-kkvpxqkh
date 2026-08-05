@@ -9,13 +9,24 @@
 </head>
 <body>
 
+  <!-- Contenedor de Notificaciones Toast -->
+  <div id="toast-container" class="toast-container"></div>
+
+  <!-- Capa de Celebraciones en Vivo (Confeti / Emojis) -->
+  <div id="celebracion-overlay" class="celebracion-overlay"></div>
+  <div id="reacciones-overlay" class="reacciones-overlay"></div>
+
   <!-- Cabecera Principal -->
   <header class="header">
     <div class="header-info">
       <h1>JUEGOS INTERFILO 2026</h1>
       <p>Facultad de Filosofía - Filial San Estanislao</p>
     </div>
-    <button class="btn-crear-partido solo-logistica" onclick="abrirModalCrearPartido()">➕ Agregar Partido</button>
+    <div class="header-acciones">
+      <span id="badge-modo-rol" class="badge-rol" style="display:none;"></span>
+      <button class="btn-crear-partido solo-logistica" onclick="abrirModalCrearPartido()">➕ Agregar Partido</button>
+      <button class="btn-crear-partido solo-superadmin" onclick="toggleSponsorsVisibles()" style="background:#8b5cf6; color:#fff;" title="Encender/Apagar Carrusel de Auspiciantes">📢 Sponsors</button>
+    </div>
   </header>
 
   <!-- Barra de Navegación por Pestañas -->
@@ -25,6 +36,7 @@
     <button class="tab-link" onclick="openTab(event, 'panel-futbol')">⚽ Fútbol de Campo</button>
     <button class="tab-link" onclick="openTab(event, 'panel-voley')">🏐 Vóley Mixto</button>
     <button class="tab-link" onclick="openTab(event, 'panel-pikivoley')">🦶🏐 Pikivoley</button>
+    <button class="tab-link" onclick="openTab(event, 'panel-equipos')">🛡️ Equipos</button>
     <button class="tab-link" onclick="openTab(event, 'panel-medallero')">🏆 Tabla General</button>
     <button class="tab-link" onclick="openTab(event, 'panel-quiniela')">🎯 Predicciones</button>
     <button class="tab-link" onclick="openTab(event, 'panel-estadisticas')">📊 Rendimiento Cursos</button>
@@ -37,6 +49,7 @@
   <!-- Paneles de Contenido -->
   <main class="main-content">
     
+    <!-- Panel En Vivo / Próximo -->
     <div id="panel-envivo" class="tab-content" style="display:block">
       <h2>🔴 Cobertura en Vivo / Próximo Encuentro</h2>
       <div id="envivo-content">Buscando encuentros en vivo...</div>
@@ -45,6 +58,8 @@
         <button class="btn-reaccion" onclick="enviarReaccion('🔥')" title="Fuego">🔥</button>
         <button class="btn-reaccion" onclick="enviarReaccion('😱')" title="Sorpresa">😱</button>
         <button class="btn-reaccion" onclick="enviarReaccion('😂')" title="Risa">😂</button>
+        <button class="btn-reaccion" onclick="enviarReaccion('⚽')" title="Balón">⚽</button>
+        <button class="btn-reaccion" onclick="enviarReaccion('🎉')" title="Fiesta">🎉</button>
       </div>
 
       <div class="muro-comentarios-box">
@@ -59,6 +74,7 @@
       </div>
     </div>
 
+    <!-- Panel Futsal -->
     <div id="panel-futsal" class="tab-content" style="display:none">
       <div class="header-seccion">
         <h2>⚽ Futsal</h2>
@@ -71,6 +87,7 @@
       <div id="futsal-content">Cargando partidos de futsal...</div>
     </div>
 
+    <!-- Panel Fútbol de Campo -->
     <div id="panel-futbol" class="tab-content" style="display:none">
       <div class="header-seccion">
         <h2>⚽ Fútbol de Campo</h2>
@@ -83,6 +100,7 @@
       <div id="futbol-content">Cargando partidos de fútbol...</div>
     </div>
 
+    <!-- Panel Vóley Mixto -->
     <div id="panel-voley" class="tab-content" style="display:none">
       <div class="header-seccion">
         <h2>🏐 Vóley Mixto</h2>
@@ -91,6 +109,7 @@
       <div id="voley-content">Cargando partidos de vóley...</div>
     </div>
 
+    <!-- Panel Pikivoley -->
     <div id="panel-pikivoley" class="tab-content" style="display:none">
       <div class="header-seccion">
         <h2>🦶🏐 Pikivoley Masculino</h2>
@@ -99,17 +118,28 @@
       <div id="pikivoley-content">Cargando partidos de pikivoley...</div>
     </div>
 
+    <!-- Panel Equipos -->
+    <div id="panel-equipos" class="tab-content" style="display:none">
+      <div class="header-seccion">
+        <h2>🛡️ Cursos y Equipos Participantes</h2>
+      </div>
+      <p style="color:#aaa; font-size:13px;">Haz clic en cualquier equipo para ver su plantilla oficial de jugadores, estadísticas y gestionar su nómina.</p>
+      <div id="equipos-grid" class="grid-equipos">Cargando equipos...</div>
+    </div>
+
+    <!-- Panel Tabla General (Medallero) -->
     <div id="panel-medallero" class="tab-content" style="display:none">
       <div class="header-seccion">
         <h2>🏆 Tabla General de Deportes</h2>
-        <div style="display:flex; gap:8px;">
-          <button class="btn-crear-partido solo-superadmin" onclick="abrirModalCambiarClave()">🔑 Cambiar Clave de Logística</button>
+        <div style="display:flex; gap:8px; flex-wrap:wrap;">
+          <button class="btn-crear-partido solo-superadmin" onclick="abrirModalCambiarClave()">🔑 Cambiar Claves de Acceso</button>
           <button class="btn-crear-partido solo-superadmin" onclick="abrirModalAjustarPuntos()">✏️ Ajustar Puntos Manuales</button>
         </div>
       </div>
       <div id="medallero-content">Cargando puntuaciones oficiales...</div>
     </div>
 
+    <!-- Panel Rendimiento Cursos -->
     <div id="panel-estadisticas" class="tab-content" style="display:none">
       <h2>📊 Rendimiento Detallado por Curso</h2>
       <div id="estadisticas-content">Cargando rendimiento...</div>
@@ -118,21 +148,25 @@
       <div id="goleadores-content">Cargando goleadores...</div>
     </div>
 
+    <!-- Panel Cuadro de Honor -->
     <div id="panel-cuadro-honor" class="tab-content" style="display:none">
       <h2>🎖️ Cuadro de Honor por Disciplinas</h2>
       <div id="cuadro-honor-content">Cargando destacados...</div>
     </div>
 
+    <!-- Panel Comparativa Psicología vs Educación -->
     <div id="panel-comparativa" class="tab-content" style="display:none">
       <h2>⚖️ Comparativa: Psicología vs Ciencias de la Educación</h2>
       <div id="comparativa-content">Cargando comparativa...</div>
     </div>
 
+    <!-- Panel Fixture General -->
     <div id="panel-fixture" class="tab-content" style="display:none">
       <h2>📅 Cronograma de Jornada / Fixture General</h2>
       <div id="fixture-content">Cargando cronograma...</div>
     </div>
 
+    <!-- Panel Reglamento & Sanciones -->
     <div id="panel-reglamento" class="tab-content" style="display:none">
       <h2>📜 Reglamento Oficial & Control de Suspendidos</h2>
       
@@ -156,9 +190,10 @@
       </div>
     </div>
 
+    <!-- Panel Predicciones (Quiniela) -->
     <div id="panel-quiniela" class="tab-content" style="display:none">
       <h2>🎯 Predicciones del Torneo</h2>
-      <p style="color:#aaa; font-size:13px;">Pronosticá quién se corona campeón en Futsal Masculino, Fútbol de Campo Masculino, Vóley Mixto, Pikivoley y quién será el Campeón General del torneo. Los aciertos se calculan automáticamente cuando se juega la Final de cada disciplina (o se actualiza la Tabla General, en el caso del Campeón General).</p>
+      <p style="color:#aaa; font-size:13px;">Pronosticá quién se corona campeón en Futsal Masculino, Fútbol de Campo Masculino, Vóley Mixto, Pikivoley y quién será el Campeón General del torneo.</p>
 
       <div class="quiniela-form-box">
         <label>Tu Nombre:</label>
@@ -192,14 +227,53 @@
 
   </main>
 
+  <!-- Carrusel / Banner de Auspiciantes / Sponsors -->
+  <section id="sponsor-carousel" class="sponsor-carousel" style="display:none;">
+    <div class="sponsor-title">✨ PATROCINADORES OFICIALES INTERFILO 2026 ✨</div>
+    <div class="sponsor-track">
+      <div class="sponsor-card">🏪 <b>Bodega Central</b><span>Auspiciador Oficial</span></div>
+      <div class="sponsor-card">🖨️ <b>Copiprint San Estanislao</b><span>Impresiones & Diseño</span></div>
+      <div class="sponsor-card">🏋️ <b>Gym Filo Fitness</b><span>Entrenamiento Deportivo</span></div>
+      <div class="sponsor-card">🍔 <b>Burger House Santaní</b><span>Gastronomía Local</span></div>
+      <div class="sponsor-card">📻 <b>Radio Tapiracuai</b><span>Prensa & Transmisión</span></div>
+    </div>
+  </section>
+
+  <!-- Footer -->
   <footer class="footer">
     <div class="footer-creditos">
       Dev. by Lukasy | <a href="https://www.instagram.com/lukasy.exe" target="_blank" rel="noopener noreferrer">@lukasyexe</a>
     </div>
-    <button id="btn-buho" class="btn-modo-acceso" onclick="activarModoLogistica()" title="Acceso Organización">🦉</button>
+    <button id="btn-buho" class="btn-modo-acceso" onclick="abrirModalLogin()" title="Acceso Organización">🦉</button>
   </footer>
 
-  <!-- Modal 1: Cargar Marcador e Incidencias (Mesa de Control) -->
+  <!-- MODAL: Acceso Organización (Login) -->
+  <div id="modal-login" class="modal">
+    <div class="modal-content" style="max-width:380px;">
+      <span class="close" onclick="cerrarModalLogin()">&times;</span>
+      <h3 style="color:#d4af37; margin-top:0;">🦉 Acceso Organización</h3>
+      <p style="font-size:13px; color:#aaa;">Ingresá tu contraseña de acceso para habilitar los permisos correspondientes (SuperAdmin, Logística o Editor):</p>
+      <input type="password" id="login-pass-input" placeholder="Ingresar contraseña..." onkeydown="if(event.key==='Enter') procesarLoginModal();">
+      <div style="display:flex; gap:10px; margin-top:15px;">
+        <button type="button" class="btn-cancelar" onclick="cerrarModalLogin()" style="flex:1;">Cancelar</button>
+        <button type="button" class="btn-guardar" onclick="procesarLoginModal()" style="flex:1;">Ingresar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: Confirmación Personalizada -->
+  <div id="modal-confirmacion" class="modal">
+    <div class="modal-content" style="max-width:380px; text-align:center;">
+      <h3 style="color:#d4af37; margin-top:0;">⚠️ Confirmación</h3>
+      <p id="confirm-mensaje" style="color:#ddd; margin:15px 0; font-size:14px;"></p>
+      <div style="display:flex; gap:10px; margin-top:20px;">
+        <button type="button" class="btn-cancelar" id="btn-confirm-cancelar" style="flex:1;">Cancelar</button>
+        <button type="button" class="btn-guardar" id="btn-confirm-aceptar" style="flex:1;">Confirmar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL 1: Cargar Marcador e Incidencias (Mesa de Control) -->
   <div id="modal-admin" class="modal">
     <div class="modal-content">
       <span class="close" onclick="cerrarModalAdmin()">&times;</span>
@@ -207,7 +281,7 @@
       <h4 id="modal-partido-titulo" style="color:#d4af37; margin:10px 0;"></h4>
       <input type="hidden" id="admin-id-partido">
 
-      <!-- Botones de Cambio de Estado Rápido -->
+      <!-- Cambiar Estado -->
       <div class="estado-selector-box">
         <label style="font-size:12px; color:#aaa;">Cambiar Estado del Encuentro:</label>
         <div class="estado-btn-group">
@@ -217,14 +291,14 @@
         </div>
       </div>
 
-      <!-- Editar Fecha y Hora del Partido -->
+      <!-- Fecha y Hora -->
       <div class="estado-selector-box">
         <label style="font-size:12px; color:#aaa;">📅 Fecha y Hora del Encuentro:</label>
         <input type="datetime-local" id="admin-fecha-hora" style="margin-top:6px;">
         <button type="button" class="btn-guardar" style="margin-top:8px;" onclick="actualizarFechaHoraPartido()">Guardar Fecha y Hora</button>
       </div>
 
-      <!-- Marcador Rápido Punto a Punto -->
+      <!-- Marcador Rápido (+1 Pt) -->
       <div class="quick-score-box">
         <button type="button" class="btn-score-quick equipo-a" onclick="sumarPuntoRapido('A', 1)">
           <span id="btn-quick-lbl-a">Equipo A</span>
@@ -247,16 +321,29 @@
         </div>
       </div>
 
+      <!-- Checkbox Definido por Penales -->
+      <div style="margin:12px 0; background:#0d0d0d; padding:10px; border-radius:8px; border:1px solid #333; display:flex; align-items:center; gap:8px;">
+        <input type="checkbox" id="admin-penales" style="width:auto; margin:0; cursor:pointer;">
+        <label for="admin-penales" style="margin:0; cursor:pointer; font-size:13px; color:#d4af37; font-weight:bold;">Definido por penales (P)</label>
+      </div>
+
       <hr style="border-color:#333; margin:15px 0;">
       <h4 style="margin:5px 0; color:#aaa;">Cargar Tarjetas e Incidencias:</h4>
-      <input type="text" id="incidencia-jugador" placeholder="Ej. Lucas López">
-      <select id="incidencia-equipo"></select>
+      
+      <label style="font-size:12px; color:#aaa;">Equipo Anotador / Sancionado:</label>
+      <select id="incidencia-equipo" onchange="actualizarSelectJugadoresIncidencia()"></select>
+
+      <label style="font-size:12px; color:#aaa;">Jugador Inscrito:</label>
+      <select id="incidencia-jugador-select"></select>
+
+      <label style="font-size:12px; color:#aaa;">Tipo de Evento:</label>
       <select id="incidencia-tipo">
         <option value="Gol">⚽ Gol</option>
         <option value="Tarjeta Amarilla">🟨 Tarjeta Amarilla</option>
         <option value="Tarjeta Roja">🟥 Tarjeta Roja</option>
         <option value="Tarjeta Azul">🟦 Tarjeta Azul</option>
       </select>
+      
       <button type="button" class="btn-add-incidencia" onclick="agregarIncidencia()">➕ Agregar Incidencia</button>
       
       <ul id="lista-incidencias" class="incidencias-list"></ul>
@@ -266,7 +353,7 @@
     </div>
   </div>
 
-  <!-- Modal 2: Crear Partido -->
+  <!-- MODAL 2: Crear Partido -->
   <div id="modal-crear-partido" class="modal">
     <div class="modal-content">
       <span class="close" onclick="cerrarModalCrearPartido()">&times;</span>
@@ -309,7 +396,7 @@
     </div>
   </div>
 
-  <!-- Modal 3: Ajuste Manual de Puntos (Super Admin) -->
+  <!-- MODAL 3: Ajuste Manual de Puntos (Super Admin) -->
   <div id="modal-ajustar-puntos" class="modal">
     <div class="modal-content">
       <span class="close" onclick="cerrarModalAjustarPuntos()">&times;</span>
@@ -339,7 +426,7 @@
     </div>
   </div>
 
-  <!-- Modal 4: Vista de Detalles para Espectadores (Solo Lectura) -->
+  <!-- MODAL 4: Vista de Detalles para Espectadores -->
   <div id="modal-detalles-partido" class="modal">
     <div class="modal-content">
       <span class="close" onclick="cerrarModalDetalles()">&times;</span>
@@ -357,22 +444,86 @@
     </div>
   </div>
 
-  <!-- Modal 5: Cambiar Contraseña de Logística (Solo Super Admin) -->
+  <!-- MODAL 5: Cambiar Contraseñas de Logística y Editor (Super Admin) -->
   <div id="modal-cambiar-clave" class="modal">
     <div class="modal-content">
       <span class="close" onclick="cerrarModalCambiarClave()">&times;</span>
-      <h3>🔑 Cambiar Contraseña de Logística</h3>
-      <p style="font-size:12px; color:#aaa;">Esta es la contraseña que usa el equipo de Logística para cargar resultados. Solo vos (Super Admin) podés cambiarla.</p>
+      <h3>🔑 Cambiar Contraseñas de Organización</h3>
+      <p style="font-size:12px; color:#aaa;">Solo el SuperAdmin puede modificar las contraseñas de los roles Logística y Editor.</p>
 
-      <label>Nueva Contraseña de Logística:</label>
-      <input type="text" id="nueva-clave-logistica" placeholder="Ingresá la nueva contraseña">
+      <label>Nueva Contraseña para Logística (Mesa de Control):</label>
+      <input type="text" id="nueva-clave-logistica" placeholder="Ej. logistica2026">
 
-      <button type="button" class="btn-guardar" onclick="guardarNuevaClaveLogistica()">Guardar Nueva Contraseña</button>
+      <label style="margin-top:10px;">Nueva Contraseña para Editor (Gestión de Jugadores):</label>
+      <input type="text" id="nueva-clave-editor" placeholder="Ej. editor2026">
+
+      <button type="button" class="btn-guardar" onclick="guardarNuevasClaves()">Guardar Nuevas Contraseñas</button>
       <p id="clave-msj"></p>
     </div>
   </div>
 
-  <div id="reacciones-overlay" class="reacciones-overlay"></div>
+  <!-- MODAL 6: Modal de Equipo y Gestión de Jugadores -->
+  <div id="modal-equipo" class="modal">
+    <div class="modal-content" style="max-width:550px;">
+      <span class="close" onclick="cerrarModalEquipo()">&times;</span>
+      <div id="modal-equipo-header" style="text-align:center; padding-bottom:15px; border-bottom:1px solid #333;"></div>
+      
+      <div id="modal-equipo-stats" style="margin:15px 0;"></div>
+
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-top:20px;">
+        <h4 style="color:#d4af37; margin:0;">📋 Plantilla de Jugadores por Disciplina:</h4>
+        <button class="btn-crear-partido solo-editor" style="padding:6px 12px; font-size:12px;" onclick="abrirModalEditarJugador(null)">➕ Añadir Jugador</button>
+      </div>
+
+      <div id="modal-equipo-jugadores" style="margin-top:15px;"></div>
+    </div>
+  </div>
+
+  <!-- MODAL 7: Crear/Editar Jugador -->
+  <div id="modal-editar-jugador" class="modal">
+    <div class="modal-content" style="max-width:420px;">
+      <span class="close" onclick="cerrarModalEditarJugador()">&times;</span>
+      <h3 id="titulo-modal-jugador" style="color:#d4af37;">➕ Añadir Jugador</h3>
+      <input type="hidden" id="edit-jugador-id">
+      
+      <label>Nombre Completo del Jugador:</label>
+      <input type="text" id="edit-jugador-nombre" placeholder="Ej. Juan Pérez">
+
+      <label>Curso / Equipo:</label>
+      <select id="edit-jugador-equipo" disabled></select>
+
+      <label style="margin-top:10px;">Disciplinas en las que compite:</label>
+      <div style="display:flex; flex-direction:column; gap:8px; margin:8px 0; background:#0d0d0d; padding:10px; border-radius:6px; border:1px solid #333;">
+        <label style="cursor:pointer; font-size:13px; color:#fff;"><input type="checkbox" id="check-disc-futsal" value="Futsal"> ⚽ Futsal</label>
+        <label style="cursor:pointer; font-size:13px; color:#fff;"><input type="checkbox" id="check-disc-futbol" value="Fútbol de Campo"> ⚽ Fútbol de Campo</label>
+        <label style="cursor:pointer; font-size:13px; color:#fff;"><input type="checkbox" id="check-disc-voley" value="Vóley Mixto"> 🏐 Vóley Mixto</label>
+        <label style="cursor:pointer; font-size:13px; color:#fff;"><input type="checkbox" id="check-disc-pikivoley" value="Pikivoley"> 🦶🏐 Pikivoley</label>
+      </div>
+
+      <button type="button" class="btn-guardar" onclick="guardarJugador()">Guardar Jugador</button>
+    </div>
+  </div>
+
+  <!-- MODAL 8: Tarjeta FIFA del Jugador -->
+  <div id="modal-fifa-card" class="modal">
+    <div class="modal-content" style="background:transparent; border:none; box-shadow:none; max-width:320px; padding:0;">
+      <span class="close" onclick="cerrarFifaCard()" style="position:relative; z-index:10; font-size:28px; color:#d4af37;">&times;</span>
+      <div id="fifa-card-container"></div>
+    </div>
+  </div>
+
+  <!-- MODAL 9: Votación de MVP -->
+  <div id="modal-votar-mvp" class="modal">
+    <div class="modal-content" style="max-width:440px;">
+      <span class="close" onclick="cerrarModalVotarMvp()">&times;</span>
+      <h3 style="color:#d4af37; text-align:center;">⭐ Votación Jugador del Partido (MVP)</h3>
+      <p id="votar-mvp-sub" style="font-size:12px; color:#aaa; text-align:center;"></p>
+      
+      <div id="votar-mvp-opciones" style="margin-top:15px; max-height:300px; overflow-y:auto;"></div>
+      
+      <button type="button" class="btn-guardar" style="margin-top:15px;" onclick="enviarVotoMvp()">⭐ Registrar Voto MVP</button>
+    </div>
+  </div>
 
   <script src="script.js"></script>
 </body>
