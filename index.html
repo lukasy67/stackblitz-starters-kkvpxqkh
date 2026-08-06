@@ -19,18 +19,18 @@
 </head>
 <body>
 
-  <!-- ENVOLTORIO PRINCIPAL (App Móvil Virtual) -->
-  <div class="app-container">
+<!-- ENVOLTORIO PRINCIPAL (App Móvil Virtual) -->
+<div class="app-container">
 
-    <!-- Contenedor de Notificaciones Toast -->
-    <div id="toast-container" class="toast-container"></div>
+  <!-- Contenedor de Notificaciones Toast -->
+  <div id="toast-container" class="toast-container"></div>
 
-    <!-- Capa de Celebraciones en Vivo (Confeti / Emojis) -->
-    <div id="celebracion-overlay" class="celebracion-overlay"></div>
-    <div id="reacciones-overlay" class="reacciones-overlay"></div>
+  <!-- Capa de Celebraciones en Vivo (Confeti / Emojis) -->
+  <div id="celebracion-overlay" class="celebracion-overlay"></div>
+  <div id="reacciones-overlay" class="reacciones-overlay"></div>
 
-    <!-- Cabecera Principal -->
-    <header class="header">
+  <!-- Cabecera Principal -->
+  <header class="header">
       <div class="header-info">
         <h1>JUEGOS INTERFILO 2026</h1>
         <p>Facultad de Filosofía - Filial San Estanislao</p>
@@ -58,11 +58,52 @@
       <button class="tab-link" onclick="openTab(event, 'panel-cuadro-honor')">🎖️ Cuadro de Honor</button>
       <button class="tab-link" onclick="openTab(event, 'panel-comparativa')">⚖️ Psicología vs Educación</button>
       <button class="tab-link" onclick="openTab(event, 'panel-fixture')">📅 Fixture General</button>
+      <button class="tab-link solo-superadmin" onclick="openTab(event, 'panel-auditoria')" style="background:#7f1d1d; color:#fff; border-color:#ef4444;">🛡️ Panel Auditoría</button>
       <button class="tab-link" onclick="openTab(event, 'panel-reglamento')">📜 Reglamento & Sanciones</button>
     </nav>
 
     <!-- Paneles de Contenido -->
     <main class="main-content">
+      <!-- Panel Exclusivo SuperAdmin -->
+    <div id="panel-auditoria" class="tab-content" style="display:none">
+      <div class="header-seccion">
+        <h2>🛡️ Panel de Control Global (SuperAdmin)</h2>
+      </div>
+
+      <!-- Gestión de Operadores -->
+      <div style="background:#161616; padding:18px; border-radius:12px; border:1px solid #d4af37; margin-bottom:20px;">
+        <h3 style="color:#d4af37; margin-top:0;">👥 Gestión de Operadores Secundarios</h3>
+        <p style="color:#aaa; font-size:12px;">Crea cuentas de acceso individualizadas para la mesa de control o editores.</p>
+        
+        <div class="quiniela-form-box" style="max-width:100%; display:flex; gap:10px; flex-wrap:wrap; align-items:flex-end; padding:12px;">
+          <div style="flex:1; min-width:150px;">
+            <label>Usuario / Alias:</label>
+            <input type="text" id="operador-nombre" placeholder="Ej. mesa_futsal">
+          </div>
+          <div style="flex:1; min-width:150px;">
+            <label>Contraseña:</label>
+            <input type="password" id="operador-pass" placeholder="***">
+          </div>
+          <div style="flex:2; min-width:250px;">
+            <label>Permisos Granulares:</label>
+            <div style="display:flex; gap:15px; margin-top:10px;">
+              <label style="color:#fff; cursor:pointer;"><input type="checkbox" id="perm-logistica"> 📋 Logística</label>
+              <label style="color:#fff; cursor:pointer;"><input type="checkbox" id="perm-editor"> ✏️ Editor (Jugadores)</label>
+            </div>
+          </div>
+          <button class="btn-guardar" style="width:auto; padding:10px 20px;" onclick="guardarOperador()">💾 Crear Acceso</button>
+        </div>
+        
+        <div id="lista-operadores" style="margin-top:15px;">Cargando operadores...</div>
+      </div>
+
+      <!-- Audit Log -->
+      <div style="background:#161616; padding:18px; border-radius:12px; border:1px solid #ef4444;">
+        <h3 style="color:#ef4444; margin-top:0;">🚨 Registro de Auditoría (Audit Log)</h3>
+        <p style="color:#aaa; font-size:12px;">Historial inmutable de acciones. Utiliza el botón de reversión para anular inmediatamente un cambio erróneo en la base de datos.</p>
+        <div id="audit-log-content">Cargando historial...</div>
+      </div>
+    </div>
       
       <!-- Panel En Vivo / Próximo -->
       <div id="panel-envivo" class="tab-content" style="display:block">
@@ -301,8 +342,15 @@
       <div class="modal-content" style="max-width:380px;">
         <span class="close" onclick="cerrarModalLogin()">&times;</span>
         <h3 style="color:#d4af37; margin-top:0;">🦉 Acceso Organización</h3>
-        <p style="font-size:13px; color:#aaa;">Ingresá tu contraseña de acceso para habilitar los permisos correspondientes (SuperAdmin, Logística o Editor):</p>
-        <input type="password" id="login-pass-input" placeholder="Ingresar contraseña..." onkeydown="if(event.key==='Enter') procesarLoginModal();">
+        <p style="font-size:13px; color:#aaa;">Ingresá tus credenciales para habilitar tus permisos en el sistema:</p>
+        
+        <!-- Nuevos campos de Usuario y Contraseña -->
+        <label style="font-size:12px; color:#aaa;">Usuario / Alias:</label>
+        <input type="text" id="login-user-input" placeholder="Ej. admin..." style="margin-bottom: 10px;" onkeydown="if(event.key==='Enter') document.getElementById('login-pass-input').focus();">
+        
+        <label style="font-size:12px; color:#aaa;">Contraseña:</label>
+        <input type="password" id="login-pass-input" placeholder="***" onkeydown="if(event.key==='Enter') procesarLoginModal();">
+        
         <div style="display:flex; gap:10px; margin-top:15px;">
           <button type="button" class="btn-cancelar" onclick="cerrarModalLogin()" style="flex:1;">Cancelar</button>
           <button type="button" class="btn-guardar" onclick="procesarLoginModal()" style="flex:1;">Ingresar</button>

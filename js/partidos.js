@@ -276,20 +276,57 @@ async function abrirModalAdmin(idPartido, disciplina = "", fase = "", eqA = "", 
   
   async function cambiarEstadoPartido(nuevoEstado) {
     const idPartido = document.getElementById("admin-id-partido").value;
-    if (!idPartido) return;
-  
     const golesA = document.getElementById("goles-a").value;
     const golesB = document.getElementById("goles-b").value;
+    const esPenales = document.getElementById("admin-penales").checked;
     const ahoraIso = new Date().toISOString();
   
-    const existe = datosTorneo.partidos.find(p => p.id === idPartido);
+    if (!idPartido) return;
   
-    if (!existe && idPartido.startsWith("VIRTUAL-")) {
+    const partidoActual = datosTorneo.partidos.find(p => p.id === idPartido);
+  
+    // Si el partido ya existe en la base de datos (Actualización y Auditoría)
+    if (partidoActual) {
+      // 1. Creamos la "Foto" del estado ANTERIOR
+      const valoresAnteriores = {
+        estado: partidoActual.estado,
+        goles_a: partidoActual.golesA,
+        goles_b: partidoActual.golesB,
+        finalizado_at: partidoActual.finalizadoAt,
+        definido_penales: partidoActual.definidoPenales
+      };
+  
+      // 2. Preparamos los datos nuevos
+      const updateData = { 
+        estado: nuevoEstado,
+        goles_a: golesA !== "" ? parseInt(golesA) : 0,
+        goles_b: golesB !== "" ? parseInt(golesB) : 0,
+        definido_penales: esPenales,
+        finalizado_at: nuevoEstado === 'Finalizado' ? ahoraIso : null
+      };
+  
+      // 3. Hacemos el UPDATE en Supabase
+      const { error: errUpdate } = await dbClient.from('partidos').update(updateData).eq('id', idPartido);
+      if (errUpdate) return mostrarToast("Error al cambiar estado: " + errUpdate.message, "error");
+  
+      // 4. INYECTAMOS EL LOG DE AUDITORÍA
+      await dbClient.from('auditoria').insert([{
+        id: 'AUDIT-' + Date.now(),
+        accion: 'Cambio de Estado/Marcador',
+        detalle: `El partido pasó a estado: ${nuevoEstado} (${updateData.goles_a} - ${updateData.goles_b})`,
+        tabla_afectada: 'partidos',
+        registro_id: idPartido,
+        valores_anteriores: valoresAnteriores,
+        valores_nuevos: updateData,
+        usuario: esModoSuperAdmin ? 'alucas' : 'Mesa de Control'
+      }]);
+  
+    } else if (idPartido.startsWith("VIRTUAL-")) {
+      // Si el partido proviene de un cruce virtual en los brackets (Creación nueva)
       const disciplina = document.getElementById("modal-partido-titulo").dataset.disciplina || "Futsal Masculino";
       const fase = document.getElementById("modal-partido-titulo").dataset.fase || "Semifinales";
       const eqA = document.getElementById("lbl-equipo-a").innerText;
       const eqB = document.getElementById("lbl-equipo-b").innerText;
-      const esPenales = document.getElementById("admin-penales").checked;
   
       const idReal = "PAR-" + new Date().getTime();
       const payload = {
@@ -301,31 +338,10 @@ async function abrirModalAdmin(idPartido, disciplina = "", fase = "", eqA = "", 
       const { error } = await dbClient.from('partidos').insert([payload]);
       if (error) return mostrarToast("Error al cambiar estado: " + error.message, "error");
       document.getElementById("admin-id-partido").value = idReal;
-    } else {
-      const updateData = { estado: nuevoEstado };
-      if (nuevoEstado === 'Finalizado') updateData.finalizado_at = ahoraIso;
-  
-      const { error } = await dbClient.from('partidos').update(updateData).eq('id', idPartido);
-      if (error) return mostrarToast("Error al cambiar estado: " + error.message, "error");
     }
   
     mostrarToast(`Estado cambiado a "${nuevoEstado}".`, "success");
     await cargarDatos();
-  }
-  
-  function compartirResultado(idPartido) {
-    const p = datosTorneo.partidos.find(part => part.id === idPartido);
-    if (!p) return;
-  
-    const penalesTxt = p.definidoPenales ? " (Definido por penales)" : "";
-    const texto = `🔥 ¡Partidazo en el InterFilo 2026! ⚽\n${renderizarNombreVisible(p.equipoA)} ${p.golesA} - ${p.golesB} ${renderizarNombreVisible(p.equipoB)}${penalesTxt}\n🏆 Disciplina: ${p.disciplina} (${p.fase})\n\nSigue los resultados en vivo aquí: ${window.location.href}`;
-  
-    if (navigator.share) {
-      navigator.share({ title: 'InterFilo 2026 - Resultado', text: texto }).catch(() => {});
-    } else {
-      const urlWa = `https://api.whatsapp.com/send?text=${encodeURIComponent(texto)}`;
-      window.open(urlWa, '_blank');
-    }
   }
   
   function abrirModalVotarMvp(idPartido) {
